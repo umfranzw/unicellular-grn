@@ -1,22 +1,29 @@
 #ifndef GENE_H
 #define GENE_H
 
-#include <string>
 #include <iostream>
 #include "protein.h"
+#include "constants.h"
+#include <bitset>
+#include <string>
 
 using namespace std;
+
+class Protein;
 
 class Gene
 {
 public:
-    Protein binding_seq;
-    Protein protein_seq;
+    bitset<BIND_BITS> binding_seq;
+    bitset<OUTPUT_BITS> output_seq;
+    Protein *bound;
     float threshold;
-    float prod_rate;
+    float out_rate;
+    int diff_index;
     
     Gene();
-    friend ostream& operator<<(ostream& strm, const Gene &g);
+    string str(bool compact=false);
+    void init_rand(mt19937 &gen);
 };
 
 #endif
