@@ -1,7 +1,5 @@
 #include "protein.h"
 #include "utils.h"
-#include <iostream>
-#include <iomanip>
 #include <sstream>
 #include <bitset>
 
@@ -9,31 +7,31 @@ using namespace std;
 
 Protein::Protein()
 {
-    this->seq = 0;
-    this->conc = 0;
 }
 
-void Protein::init_rand(mt19937 gen)
+void Protein::init_rand(RandGen gen)
 {
     unsigned int mask = make_lower_bitmask(BIND_BITS);
     this->seq = gen() & mask;
-    this->conc = (float) gen() / RAND_MAX;
+    for (int i = 0; i < NUM_GENES; i++)
+    {
+        this->conc[i] = (float) gen() / RAND_MAX;
+    }
 }
 
-string Protein::str(bool compact)
+string Protein::str()
 {
     stringstream s;
-    if (compact)
+    s << "(" << this->seq << " {";
+    for (int i = 0; i < NUM_GENES; i++)
     {
-        s << "(" << this->seq << " " << this->conc << ")" << endl;
+        s << this->conc[i];
+        if (i < NUM_GENES - 1)
+        {
+            s << " ";
+        }
     }
-
-    else
-    {
-        s << "Protein(" << endl;
-        s << setw(20) << "seq : " << this->seq << endl;
-        s << ")" << endl;
-    }
+    s << ")" << endl;
 
     return s.str();
 }

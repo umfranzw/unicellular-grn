@@ -6,6 +6,7 @@
 #include <string>
 #include <random>
 #include "gene.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -15,12 +16,12 @@ class Protein
 {
 public:
     bitset<BIND_BITS> seq;
-    float conc;
+    float conc[NUM_GENES];
     Gene *src;
     
     Protein();
-    void init_rand(mt19937 gen);
-    string str(bool compact=false);
+    void init_rand(RandGen gen);
+    string str();
 };
 
 #endif

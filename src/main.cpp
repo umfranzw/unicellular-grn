@@ -2,28 +2,22 @@
 #include "gene.h"
 #include "grn.h"
 #include "protein.h"
-#include <random>
-#include <sys/random.h>
+#include "utils.h"
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
-    //initialize and seed random number generator (using Mersenne Twister)
-    unsigned int seed;
-    getrandom(&seed, sizeof(unsigned int), GRND_RANDOM); //grabs bytes from /dev/random
-    mt19937 gen;
-    gen.seed(seed);
-
+    RandGen gen = make_gen();
     GRN g;
-    g.init_rand((mt19937&) gen);
+    g.init_rand((RandGen&) gen);
     cout << g.str() << endl;
 
     // Gene g1;
-    // g1.init_rand((mt19937&) gen);
+    // g1.init_rand((RandGen&) gen);
+    // g2.init_rand((RandGen&) gen);
     // Gene g2;
-    // g2.init_rand((mt19937&) gen);
-
+                                
     // cout << g1.str() << endl;
     // cout << g2.str() << endl;
 

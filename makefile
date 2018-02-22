@@ -1,8 +1,8 @@
 PROG = grn
 INCLUDE_DIR = include
 SRC_DIR = src
-HDR_FILES = gene.h protein.h
-SRC_FILES = main.cpp gene.cpp protein.cpp
+HDR_FILES = gene.h protein.h grn.h utils.h diffusion.h
+SRC_FILES = main.cpp gene.cpp protein.cpp grn.cpp utils.cpp diffusion.cpp
 
 # Tack on the appropriate dir name (cut down on the amount of typing required above)
 HDRS = $(patsubst %.h, $(INCLUDE_DIR)/%.h, $(HDR_FILES))

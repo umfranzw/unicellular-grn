@@ -4,6 +4,7 @@
 #include "gene.h"
 #include <string>
 #include "constants.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -13,8 +14,8 @@ public:
     Gene genes[NUM_GENES];
 
     GRN();
-    string str(bool compact=false);
-    void init_rand(mt19937& gen);
+    string str();
+    void init_rand(RandGen& gen);
 };
 
 #endif

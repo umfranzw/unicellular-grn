@@ -6,7 +6,7 @@ GRN::GRN()
 {
 }
 
-void GRN::init_rand(mt19937 &gen)
+void GRN::init_rand(RandGen &gen)
 {
     for (int i = 0; i < NUM_GENES; i++)
     {
@@ -14,13 +14,13 @@ void GRN::init_rand(mt19937 &gen)
     }
 }    
 
-string GRN::str(bool compact)
+string GRN::str()
 {
     stringstream s;
     
     for (int i = 0; i < NUM_GENES; i++)
     {
-        s << genes[i].str(compact);
+        s << genes[i].str();
     }
 
     return s.str();

@@ -6,6 +6,7 @@
 #include "constants.h"
 #include <bitset>
 #include <string>
+#include "utils.h"
 
 using namespace std;
 
@@ -22,8 +23,8 @@ public:
     int diff_index;
     
     Gene();
-    string str(bool compact=false);
-    void init_rand(mt19937 &gen);
+    string str();
+    void init_rand(RandGen &gen);
 };
 
 #endif
