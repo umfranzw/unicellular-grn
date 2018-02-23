@@ -16,7 +16,7 @@ class Protein
 {
 public:
     bitset<BIND_BITS> seq;
-    float conc[NUM_GENES];
+    float *conc;
     Gene *src;
     
     Protein();
