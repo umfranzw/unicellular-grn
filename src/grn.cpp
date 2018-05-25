@@ -1,75 +1,153 @@
-#include "grn.h"
-#include "constants.h"
+#include "grn.hpp"
+#include "protein.hpp"
+#include "runs.hpp"
+#include "protein_store.hpp"
+#include <boost/dynamic_bitset.hpp>
+#include "utils.hpp"
+#include "kernels.hpp"
+#include "gene.hpp"
 #include <sstream>
+#include <vector>
 
-GRN::GRN()
-{
+Grn::Grn(Run *run, vector<Gene> genes) {
+    this->run = run;
+    this->genes = genes;
 }
 
-void GRN::run_diffusion()
-{
-    for (vector<Protein *>::iterator it = proteins.begin(); it != proteins.end(); it++)
-    {
-        //get kernel
-        int kernel_index = (*it)->src->diff_index;
-        int kernel_size;
-        float *kernel = kernels.get_diff_kernel(kernel_index, &kernel_size);
-        
-        // slide kernel across protein concentration array.
-        float *concs = (*it)->conc;
-        float updated_concs[NUM_GENES];
-        int mid = kernel_size / 2;
-        bool min_flag = false;
-        for (int i = 0; i < NUM_GENES; i++)
-        {
-            float new_conc = 0;
-            for (int j = 0; j < kernel_size; j++)
-            {
-                int col = i - mid + j;
-                if (col > 0 && col < NUM_GENES)
-                {
-                    new_conc += concs[col] * kernel[j];
+//randomly initializes genes
+Grn::Grn(Run *run) {
+    this->run = run;
+
+    //insert (random) genes
+    for (int i = 0; i < run->num_genes; i++) {
+        Gene gene(run, i);
+        this->genes.push_back(gene);
+    }
+}
+
+void Grn::push_initial_proteins() {
+    //insert initial (random) proteins
+    for (int i = 0; i < this->run->initial_proteins; i++) {
+        int pos = run->rand.in_range(0, this->run->num_genes);
+        this->proteins.add(new Protein(this->run, pos));
+    }
+}
+
+void Grn::run_decay() {
+    for (const int &id : this->proteins) {
+        Protein *protein = this->proteins.get(id);
+        for (int pos = 0; pos < this->run->num_genes; pos++) {
+            protein->concs[pos] = max(0.0f, protein->concs[pos] - protein->concs[pos] * this->run->decay_rate);
+        }
+    }
+}
+
+void Grn::run_binding() {
+    for (int pos = 0; pos < this->run->num_genes; pos++) {
+        vector<pair<int, float>> weighted_probs;
+        float pos_sum = 0.0f; //sum of all concentrations in current position
+        for (const int& id: this->proteins) {
+            Protein* protein = this->proteins.get(id);
+            int hamming_dist = Utils::hamming_dist(&protein->seq, &this->genes[pos].binding_seq);
+            float w = this->run->alpha * protein->concs[pos] + this->run->beta * hamming_dist;
+            weighted_probs.push_back(pair<int, float>(id, w));
+            pos_sum += w;
+        }
+
+        //if there are proteins above this position
+        if (weighted_probs.size() > 0) {
+            //build the probability distribution and sample it (roulette-wheel-selection-style)
+            float r = this->run->rand.next_float();
+            float running_sum = 0.0f;
+            int i = 0;
+            //second part of condition below is in case of floating point error
+            while (r > running_sum && i < (int) weighted_probs.size()) {
+                weighted_probs[i].second /= pos_sum;
+                running_sum += weighted_probs[i].second;
+                i += 1;
+            }
+
+            //deal with potential floating point error
+            if (i == (int) weighted_probs.size()) {
+                i = (int) weighted_probs.size() - 1;
+            }
+
+            this->genes[pos].update_binding(&weighted_probs[i], &this->proteins);
+        }
+        //no proteins above this position => unbind
+        else {
+            this->genes[pos].update_binding(nullptr, &this->proteins);
+        }
+    }
+}
+
+void Grn::run_diffusion() {
+    for (int i = 0; i < this->run->num_genes; i++) {
+        Gene *g = &this->genes[i];
+        vector<float> new_concs(this->run->num_genes, 0.0f);
+        vector<pair<int, int>> rm_pairs; //(index in gene.outputs, protein id)
+
+        for (int j = 0; j < (int) g->outputs.size(); j++) {
+            int p_id = g->outputs[j];
+            Protein *p = this->proteins.get(p_id);
+            const vector<float> *kernel = &KERNELS[p->kernel_index];
+            int mid = (int) kernel->size() / 2;
+            bool above_threshold = false; //will set to true if any conc in the protein is > run.min_protein_conc
+
+            for (int k = 0; k < this->run->num_genes; j++) {
+                for (int l = 0; l < (int) kernel->size(); l++) {
+                    int col = k - mid + l;
+                    if (col >= 0 && col < (int) this->run->num_genes) {
+                        new_concs[k] = min(new_concs[k] + p->concs[col] * (*kernel)[l], this->run->max_protein_conc); //ensure we don't go over the max. Note: the min threshold is checked below.
+                    }
                 }
-                //else, the contribution of the kernel column is 0
+                above_threshold = above_threshold || (new_concs[k] > this->run->min_protein_conc);
             }
-            updated_concs[i] = new_conc;
-            min_flag = min_flag && (new_conc < MIN_PROTEIN_CONC);
-        }
-        if (min_flag)
-        {
-            //remove protein - all it's concentrations are below the minimum threshold.
-            proteins.erase(it);
+
+            //replace old concentrations with new ones,
+            //but don't waste time copying if we're just going to throw the protein away because it's concentrations
+            //don't meet the min threshold
+            if (above_threshold) {
+                p->concs = new_concs;
+            }
+            else {
+                rm_pairs.push_back(pair<int, int>(j, p_id));
+            }
         }
 
-        else
-        {
-            //overwrite old concentrations with new ones
-            for (int i = 0; i < NUM_GENES; i++)
-            {
-                concs[i] = updated_concs[i];
+        for (int j = 0; j < (int) rm_pairs.size(); j++) {
+            int index = rm_pairs[j].first;
+            int id = rm_pairs[j].second;
+
+            g->outputs.erase(g->outputs.begin() + index - j); //subtract j to compensate for shift due to removals on previous iterations
+
+            if (g->active_output >= 0) {
+                g->active_output = -1;
             }
+            this->proteins.remove(id);
         }
     }
-
-    //TODO: What happens when a protein has concentration 0 all throughout the array? Should be removed... but there will be floating point error. Maybe remove it if all elements are below some small error threshold?
 }
 
-void GRN::init_rand(RandGen &gen)
-{
-    for (int i = 0; i < NUM_GENES; i++)
-    {
-        this->genes[i].init_rand(gen);
+void Grn::update_output_proteins() {
+    for (int i = 0; i < this->run->num_genes; i++) {
+        this->genes[i].update_output_protein(&this->proteins);
     }
-}    
+}
 
-string GRN::str()
-{
-    stringstream s;
-    
-    for (int i = 0; i < NUM_GENES; i++)
-    {
-        s << genes[i].str();
+string Grn::to_str() {
+    stringstream info;
+
+    info << "****" << endl;
+    info << "Grn:" << endl;
+    info << "****" << endl;
+
+    info << "------" << endl;
+    info << "Genes:" << endl;
+    info << "------" << endl;
+    for (Gene& gene : this->genes) {
+        info << gene.to_str();
     }
 
-    return s.str();
+    return info.str();
 }

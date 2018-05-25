@@ -1,0 +1,4 @@
+*.dat
+build/*
+bin/*
+sample/sample

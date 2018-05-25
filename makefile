@@ -1,46 +1,32 @@
-PROG = grn
-INCLUDE_DIR = include
+EXE = grn
+
 SRC_DIR = src
-HDR_FILES = gene.h protein.h grn.h utils.h diffusion.h
-SRC_FILES = main.cpp gene.cpp protein.cpp grn.cpp utils.cpp diffusion.cpp
+INC_DIR = include
+OBJ_DIR = obj
 
-# Tack on the appropriate dir name (cut down on the amount of typing required above)
-HDRS = $(patsubst %.h, $(INCLUDE_DIR)/%.h, $(HDR_FILES))
-SRCS = $(patsubst %.cpp, $(SRC_DIR)/%.cpp, $(SRC_FILES))
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+#HDRS = $(wildcard $(INC_DIR)/*.h)
+OBJ = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-# directory to store object files
-OBJDIR = object
-# names of object files
-OBJS = $(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS)) 
-
-# name of the compiler
 CC = g++
-# additional compiler flags to pass in
-CFLAGS = -fopenmp -Wall --std=c++11 -L. -I$(INCLUDE_DIR)
-# libraries for the linker
-LIBS = 
+CPPFLAGS += -Wall --std=c++11 -I$(INC_DIR) -fopenmp
+LDFLAGS += -fopenmp
+LDLIBS += -lm
 
-####################
-# Compiling rules: #
-####################
-# WARNING: *must* have a tab before each definition
+.PHONY: all clean
 
-# invoked when "make" is run
-all : $(OBJDIR) $(PROG)
+all: $(OBJ_DIR) $(EXE)
 
-# links object files into executable
-$(PROG) : $(OBJS)
-	$(CC) $(CFLAGS) $(patsubst %.o, $(OBJDIR)/%.o, $(notdir $^)) -o $(PROG) $(LIBS)
+$(EXE): $(OBJ)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-# compiles source files into object files
-object/%.o : %.cpp $(HDRS)
-	$(CC) -c $(CFLAGS) $< -o $(OBJDIR)/$(notdir $@) $(LIBS)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CC) $(CPPFLAGS) -c $< -o $@
 
-# creates directory to store object files
-$(OBJDIR) :
-	mkdir -p $@/
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
 
-# cleans up object files and executable
 clean:
-	rm -rf object/
-	rm -f $(PROG)
+	rm -r $(OBJ_DIR)
+	rm $(EXE)
+

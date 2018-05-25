@@ -1,27 +1,35 @@
-#include "utils.h"
-#include <sys/random.h>
-#include <random>
+#include "utils.hpp"
 
-//creates a mask with the lower 'bits' bits set to 1
-unsigned int make_lower_bitmask(int bits)
-{
-    unsigned int mask = 0;
-    for (int i = 0; i < bits; i++)
-    {
-        mask <<= 1;
-        mask |= 1;
+void Utils::fill_rand(boost::dynamic_bitset<> *set, int len, Run *run) {
+    for (int i = 0; i < len; i++) {
+        int bit = (int) run->rand.next_float() < 0.5;
+        set->push_back(bit);
     }
-
-    return mask;
 }
 
-RandGen make_gen()
-{
-    //initialize and seed random number generator (using Mersenne Twister)
-    unsigned int seed;
-    getrandom(&seed, sizeof(unsigned int), GRND_RANDOM); //grabs bytes from /dev/random
-    RandGen gen;
-    gen.seed(seed);
+void Utils::fill_rand(vector<float> *vec, int len, Run *run) {
+    for (int i = 0; i < len; i++) {
+        vec->push_back(run->rand.next_float());
+    }
+}
 
-    return gen;
+vector<float> Utils::zeros(int len) {
+    vector<float> result;
+    for (int i = 0; i < len; i++) {
+        result.push_back(0.0f);
+    }
+
+    return result;
+}
+
+bool Utils::contains_id(vector<int> *vec, int id) {
+    auto it = vec->begin();
+    while (it != vec->end() && *it != id) {
+        it++;
+    }
+    return it != vec->end();
+}
+
+int Utils::hamming_dist(boost::dynamic_bitset<> *x, boost::dynamic_bitset<> *y) {
+    return (*x ^ *y).count();
 }

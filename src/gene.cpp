@@ -1,37 +1,103 @@
-#include "gene.h"
-#include "utils.h"
-#include "constants.h"
+#include "gene.hpp"
 #include <sstream>
-#include "protein.h"
+#include "utils.hpp"
+#include "kernels.hpp"
 
-using namespace std;
+#include <boost/algorithm/clamp.hpp>
 
-Gene::Gene()
-{
-    this->binding_seq = 0;
-    this->bound = NULL;
-    this->output_seq = 0;
-    this->threshold = 0.0;
-    this->out_rate = 0.0;
-    this->diff_index = 0;
+Gene::Gene(Run *run, boost::dynamic_bitset<> binding_seq, boost::dynamic_bitset<> output_seq, float threshold, float output_rate, int kernel_index, int pos) {
+    this->run = run;
+    this->binding_seq = binding_seq;
+    this->output_seq = output_seq;
+    this->threshold = threshold;
+    this->output_rate = output_rate;
+    this->kernel_index = kernel_index;
+    this->pos = pos;
+    this->active_output = -1;
+    this->bound_protein = -1;
 }
 
-void Gene::init_rand(RandGen &gen)
-{
-    unsigned int mask = make_lower_bitmask(BIND_BITS);
-    this->binding_seq = gen() & mask;
-    mask = make_lower_bitmask(OUTPUT_BITS);
-    this->output_seq = gen() & mask;
-    this->threshold = (float) gen() / gen.max();
-    this->out_rate = (float) gen() / gen.max();
-    this->diff_index = gen() % NUM_DIFF_KERNELS; //note: the mod operation biases the distribution
+//randomly initializes components that are not passed
+Gene::Gene(Run *run, int pos) {
+    this->pos = pos;
+    Utils::fill_rand(&this->binding_seq, run->gene_bits, run);
+    Utils::fill_rand(&this->output_seq, run->gene_bits, run);
+    this->threshold = run->rand.next_float();
+    this->output_rate = run->rand.next_float();
+    this->kernel_index = run->rand.in_range(0, KERNELS.size());
+    this->active_output = -1;
+    this->bound_protein = -1;
 }
 
-string Gene::str()
-{
-    stringstream s;
-    s << "[" << this->binding_seq << " : " << this->output_seq << " | " << this->threshold << " " << this->out_rate << " " << this->diff_index << "]";
-
-    return s.str();
+//copy constructor
+Gene::Gene(Gene *gene) {
+    this->run = gene->run;
+    this->binding_seq = gene->binding_seq;
+    this->output_seq = gene->output_seq;
+    this->threshold = gene->threshold;
+    this->output_rate = gene->output_rate;
+    this->kernel_index = gene->kernel_index;
+    this->pos = gene->pos;
+    
+    //don't copy these, or outputs
+    this->active_output = -1;
+    this->bound_protein = -1;
 }
 
+void Gene::update_output_protein(ProteinStore *store) {
+    if (this->active_output != -1) {
+        Protein *protein = store->get(this->active_output);
+        protein->concs[this->pos] = boost::algorithm::clamp(protein->concs[this->pos] + this->output_rate, 0.0, this->run->max_protein_conc);
+    }
+}
+
+void Gene::update_binding(pair<int, float> *protein_info, ProteinStore *store) {
+    if (protein_info != nullptr) {
+        int id = protein_info->first;
+        float conc = protein_info->second;
+        this->bound_protein = id;
+        if (conc >= this->threshold) {
+            if (Utils::contains_id(&this->outputs, id)) {
+                this->active_output = id;
+            }
+            else {
+                Protein *protein = new Protein(this->run, this->output_seq, Utils::zeros(this->run->num_genes), this->kernel_index, this->pos);
+                int id = store->add(protein);
+                this->active_output = id;
+                this->outputs.push_back(id);
+            }
+        }
+        else {
+            this->active_output = -1;
+        }
+    }
+    else {
+        this->active_output = -1;
+        this->bound_protein = -1;
+    }
+}
+
+string Gene::to_str() {
+    stringstream info;
+
+    info << "Gene:" << endl;
+    info << "  binding_seq: " << this->binding_seq << endl;
+    info << "  output_seq: " << this->output_seq << endl;
+    info << "  threshold: " << this->threshold << endl;
+    info << "  output_rate: " << this->output_rate << endl;
+    info << "  kernel_index: " << this->kernel_index << endl;
+    info << "  pos: " << this->pos << endl;
+    info << "  bound_protein: " << this->bound_protein << endl;
+    info << "  active_output: " << this->active_output << endl;
+    info << "  outputs: [";
+
+    for (size_t i = 0; i < this->outputs.size(); i++) {
+        info << this->outputs[i];
+        if (i < this->outputs.size() - 1) {
+            info << ", ";
+        }
+    }
+    info << "]" << endl;
+
+    return info.str();
+}
