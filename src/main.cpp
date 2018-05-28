@@ -1,7 +1,7 @@
 #include <iostream>
 #include "runs.hpp"
 #include "ga.hpp"
-#include "constants.hpp"
+#include <string>
 
 using namespace std;
 

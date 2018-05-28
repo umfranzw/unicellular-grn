@@ -3,17 +3,20 @@
 
 #include "runs.hpp"
 #include "grn.hpp"
+#include "logger.hpp"
 #include <vector>
 
 class Ga {
 public:
     Ga(Run *run);
+    ~Ga();
     void run_alg();
     
 private:
     vector<Grn> pop;
     vector<float> fitnesses;
     Run *run;
+    Logger *logger;
 
     int get_fittest();
     float get_avg_fitness();
@@ -32,7 +35,7 @@ private:
     void mutate_float(float *val, float lower, float upper);
     void mutate_bitset(boost::dynamic_bitset<> *bits);
 
-    void update_fitness();
+    void update_fitness(int ga_step);
     float calc_fitness(Grn *grn);
     float calc_protein_error(Protein *protein);
 };

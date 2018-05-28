@@ -2,7 +2,7 @@
 
 void Utils::fill_rand(boost::dynamic_bitset<> *set, int len, Run *run) {
     for (int i = 0; i < len; i++) {
-        int bit = (int) run->rand.next_float() < 0.5;
+        int bit = (int) (run->rand.next_float() < 0.5);
         set->push_back(bit);
     }
 }

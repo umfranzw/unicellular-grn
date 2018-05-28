@@ -1,10 +1,12 @@
 #include "ga.hpp"
 #include <boost/algorithm/clamp.hpp>
 #include "kernels.hpp"
+#include "constants.hpp"
 #include <cmath>
 
 Ga::Ga(Run *run) {
     this->run = run;
+    this->logger = new Logger(run);
 
     //initialize population (randomly)
     for (int i = 0; i < run->pop_size; i++) {
@@ -13,18 +15,31 @@ Ga::Ga(Run *run) {
     }
 }
 
-void Ga::run_alg() {
-    this->update_fitness();
+Ga::~Ga() {
+    delete this->logger;
+}
 
-    for (int i = 0; i < this->run->ga_steps; i++) {
-        cout << "\ri: " << i + 1;
-        cout.flush();
-        
-        vector<pair<int, int>> parents = this->select();
-        this->cross(&parents);
-        this->mutate();
-        this->update_fitness();
+void Ga::run_alg() {
+    for (int i = 0; i < this->run->pop_size; i++) {
+        this->pop[i].push_initial_proteins();
     }
+    
+    this->logger->log_ga_step(-1, &this->pop); //log initial grns using ga_step = -1
+    this->update_fitness(-1); //this will log initial reg sim using ga_step = -1
+    this->logger->log_fitnesses(-1, &this->fitnesses); //and finally the fitnesses
+
+    // for (int i = 0; i < this->run->ga_steps; i++) {
+    //     cout << "i: " << i + 1 << endl;
+    //     //cout.flush();
+        
+    //     vector<pair<int, int>> parents = this->select();
+    //     this->cross(&parents);
+    //     this->mutate();
+    //     this->update_fitness(i);
+
+    //     this->logger->log_ga_step(i, &this->pop);
+    //     this->logger->log_fitnesses(-1, &this->fitnesses);
+    // }
 }
 
 int Ga::get_fittest() {
@@ -237,17 +252,21 @@ void Ga::mutate_bitset(boost::dynamic_bitset<> *bits) {
     }
 }
 
-void Ga::update_fitness() {
+void Ga::update_fitness(int ga_step) {
     //do regulatory simulation
     for (int i = 0; i < this->run->pop_size; i++) {
         Grn *grn = &this->pop[i];
+        this->logger->log_reg_step(ga_step, -1, grn, i);
         
         for (int j = 0; j < this->run->reg_steps; j++) {
             grn->run_binding();
             grn->update_output_proteins();
             grn->run_diffusion();
             grn->run_decay();
+
+            this->logger->log_reg_step(ga_step, j, grn, i);
         }
+        
 
         //update fitness value
         this->fitnesses[i] = this->calc_fitness(grn);
