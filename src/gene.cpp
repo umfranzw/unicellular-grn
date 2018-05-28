@@ -19,6 +19,7 @@ Gene::Gene(Run *run, boost::dynamic_bitset<> binding_seq, boost::dynamic_bitset<
 
 //randomly initializes components that are not passed
 Gene::Gene(Run *run, int pos) {
+    this->run = run;
     this->pos = pos;
     Utils::fill_rand(&this->binding_seq, run->gene_bits, run);
     Utils::fill_rand(&this->output_seq, run->gene_bits, run);
