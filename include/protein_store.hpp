@@ -21,6 +21,7 @@ public:
     Protein *get(int id);
     size_t size();
     bool contains(int id);
+    vector<int> get_ids();
 
 private:
     map<int, Protein*> proteins;

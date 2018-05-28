@@ -45,6 +45,15 @@ bool ProteinStore::contains(int id) {
     return this->proteins.find(id) == this->proteins.end();
 }
 
+vector<int> ProteinStore::get_ids() {
+    vector<int> ids;
+    for (pair<int, Protein*> entry : this->proteins) {
+        ids.push_back(entry.first);
+    }
+    
+    return ids;
+}
+
 ProteinStore::iterator ProteinStore::begin() const {
     return StoreIterator(this->proteins.begin());
 }

@@ -255,13 +255,30 @@ void Ga::mutate_bitset(boost::dynamic_bitset<> *bits) {
 void Ga::update_fitness(int ga_step) {
     //do regulatory simulation
     for (int i = 0; i < this->run->pop_size; i++) {
+        cout << "i: " << i << endl;
+        cout.flush();
+        
         Grn *grn = &this->pop[i];
         this->logger->log_reg_step(ga_step, -1, grn, i);
         
         for (int j = 0; j < this->run->reg_steps; j++) {
+            cout << "j: " << j << endl;
+            cout.flush();
+
+            cout << "Running binding" << endl;
+            cout.flush();
             grn->run_binding();
+
+            cout << "Updating output proteins" << endl;
+            cout.flush();
             grn->update_output_proteins();
+
+            cout << "Running diffusion" << endl;
+            cout.flush();
             grn->run_diffusion();
+
+            cout << "Running decay" << endl;
+            cout.flush();
             grn->run_decay();
 
             this->logger->log_reg_step(ga_step, j, grn, i);
