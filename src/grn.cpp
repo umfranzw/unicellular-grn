@@ -46,7 +46,8 @@ void Grn::run_binding() {
     for (int pos = 0; pos < this->run->num_genes; pos++) {
         vector<pair<int, float>> weighted_probs;
         float pos_sum = 0.0f; //sum of all concentrations in current position
-        for (const int& id: this->proteins) {
+        vector<int> protein_ids = this->proteins.get_ids();
+        for (const int& id: protein_ids) {
             Protein* protein = this->proteins.get(id);
             int hamming_dist = Utils::hamming_dist(&protein->seq, &this->genes[pos].binding_seq);
             float w = this->run->alpha * protein->concs[pos] + this->run->beta * hamming_dist;
@@ -94,7 +95,7 @@ void Grn::run_diffusion() {
             int mid = (int) kernel->size() / 2;
             bool above_threshold = false; //will set to true if any conc in the protein is > run.min_protein_conc
 
-            for (int k = 0; k < this->run->num_genes; j++) {
+            for (int k = 0; k < this->run->num_genes; k++) {
                 for (int l = 0; l < (int) kernel->size(); l++) {
                     int col = k - mid + l;
                     if (col >= 0 && col < (int) this->run->num_genes) {
