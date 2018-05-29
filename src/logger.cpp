@@ -40,8 +40,31 @@ void Logger::write_db() {
 
 void Logger::create_tables() {
     #if USE_LOGGING
-    //grn
+    //run
     stringstream sql;
+    sql << "CREATE TABLE run (";
+    sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+    sql << "pop_size INTEGER NOT NULL,";
+    sql << "ga_steps INTEGER NOT NULL,";
+    sql << "reg_steps INTEGER NOT NULL,";
+    sql << "mut_prob REAL NOT NULL,";
+    sql << "cross_frac REAL NOT NULL,";
+    sql << "num_genes INTEGER NOT NULL,";
+    sql << "gene_bits INTEGER NOT NULL,";
+    sql << "min_protein_conc REAL NOT NULL,";
+    sql << "max_protein_conc REAL NOT NULL,";
+    sql << "alpha REAL NOT NULL,";
+    sql << "beta REAL NOT NULL,";
+    sql << "decay_rate REAL NOT NULL,";
+    sql << "initial_proteins INTEGER NOT NULL,";
+    sql << "max_mut_float REAL NOT NULL,";
+    sql << "max_mut_bits INTEGER NOT NULL,";
+    sql << "fitness_log_interval INTEGER NOT NULL";
+    sql << ");";
+    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    
+    //grn
+    sql = stringstream();
     sql << "CREATE TABLE grn (";
     sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
     sql << "ga_step INTEGER NOT NULL,";
@@ -125,6 +148,38 @@ Logger::~Logger() {
     #if USE_LOGGING
     sqlite3_close(this->db);
     #endif
+}
+
+void Logger::log_run() {
+    int rc;
+    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, cross_frac, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_mut_float, max_mut_bits, fitness_log_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    sqlite3_stmt *run_stmt;
+    sqlite3_prepare_v3(this->db, run_sql.c_str(), run_sql.size() + 1, 0, &run_stmt, NULL);
+
+    int bind_index = 1;
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->pop_size);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->ga_steps);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->reg_steps);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->mut_prob);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->cross_frac);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->num_genes);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->gene_bits);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->min_protein_conc);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->max_protein_conc);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->alpha);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->beta);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->decay_rate);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->initial_proteins);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->max_mut_float);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->max_mut_bits);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->fitness_log_interval);
+
+    rc = sqlite3_step(run_stmt);
+    if (rc != SQLITE_DONE) {
+        cerr << "Error inserting run." << endl;
+    }
+
+    sqlite3_finalize(run_stmt);
 }
 
 void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {

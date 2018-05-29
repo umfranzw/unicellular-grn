@@ -21,11 +21,13 @@ Ga::~Ga() {
 }
 
 void Ga::run_alg() {
+    this->logger->log_run(); //log the parameters used in this run
+    this->logger->log_ga_step(-1, &this->pop); //log initial grns using ga_step = -1
+    
     for (int i = 0; i < this->run->pop_size; i++) {
         this->pop[i].push_initial_proteins();
     }
 
-    this->logger->log_ga_step(-1, &this->pop); //log initial grns using ga_step = -1
     this->update_fitness(-1); //this will log initial reg sim using ga_step = -1
     this->logger->log_fitnesses(-1, &this->fitnesses); //and finally the fitnesses
 
