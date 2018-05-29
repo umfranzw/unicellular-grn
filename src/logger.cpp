@@ -70,7 +70,7 @@ void Logger::create_tables() {
     sql << "fitness_log_interval INTEGER NOT NULL";
     sql << ");";
     sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
-    
+
     //grn
     sql = stringstream();
     sql << "CREATE TABLE grn (";
@@ -78,6 +78,15 @@ void Logger::create_tables() {
     sql << "ga_step INTEGER NOT NULL,";
     sql << "pop_index INTEGER NOT NULL";
     sql << ");";
+    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+
+    //create indices
+    sql = stringstream();
+    sql << "CREATE INDEX index0 ON grn(ga_step);";
+    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+
+    sql = stringstream();
+    sql << "CREATE UNIQUE INDEX index1 ON grn(ga_step, pop_index);";
     sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
 
     //fitness
@@ -105,6 +114,11 @@ void Logger::create_tables() {
     sql << ");";
     sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
 
+    //create index
+    sql = stringstream();
+    sql << "CREATE UNIQUE INDEX index0 ON gene(grn_id, pos);";
+    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+
     //gene_state
     sql = stringstream();
     sql << "CREATE TABLE gene_state (";
@@ -130,6 +144,11 @@ void Logger::create_tables() {
     sql << "grn_id INTEGER NOT NULL,";
     sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
     sql << ");";
+    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+
+    //create index
+    sql = stringstream();
+    sql << "CREATE UNIQUE INDEX index0 ON protein(grn_id, pid);";
     sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
 
     //protein_state
