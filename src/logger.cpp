@@ -11,13 +11,27 @@
 Logger::Logger(Run *run) {
     this->run = run;
     
-    //int rc = sqlite3_open(LOG_DB.c_str(), &this->db);
+    //we'll log to an in-memory database during the simulation (since it's an order of magnitude faster than a disk-based db)
+    //Then, when the simulation ends, the user should call write_db() to write it out to disk in one shot
     int rc = sqlite3_open(":memory:", &this->db);
     if (rc) {
-        cerr << "Can't open database: " << LOG_DB << endl;
+        cerr << "Cannot create in-memory database" << endl;
     }
 
     this->create_tables();
+}
+
+//write the in-memory database to disk
+void Logger::write_db() {
+    sqlite3 *disk_db;
+    int rc = sqlite3_open(LOG_DB.c_str(), &disk_db);
+    if (rc) {
+        cerr << "Cannot create disk database file" << endl;
+    }
+    
+    sqlite3_backup *backup = sqlite3_backup_init(disk_db, "main", this->db, "main");
+    sqlite3_backup_step(backup, -1); //pass -1 to copy entire db
+    sqlite3_backup_finish(backup); //cleans up resources allocated for copy operation
 }
 
 void Logger::create_tables() {
@@ -254,22 +268,20 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
     
         //first, check if protein has already been inserted on a previous iteration and, if so, get its database id
         bool inserted = false;
-        if (reg_step > 0) {
-            bind_index = 1;
-            sqlite3_bind_int(protein_sel_stmt, bind_index++, grn_id);
-            sqlite3_bind_int(protein_sel_stmt, bind_index++, pid);
-            rc = sqlite3_step(protein_sel_stmt);
-            if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
-                cerr << "Error selecting protein." << endl;
-            }
-            if (rc == SQLITE_ROW) {
-                inserted = true;
-                protein_id = sqlite3_column_int(protein_sel_stmt, 0);
-            }
-
-            sqlite3_reset(protein_sel_stmt);
-            sqlite3_clear_bindings(protein_sel_stmt);
+        bind_index = 1;
+        sqlite3_bind_int(protein_sel_stmt, bind_index++, grn_id);
+        sqlite3_bind_int(protein_sel_stmt, bind_index++, pid);
+        rc = sqlite3_step(protein_sel_stmt);
+        if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
+            cerr << "Error selecting protein (1)." << endl;
         }
+        if (rc == SQLITE_ROW) {
+            inserted = true;
+            protein_id = sqlite3_column_int(protein_sel_stmt, 0);
+        }
+
+        sqlite3_reset(protein_sel_stmt);
+        sqlite3_clear_bindings(protein_sel_stmt);
 
         //otherwise, insert it and retreive the resulting id
         if (!inserted) {
@@ -316,7 +328,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
     sqlite3_stmt *gstate_ins_stmt;
     sqlite3_prepare_v3(this->db, gstate_ins_sql.c_str(), gstate_ins_sql.size() + 1, 0, &gstate_ins_stmt, NULL);
 
-    string gstate_selp_sql = "SELECT id FROM proteins WHERE pid = ? AND grn_id = ? AND src_pos = ?;";
+    string gstate_selp_sql = "SELECT id FROM protein WHERE pid = ? AND grn_id = ?;";
     sqlite3_stmt *gstate_selp_stmt;
     sqlite3_prepare_v3(this->db, gstate_selp_sql.c_str(), gstate_selp_sql.size() + 1, 0, &gstate_selp_stmt, NULL);
 
@@ -351,7 +363,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
             sqlite3_bind_int(gstate_selp_stmt, bind_index++, gene->pos);
 
             if (sqlite3_step(gstate_selp_stmt) != SQLITE_ROW) {
-                cerr << "Error selecting protein." << endl;
+                cerr << "Error selecting protein (2)." << endl;
             }
 
             active_output_id = sqlite3_column_int(gstate_selp_stmt, 0);
@@ -366,10 +378,9 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
             bind_index = 1;
             sqlite3_bind_int(gstate_selp_stmt, bind_index++, gene->bound_protein);
             sqlite3_bind_int(gstate_selp_stmt, bind_index++, grn_id);
-            sqlite3_bind_int(gstate_selp_stmt, bind_index++, gene->pos);
 
-            if (sqlite3_step(gstate_selp_stmt) != SQLITE_ROW) {
-                cerr << "Error selecting protein." << endl;
+            if ((rc = sqlite3_step(gstate_selp_stmt)) != SQLITE_ROW) {
+                cerr << "Error selecting protein (3). rc: " << rc << ", pid: " << gene->bound_protein << ", grn_id: " << grn_id << endl;
             }
 
             bound_protein_id = sqlite3_column_int(gstate_selp_stmt, 0);

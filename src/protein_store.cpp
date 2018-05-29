@@ -23,7 +23,6 @@ bool ProteinStore::remove(int id) {
     // if (item != this->proteins.end()) {
     //     delete item->second;
     // }
-    
     return this->proteins.erase(id) > 0;
 }
 

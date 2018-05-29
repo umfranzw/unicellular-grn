@@ -126,6 +126,13 @@ void Grn::run_diffusion() {
                 g->active_output = -1;
             }
             this->proteins.remove(id);
+
+            //remove any bindings to the protein we just deleted
+            for (int k = 0; k < this->run->num_genes; k++) {
+                if (this->genes[k].bound_protein == id) {
+                    this->genes[k].update_binding(nullptr, &this->proteins);
+                }
+            }
         }
     }
 }

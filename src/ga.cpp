@@ -28,18 +28,22 @@ void Ga::run_alg() {
     this->update_fitness(-1); //this will log initial reg sim using ga_step = -1
     this->logger->log_fitnesses(-1, &this->fitnesses); //and finally the fitnesses
 
-    // for (int i = 0; i < this->run->ga_steps; i++) {
-    //     cout << "i: " << i + 1 << endl;
-    //     //cout.flush();
+    for (int i = 0; i < this->run->ga_steps; i++) {
+        cout << "i: " << i + 1 << endl;
+        //cout.flush();
         
-    //     vector<pair<int, int>> parents = this->select();
-    //     this->cross(&parents);
-    //     this->mutate();
-    //     this->update_fitness(i);
+        vector<pair<int, int>> parents = this->select();
+        this->cross(&parents);
+        this->mutate();
 
-    //     this->logger->log_ga_step(i, &this->pop);
-    //     this->logger->log_fitnesses(-1, &this->fitnesses);
-    // }
+        this->logger->log_ga_step(i, &this->pop);
+
+        this->update_fitness(i); //this will log the reg sim
+
+        this->logger->log_fitnesses(-1, &this->fitnesses);
+    }
+
+    this->logger->write_db();
 }
 
 int Ga::get_fittest() {
@@ -255,30 +259,30 @@ void Ga::mutate_bitset(boost::dynamic_bitset<> *bits) {
 void Ga::update_fitness(int ga_step) {
     //do regulatory simulation
     for (int i = 0; i < this->run->pop_size; i++) {
-        cout << "i: " << i << endl;
-        cout.flush();
+        // cout << "i: " << i << endl;
+        // cout.flush();
         
         Grn *grn = &this->pop[i];
         this->logger->log_reg_step(ga_step, -1, grn, i);
         
         for (int j = 0; j < this->run->reg_steps; j++) {
-            cout << "j: " << j << endl;
-            cout.flush();
+            // cout << "j: " << j << endl;
+            // cout.flush();
 
-            cout << "Running binding" << endl;
-            cout.flush();
+            // cout << "Running binding" << endl;
+            // cout.flush();
             grn->run_binding();
 
-            cout << "Updating output proteins" << endl;
-            cout.flush();
+            // cout << "Updating output proteins" << endl;
+            // cout.flush();
             grn->update_output_proteins();
 
-            cout << "Running diffusion" << endl;
-            cout.flush();
+            // cout << "Running diffusion" << endl;
+            // cout.flush();
             grn->run_diffusion();
 
-            cout << "Running decay" << endl;
-            cout.flush();
+            // cout << "Running decay" << endl;
+            // cout.flush();
             grn->run_decay();
 
             this->logger->log_reg_step(ga_step, j, grn, i);
