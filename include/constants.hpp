@@ -3,6 +3,8 @@
 
 #include <string>
 
+#define USE_LOGGING 1
+
 using namespace std;
 
 const string RUN_FILE = "runs.toml";

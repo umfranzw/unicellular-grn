@@ -6,6 +6,7 @@
 
 Ga::Ga(Run *run) {
     this->run = run;
+    
     this->logger = new Logger(run);
 
     //initialize population (randomly)
@@ -23,7 +24,7 @@ void Ga::run_alg() {
     for (int i = 0; i < this->run->pop_size; i++) {
         this->pop[i].push_initial_proteins();
     }
-    
+
     this->logger->log_ga_step(-1, &this->pop); //log initial grns using ga_step = -1
     this->update_fitness(-1); //this will log initial reg sim using ga_step = -1
     this->logger->log_fitnesses(-1, &this->fitnesses); //and finally the fitnesses
@@ -263,6 +264,7 @@ void Ga::update_fitness(int ga_step) {
         // cout.flush();
         
         Grn *grn = &this->pop[i];
+        
         this->logger->log_reg_step(ga_step, -1, grn, i);
         
         for (int j = 0; j < this->run->reg_steps; j++) {

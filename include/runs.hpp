@@ -7,7 +7,7 @@
 
 class Run {
 public:
-    Run(toml::Table& t);
+    Run(toml::Table& t, int run_index);
     
     Rand rand;
     int pop_size;
@@ -26,16 +26,14 @@ public:
     float max_mut_float;
     float max_mut_bits;
     int fitness_log_interval;
+
+    int run_index; //index of run in file (this is filled in by the Runs() constructor and is not part of toml file)
 };
 
 class Runs {
 public:
     Runs();
-    ~Runs();
-    vector<Run*> get_runs();
-
-private:
-    vector<Run*> runs;
+    vector<Run> get_runs();
 };
 
 #endif
