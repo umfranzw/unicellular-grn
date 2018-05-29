@@ -7,9 +7,10 @@
 #include "gene.hpp"
 #include "protein.hpp"
 #include "protein_store.hpp"
+#include <cstdio>
+#include <fstream>
 
 Logger::Logger(Run *run) {
-    #if USE_LOGGING
     this->run = run;
     
     //we'll log to an in-memory database during the simulation (since it's an order of magnitude faster than a disk-based db)
@@ -20,14 +21,23 @@ Logger::Logger(Run *run) {
     }
 
     this->create_tables();
-    #endif
 }
 
 //write the in-memory database to disk
 void Logger::write_db() {
-    #if USE_LOGGING
     sqlite3 *disk_db;
-    int rc = sqlite3_open(LOG_DB.c_str(), &disk_db);
+    stringstream path;
+    path << LOG_DIR << "/run" << this->run->file_index << ".db";
+    string path_str = path.str();
+    
+    //check if file already exists
+    ifstream fin(path_str);
+    if (fin) {
+        //show no mercy!
+        remove(path_str.c_str());
+    }
+                                                              
+    int rc = sqlite3_open(path_str.c_str(), &disk_db);
     if (rc) {
         cerr << "Cannot create disk database file" << endl;
     }
@@ -35,11 +45,9 @@ void Logger::write_db() {
     sqlite3_backup *backup = sqlite3_backup_init(disk_db, "main", this->db, "main");
     sqlite3_backup_step(backup, -1); //pass -1 to copy entire db
     sqlite3_backup_finish(backup); //cleans up resources allocated for copy operation
-    #endif
 }
 
 void Logger::create_tables() {
-    #if USE_LOGGING
     //run
     stringstream sql;
     sql << "CREATE TABLE run (";
@@ -141,13 +149,10 @@ void Logger::create_tables() {
     sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
     sql << ");";
     sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
-    #endif
 }
 
 Logger::~Logger() {
-    #if USE_LOGGING
     sqlite3_close(this->db);
-    #endif
 }
 
 void Logger::log_run() {
@@ -183,8 +188,6 @@ void Logger::log_run() {
 }
 
 void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
-    #if USE_LOGGING
-    
     int rc;
     string grn_sel_sql = "SELECT id, pop_index FROM grn WHERE ga_step = ?;";
     sqlite3_stmt *grn_sel_stmt;
@@ -219,12 +222,53 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
 
     sqlite3_finalize(grn_sel_stmt);
     sqlite3_finalize(fitness_stmt);
-    #endif
+
+
+    //note: ga_step may be < 0 when logging initial fitnesses
+    if (ga_step <= 0 || (ga_step + 1) % this->run->fitness_log_interval) {
+        if (ga_step < 0) {
+            cout << "initial:" << endl;
+        }
+        else {
+            cout << "iteration " << ga_step << ":" << endl;
+        }
+        cout << "avg fitness: " << this->get_avg_fitness(ga_step) << endl;
+        cout << "best fitness: " << this->get_best_fitness(ga_step) << endl;
+        cout << endl;
+    }
+}
+
+float Logger::get_fitness_val(int ga_step, string *sql_fcn) {
+    string sql = "SELECT " + *sql_fcn + "(fitness) FROM fitness f JOIN grn g ON f.grn_id = g.id WHERE g.ga_step = ?;";
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v3(this->db, sql.c_str(), sql.size() + 1, 0, &stmt, NULL);
+
+    int bind_index = 1;
+    sqlite3_bind_int(stmt, bind_index++, ga_step);
+
+    int rc = sqlite3_step(stmt);
+    if (rc != SQLITE_ROW) {
+        cerr << "Error selecting fitness: " << rc << endl;
+    }
+
+    float result = (float) sqlite3_column_double(stmt, 0);
+    
+    sqlite3_finalize(stmt);
+
+    return result;
+}
+
+float Logger::get_best_fitness(int ga_step) {
+    string fcn = "min";
+    return this->get_fitness_val(ga_step, &fcn);
+}
+
+float Logger::get_avg_fitness(int ga_step) {
+    string fcn = "avg";
+    return this->get_fitness_val(ga_step, &fcn);
 }
 
 void Logger::log_ga_step(int ga_step, vector<Grn> *grns) {
-    #if USE_LOGGING
-    
     int rc;
     int bind_index;
     string grn_sql = "INSERT INTO grn (ga_step, pop_index) VALUES (?, ?);";
@@ -281,12 +325,9 @@ void Logger::log_ga_step(int ga_step, vector<Grn> *grns) {
 
     sqlite3_finalize(grn_stmt);
     sqlite3_finalize(gene_stmt);
-    #endif
 }
 
 void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
-    #if USE_LOGGING
-    
     int rc;
     
     //the grn should already be in the database. Get it's id.
@@ -491,6 +532,4 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
     sqlite3_finalize(gstate_ins_stmt);
     sqlite3_finalize(gstate_selp_stmt);
     sqlite3_finalize(gstate_selg_stmt);
-
-    #endif
 }

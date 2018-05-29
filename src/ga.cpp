@@ -32,9 +32,6 @@ void Ga::run_alg() {
     this->logger->log_fitnesses(-1, &this->fitnesses); //and finally the fitnesses
 
     for (int i = 0; i < this->run->ga_steps; i++) {
-        cout << "i: " << i + 1 << endl;
-        //cout.flush();
-        
         vector<pair<int, int>> parents = this->select();
         this->cross(&parents);
         this->mutate();
@@ -43,7 +40,7 @@ void Ga::run_alg() {
 
         this->update_fitness(i); //this will log the reg sim
 
-        this->logger->log_fitnesses(-1, &this->fitnesses);
+        this->logger->log_fitnesses(i, &this->fitnesses);
     }
 
     this->logger->write_db();
@@ -61,10 +58,6 @@ int Ga::get_fittest() {
     }
     
     return min_index;
-}
-
-float Ga::get_avg_fitness() {
-    return this->sum_fitnesses() / this->run->pop_size;
 }
 
 float Ga::sum_fitnesses() {

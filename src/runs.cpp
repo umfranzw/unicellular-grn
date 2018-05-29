@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-Run::Run(toml::Table& t, int run_index) {
+Run::Run(toml::Table& t, int file_index) {
     this->rand = Rand();
     this->pop_size = toml::get<toml::Integer>(t.at("pop_size"));
     this->ga_steps = toml::get<toml::Integer>(t.at("ga_steps"));
@@ -22,7 +22,7 @@ Run::Run(toml::Table& t, int run_index) {
     this->max_mut_bits = toml::get<toml::Integer>(t.at("max_mut_bits"));
     this->fitness_log_interval = toml::get<toml::Integer>(t.at("fitness_log_interval"));
 
-    this->run_index = run_index;
+    this->file_index = file_index;
 }
 
 Runs::Runs() {
@@ -32,11 +32,6 @@ vector<Run> Runs::get_runs() {
     ifstream ifs(RUN_FILE);
     toml::Data data = toml::parse(ifs);
     vector<toml::Table> tables = toml::get<toml::Array<toml::Table>>(data.at("runs"));
-
-    // for (toml::Table & t : tables) {
-    //     Run *cur = new Run(t);
-    //     this->runs.push_back(cur);
-    // }
 
     vector<Run> runs;
     for (int i = 0; i < (int) tables.size(); i++) {

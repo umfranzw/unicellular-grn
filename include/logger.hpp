@@ -19,11 +19,15 @@ public:
     void log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index);
     void write_db();
 
+    float get_best_fitness(int ga_step);
+    float get_avg_fitness(int ga_step);
+
 private:
     sqlite3 *db;
     Run *run;
 
     void create_tables();
+    float get_fitness_val(int ga_step, string *sql_fcn);
 };
 
 #endif

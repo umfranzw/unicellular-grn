@@ -19,7 +19,6 @@ private:
     Logger *logger;
 
     int get_fittest();
-    float get_avg_fitness();
     float sum_fitnesses();
     vector<pair<int, int>> select();
     int spin_wheel(vector<float> *wheel);
