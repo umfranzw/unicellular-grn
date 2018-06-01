@@ -3,12 +3,10 @@
 #include "utils.hpp"
 #include "kernels.hpp"
 
-#include <boost/algorithm/clamp.hpp>
-
-Gene::Gene(Run *run, boost::dynamic_bitset<> binding_seq, boost::dynamic_bitset<> output_seq, float threshold, float output_rate, int kernel_index, int pos) {
+Gene::Gene(Run *run, BitVec *binding_seq, BitVec *output_seq, float threshold, float output_rate, int kernel_index, int pos) {
     this->run = run;
-    this->binding_seq = binding_seq;
-    this->output_seq = output_seq;
+    this->binding_seq = new BitVec(*binding_seq);
+    this->output_seq = new BitVec(*output_seq);
     this->threshold = threshold;
     this->output_rate = output_rate;
     this->kernel_index = kernel_index;
@@ -21,8 +19,10 @@ Gene::Gene(Run *run, boost::dynamic_bitset<> binding_seq, boost::dynamic_bitset<
 Gene::Gene(Run *run, int pos) {
     this->run = run;
     this->pos = pos;
-    Utils::fill_rand(&this->binding_seq, run->gene_bits, run);
-    Utils::fill_rand(&this->output_seq, run->gene_bits, run);
+    this->binding_seq = new BitVec(this->run->gene_bits);
+    this->output_seq = new BitVec(this->run->gene_bits);
+    Utils::fill_rand(this->binding_seq, run->gene_bits, run);
+    Utils::fill_rand(this->output_seq, run->gene_bits, run);
     this->threshold = run->rand.next_float();
     this->output_rate = run->rand.next_float();
     this->kernel_index = run->rand.in_range(0, KERNELS.size());
@@ -33,8 +33,8 @@ Gene::Gene(Run *run, int pos) {
 //copy constructor
 Gene::Gene(Gene *gene) {
     this->run = gene->run;
-    this->binding_seq = gene->binding_seq;
-    this->output_seq = gene->output_seq;
+    this->binding_seq = new BitVec(*gene->binding_seq);
+    this->output_seq = new BitVec(*gene->output_seq);
     this->threshold = gene->threshold;
     this->output_rate = gene->output_rate;
     this->kernel_index = gene->kernel_index;
@@ -45,10 +45,22 @@ Gene::Gene(Gene *gene) {
     this->bound_protein = -1;
 }
 
+Gene::~Gene() {
+    delete this->binding_seq;
+    delete this->output_seq;
+}
+
+//clears bindings and outputs
+void Gene::reset() {
+    this->active_output = -1;
+    this->bound_protein = -1;
+    this->outputs.clear();
+}
+
 void Gene::update_output_protein(ProteinStore *store) {
     if (this->active_output != -1) {
         Protein *protein = store->get(this->active_output);
-        protein->concs[this->pos] = boost::algorithm::clamp(protein->concs[this->pos] + this->output_rate, 0.0, this->run->max_protein_conc);
+        protein->concs[this->pos] = Utils::clamp<float>(protein->concs[this->pos] + this->output_rate, 0.0, this->run->max_protein_conc);
     }
 }
 
@@ -82,8 +94,8 @@ string Gene::to_str() {
     stringstream info;
 
     info << "Gene:" << endl;
-    info << "  binding_seq: " << this->binding_seq << endl;
-    info << "  output_seq: " << this->output_seq << endl;
+    info << "  binding_seq: " << this->binding_seq->to_str() << endl;
+    info << "  output_seq: " << this->output_seq->to_str() << endl;
     info << "  threshold: " << this->threshold << endl;
     info << "  output_rate: " << this->output_rate << endl;
     info << "  kernel_index: " << this->kernel_index << endl;

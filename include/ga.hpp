@@ -4,6 +4,7 @@
 #include "runs.hpp"
 #include "grn.hpp"
 #include "logger.hpp"
+#include "utils.hpp"
 #include <vector>
 
 class Ga {
@@ -11,9 +12,10 @@ public:
     Ga(Run *run);
     ~Ga();
     void run_alg();
+    void print_pop();
     
 private:
-    vector<Grn> pop;
+    vector<Grn*> pop;
     vector<float> fitnesses;
     Run *run;
     Logger *logger;
@@ -24,19 +26,25 @@ private:
     int spin_wheel(vector<float> *wheel);
 
     void cross(vector<pair<int, int>> *parents);
-    Grn build_child(vector<Gene>::iterator left, int left_len, vector<Gene>::iterator right, int right_len);
-    Gene cross_genes(Gene *left, Gene *right, int pos);
-    float cross_floats(float left, float right, float lower, float upper);
-    boost::dynamic_bitset<> cross_bitsets(boost::dynamic_bitset<> *left, boost::dynamic_bitset<> *right);
+    vector<Gene*> build_child_genes(vector<Gene*>::iterator left, int left_len, vector<Gene*>::iterator right, int right_len);
+    vector<Protein *> build_child_init_proteins(vector<Protein*>::iterator left, int left_len, vector<Protein*>::iterator right, int right_len);
+    Gene *cross_genes(Gene *left, Gene *right, int pos);
+    Protein *cross_proteins(Protein *left, Protein *right);
+    BitVec *cross_bitsets(BitVec *left, BitVec *right);
 
     void mutate();
     void mutate_kernel_index(int *index);
     void mutate_float(float *val, float lower, float upper);
-    void mutate_bitset(boost::dynamic_bitset<> *bits);
+    void mutate_bitset(BitVec *bits);
 
     void update_fitness(int ga_step);
     float calc_fitness(Grn *grn);
     float calc_protein_error(Protein *protein);
+
+    template<typename T>
+    T cross_primitives(T left, T right, T lower, T upper) {
+        return Utils::clamp<T>((left + right) / (T) 2, lower, upper);
+    }
 };
 
 #endif

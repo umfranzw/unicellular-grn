@@ -15,7 +15,7 @@ public:
 
     void log_run();
     void log_fitnesses(int ga_step, vector<float> *fitnesses);
-    void log_ga_step(int ga_step, vector<Grn> *grns);
+    void log_ga_step(int ga_step, vector<Grn*> *grns);
     void log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index);
     void write_db();
 

@@ -3,7 +3,6 @@
 #include <iostream>
 #include "constants.hpp"
 #include <sstream>
-#include <boost/dynamic_bitset.hpp>
 #include "gene.hpp"
 #include "protein.hpp"
 #include "protein_store.hpp"
@@ -254,6 +253,7 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
         cout << "avg fitness: " << this->get_avg_fitness(ga_step) << endl;
         cout << "best fitness: " << this->get_best_fitness(ga_step) << endl;
         cout << endl;
+        cout.flush();
     }
 }
 
@@ -287,7 +287,7 @@ float Logger::get_avg_fitness(int ga_step) {
     return this->get_fitness_val(ga_step, &fcn);
 }
 
-void Logger::log_ga_step(int ga_step, vector<Grn> *grns) {
+void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
     int rc;
     int bind_index;
     string grn_sql = "INSERT INTO grn (ga_step, pop_index) VALUES (?, ?);";
@@ -301,7 +301,7 @@ void Logger::log_ga_step(int ga_step, vector<Grn> *grns) {
     //insert grns
     Grn *grn;
     for (int i = 0; i < (int) grns->size(); i++) {
-        grn = &(*grns)[i];
+        grn = (*grns)[i];
         bind_index = 1;
         sqlite3_bind_int(grn_stmt, bind_index++, ga_step);
         sqlite3_bind_int(grn_stmt, bind_index++, i);
@@ -315,15 +315,13 @@ void Logger::log_ga_step(int ga_step, vector<Grn> *grns) {
         //insert genes
         Gene *gene;
         for (int j = 0; j < this->run->num_genes; j++) {
-            gene = &grn->genes[j];
+            gene = grn->genes[j];
 
             bind_index = 1;
-            string binding_str;
-            boost::to_string(gene->binding_seq, binding_str);
+            string binding_str = gene->binding_seq->to_str();
             sqlite3_bind_text(gene_stmt, bind_index++, binding_str.c_str(), binding_str.size(), SQLITE_STATIC);
 
-            string output_str;
-            boost::to_string(gene->output_seq, output_str);
+            string output_str = gene->output_seq->to_str();
             sqlite3_bind_text(gene_stmt, bind_index++, output_str.c_str(), output_str.size(), SQLITE_STATIC);
 
             sqlite3_bind_double(gene_stmt, bind_index++, (double) gene->threshold);
@@ -334,6 +332,7 @@ void Logger::log_ga_step(int ga_step, vector<Grn> *grns) {
             if (sqlite3_step(gene_stmt) != SQLITE_DONE) {
                 cerr << "Error inserting gene." << endl;
             }
+            //cout << "Inserted gene. grn_id: " << grn_id << ", pos: " << gene->pos << endl;
             sqlite3_reset(gene_stmt);
             sqlite3_clear_bindings(gene_stmt);
         }
@@ -389,7 +388,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
 
     //go through all proteins in the grn's store. Some of the proteins may have been inserted on previous iterations.
     //In these cases, we only need to insert a new protein_state record
-    ProteinStore *store = &grn->proteins;
+    ProteinStore *store = grn->proteins;
     Protein *protein;
     int bind_index;
 
@@ -419,8 +418,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
             bind_index = 1;
             sqlite3_bind_int(protein_ins_stmt, bind_index++, pid);
 
-            string seq_str;
-            boost::to_string(protein->seq, seq_str);
+            string seq_str = protein->seq->to_str();
             sqlite3_bind_text(protein_ins_stmt, bind_index++, seq_str.c_str(), seq_str.size(), SQLITE_STATIC);
 
             sqlite3_bind_int(protein_ins_stmt, bind_index++, protein->kernel_index);
@@ -469,7 +467,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
 
     Gene *gene;
     for (int i = 0; i < this->run->num_genes; i++) {
-        gene = &grn->genes[i];
+        gene = grn->genes[i];
 
         //get the db id of the gene (should have already been inserted)
         bind_index = 1;
@@ -477,7 +475,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
         sqlite3_bind_int(gstate_selg_stmt, bind_index++, i);
 
         if (sqlite3_step(gstate_selg_stmt) != SQLITE_ROW) {
-            cerr << "Error selecting gene." << endl;
+            cerr << "Error selecting gene. grn_id: " << grn_id << ", pos: " << i << endl;
         }
 
         int gene_id = sqlite3_column_int(gstate_selg_stmt, 0);

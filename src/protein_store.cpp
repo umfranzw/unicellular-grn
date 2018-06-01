@@ -1,13 +1,38 @@
 #include "protein_store.hpp"
 
+#include <sstream>
+
 ProteinStore::ProteinStore() {
     this->next_id = 0;
 }
 
+ProteinStore::ProteinStore(ProteinStore *store) { //copy constructor
+    this->next_id = 0;
+    
+    for (const int& id : *store) {
+        Protein *protein = store->get(id);
+        Protein *copy = new Protein(protein);
+        this->add(copy); //copy protein. Note: we always place proteins on the heap so we can fling pointers around with wild abandon
+    }
+}
+
 ProteinStore::~ProteinStore() {
-    // for (pair<int, Protein*> info : this->proteins) {
-    //     delete info.second;
-    // }
+    vector<int> ids = this->get_ids();
+    for (int id : ids) {
+        Protein *protein = this->get(id);
+        delete protein;
+    }
+}
+
+void ProteinStore::reset() {
+    vector<int> ids = this->get_ids();
+    for (int id : ids) {
+        Protein *protein = this->get(id);
+        delete protein;
+    }
+    
+    this->proteins.clear();
+    this->next_id = 0;
 }
 
 int ProteinStore::add(Protein *protein) {
@@ -19,11 +44,14 @@ int ProteinStore::add(Protein *protein) {
 }
 
 bool ProteinStore::remove(int id) {
-    // map<int, Protein*>::iterator item = this->proteins.find(id);
-    // if (item != this->proteins.end()) {
-    //     delete item->second;
-    // }
-    return this->proteins.erase(id) > 0;
+    map<int, Protein*>::iterator item = this->proteins.find(id);
+    int num_erased = 0;
+    if (item != this->proteins.end()) {
+        num_erased = this->proteins.erase(id);
+        delete item->second;
+    }
+    
+    return num_erased > 0;
 }
 
 Protein *ProteinStore::get(int id) {
@@ -51,6 +79,19 @@ vector<int> ProteinStore::get_ids() {
     }
     
     return ids;
+}
+
+string ProteinStore::to_str() {
+    stringstream info;
+
+    info << "--------------" << endl;
+    info << "Protein Store:" << endl;
+    info << "--------------" << endl;
+    for (int id : this->get_ids()) {
+        info << "Protein " << id << endl;
+    }
+    
+    return info.str();
 }
 
 ProteinStore::iterator ProteinStore::begin() const {

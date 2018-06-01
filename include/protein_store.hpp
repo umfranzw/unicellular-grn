@@ -15,6 +15,7 @@ public:
     iterator end() const;
     
     ProteinStore();
+    ProteinStore(ProteinStore *protein);
     ~ProteinStore();
     int add(Protein* protein);
     bool remove(int id);
@@ -22,10 +23,11 @@ public:
     size_t size();
     bool contains(int id);
     vector<int> get_ids();
+    string to_str();
+    void reset();
 
 private:
     map<int, Protein*> proteins;
-
     int next_id;
 };
 

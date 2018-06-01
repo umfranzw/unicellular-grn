@@ -33,7 +33,7 @@ public:
 class Runs {
 public:
     Runs();
-    vector<Run> get_runs();
+    void get_runs(vector<Run> *runs);
 };
 
 #endif

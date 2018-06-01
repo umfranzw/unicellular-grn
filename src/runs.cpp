@@ -28,15 +28,12 @@ Run::Run(toml::Table& t, int file_index) {
 Runs::Runs() {
 }
 
-vector<Run> Runs::get_runs() {
+void Runs::get_runs(vector<Run> *runs) {
     ifstream ifs(RUN_FILE);
     toml::Data data = toml::parse(ifs);
     vector<toml::Table> tables = toml::get<toml::Array<toml::Table>>(data.at("runs"));
 
-    vector<Run> runs;
     for (int i = 0; i < (int) tables.size(); i++) {
-        runs.push_back(Run(tables[i], i));
+        runs->push_back(Run(tables[i], i));
     }
-
-    return runs;
 }

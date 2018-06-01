@@ -1,9 +1,9 @@
 #include "utils.hpp"
 
-void Utils::fill_rand(boost::dynamic_bitset<> *set, int len, Run *run) {
+void Utils::fill_rand(BitVec *set, int len, Run *run) {
     for (int i = 0; i < len; i++) {
-        int bit = (int) (run->rand.next_float() < 0.5);
-        set->push_back(bit);
+        bool bit = (bool) (run->rand.next_float() < 0.5);
+        (*set)[i] = bit;
     }
 }
 
@@ -30,6 +30,6 @@ bool Utils::contains_id(vector<int> *vec, int id) {
     return it != vec->end();
 }
 
-int Utils::hamming_dist(boost::dynamic_bitset<> *x, boost::dynamic_bitset<> *y) {
+int Utils::hamming_dist(BitVec *x, BitVec *y) {
     return (*x ^ *y).count();
 }

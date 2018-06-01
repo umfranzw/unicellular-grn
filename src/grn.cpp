@@ -9,33 +9,81 @@
 #include <sstream>
 #include <vector>
 
-Grn::Grn(Run *run, vector<Gene> genes) {
+Grn::Grn(Run *run, vector<Gene*> genes, vector<Protein*> initial_proteins) {
     this->run = run;
     this->genes = genes;
+    this->proteins = new ProteinStore();
+    this->initial_proteins = initial_proteins;
+    
+    this->push_initial_proteins();
 }
 
 //randomly initializes genes
 Grn::Grn(Run *run) {
     this->run = run;
+    this->proteins = new ProteinStore();
 
     //insert (random) genes
     for (int i = 0; i < run->num_genes; i++) {
-        Gene gene(run, i);
-        this->genes.push_back(gene);
+        this->genes.push_back(new Gene(run, i));
+    }
+
+    for (int i = 0; i < run->initial_proteins; i++) {
+        this->initial_proteins.push_back(new Protein(run, run->rand.in_range(0, run->num_genes)));
+    }
+
+    this->push_initial_proteins();
+}
+
+Grn::Grn(Grn *grn) { //copy constructor
+    this->run = grn->run;
+    //copy genes (note: the Gene copy constructor will remove all outputs and reset active_output and bound_protein.)
+    for (int i = 0; i < this->run->num_genes; i++) {
+        this->genes.push_back(new Gene(grn->genes[i]));
+    }
+
+    //copy initial proteins
+    for (int i = 0; i < this->run->initial_proteins; i++) {
+        this->initial_proteins.push_back(new Protein(grn->initial_proteins[i]));
+    }
+
+    //note that we do not copy the proteinstore. We want the regulatory simulation to begin again from the initial conditions
+    this->proteins = new ProteinStore();
+    this->push_initial_proteins();
+}
+
+void Grn::reset() {
+    for (int i = 0; i < this->run->num_genes; i++) {
+        this->genes[i]->reset();
+    }
+
+    this->proteins->reset();
+    this->push_initial_proteins();
+}
+
+Grn::~Grn() {
+    delete this->proteins;
+    
+    for (Gene *gene : this->genes) {
+        delete gene;
+    }
+
+    //note: these will not have been in the store we deleted above because we always push *copies* of them
+    for (Protein *protein : this->initial_proteins) {
+        delete protein;
     }
 }
 
 void Grn::push_initial_proteins() {
     //insert initial (random) proteins
     for (int i = 0; i < this->run->initial_proteins; i++) {
-        int pos = run->rand.in_range(0, this->run->num_genes);
-        this->proteins.add(new Protein(this->run, pos));
+        this->proteins->add(new Protein(this->initial_proteins[i])); //push a *copy* - that way originals never get deleted
     }
 }
 
 void Grn::run_decay() {
-    for (const int &id : this->proteins) {
-        Protein *protein = this->proteins.get(id);
+    for (const int &id : *this->proteins) {
+        Protein *protein = this->proteins->get(id);
         for (int pos = 0; pos < this->run->num_genes; pos++) {
             protein->concs[pos] = max(0.0f, protein->concs[pos] - protein->concs[pos] * this->run->decay_rate);
         }
@@ -46,10 +94,10 @@ void Grn::run_binding() {
     for (int pos = 0; pos < this->run->num_genes; pos++) {
         vector<pair<int, float>> weighted_probs;
         float pos_sum = 0.0f; //sum of all concentrations in current position
-        vector<int> protein_ids = this->proteins.get_ids();
+        vector<int> protein_ids = this->proteins->get_ids();
         for (const int& id: protein_ids) {
-            Protein* protein = this->proteins.get(id);
-            int hamming_dist = Utils::hamming_dist(&protein->seq, &this->genes[pos].binding_seq);
+            Protein* protein = this->proteins->get(id);
+            int hamming_dist = Utils::hamming_dist(protein->seq, this->genes[pos]->binding_seq);
             float w = this->run->alpha * protein->concs[pos] + this->run->beta * hamming_dist;
             weighted_probs.push_back(pair<int, float>(id, w));
             pos_sum += w;
@@ -73,24 +121,24 @@ void Grn::run_binding() {
                 i = (int) weighted_probs.size() - 1;
             }
 
-            this->genes[pos].update_binding(&weighted_probs[i], &this->proteins);
+            this->genes[pos]->update_binding(&weighted_probs[i], this->proteins);
         }
         //no proteins above this position => unbind
         else {
-            this->genes[pos].update_binding(nullptr, &this->proteins);
+            this->genes[pos]->update_binding(nullptr, this->proteins);
         }
     }
 }
 
 void Grn::run_diffusion() {
     for (int i = 0; i < this->run->num_genes; i++) {
-        Gene *g = &this->genes[i];
+        Gene *g = this->genes[i];
         vector<float> new_concs(this->run->num_genes, 0.0f);
         vector<pair<int, int>> rm_pairs; //(index in gene.outputs, protein id)
 
         for (int j = 0; j < (int) g->outputs.size(); j++) {
             int p_id = g->outputs[j];
-            Protein *p = this->proteins.get(p_id);
+            Protein *p = this->proteins->get(p_id);
             const vector<float> *kernel = &KERNELS[p->kernel_index];
             int mid = (int) kernel->size() / 2;
             bool above_threshold = false; //will set to true if any conc in the protein is > run.min_protein_conc
@@ -125,12 +173,12 @@ void Grn::run_diffusion() {
             if (g->active_output >= 0) {
                 g->active_output = -1;
             }
-            this->proteins.remove(id);
+            this->proteins->remove(id);
 
             //remove any bindings to the protein we just deleted
             for (int k = 0; k < this->run->num_genes; k++) {
-                if (this->genes[k].bound_protein == id) {
-                    this->genes[k].update_binding(nullptr, &this->proteins);
+                if (this->genes[k]->bound_protein == id) {
+                    this->genes[k]->update_binding(nullptr, this->proteins);
                 }
             }
         }
@@ -139,7 +187,7 @@ void Grn::run_diffusion() {
 
 void Grn::update_output_proteins() {
     for (int i = 0; i < this->run->num_genes; i++) {
-        this->genes[i].update_output_protein(&this->proteins);
+        this->genes[i]->update_output_protein(this->proteins);
     }
 }
 
@@ -150,12 +198,14 @@ string Grn::to_str() {
     info << "Grn:" << endl;
     info << "****" << endl;
 
-    info << "------" << endl;
-    info << "Genes:" << endl;
-    info << "------" << endl;
-    for (Gene& gene : this->genes) {
-        info << gene.to_str();
-    }
+    // info << "------" << endl;
+    // info << "Genes:" << endl;
+    // info << "------" << endl;
+    // for (Gene& gene : this->genes) {
+    //     info << gene.to_str();
+    // }
+
+    info << this->proteins->to_str();
 
     return info.str();
 }
