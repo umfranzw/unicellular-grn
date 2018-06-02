@@ -290,25 +290,38 @@ BitVec *Ga::cross_bitsets(BitVec *left, BitVec *right) {
 
 void Ga::mutate() {
     for (int i = 0; i < this->run->pop_size; i++) {
+        Grn *grn = this->pop[i];
         for (int j = 0; j < this->run->num_genes; j++) {
-            Gene *g = this->pop[i]->genes[j];
-            this->mutate_bitset(g->binding_seq);
-            this->mutate_bitset(g->output_seq);
-            this->mutate_float(&g->threshold, 0.0f, this->run->max_protein_conc);
-            this->mutate_float(&g->output_rate, 0.0f, this->run->max_protein_conc);
-            this->mutate_kernel_index(&g->kernel_index);
+            Gene *gene = grn->genes[j];
+            this->mutate_bitset(gene->binding_seq);
+            this->mutate_bitset(gene->output_seq);
+            this->mutate_float(&gene->threshold, 0.0f, this->run->max_protein_conc);
+            this->mutate_float(&gene->output_rate, 0.0f, this->run->max_protein_conc);
+            this->mutate_int(&gene->kernel_index, 0, (int) KERNELS.size());
         }
+        this->mutate_initial_proteins(&grn->initial_proteins);
     }
 }
 
-void Ga::mutate_kernel_index(int *index) {
+void Ga::mutate_initial_proteins(vector<Protein*> *proteins) {
+    for (Protein *p : *proteins) {
+        this->mutate_bitset(p->seq);
+        for (int i = 0; i < this->run->num_genes; i++) {
+            this->mutate_float(&p->concs[i], 0.0f, this->run->max_protein_conc);
+        }
+        this->mutate_int(&p->kernel_index, 0, (int) KERNELS.size());
+        this->mutate_int(&p->src_pos, 0, this->run->num_genes);
+    }
+}
+
+void Ga::mutate_int(int *val, int lower, int upper) {
     if (this->run->rand.next_float() < this->run->mut_prob) {
-        *index = this->run->rand.in_range(0, (int) KERNELS.size());
+        *val = this->run->rand.in_range(lower, upper);
     }
 }
 
 void Ga::mutate_float(float *val, float lower, float upper) {
-    if (this->run->rand.next_float() < this->run->mut_prob) {
+    if (this->run->rand.next_float() < this->run->mut_prob) { 
         float eps = this->run->rand.in_range(-this->run->max_mut_float, this->run->max_mut_float);
         *val = Utils::clamp(*val + eps, lower, upper);
     }

@@ -33,9 +33,10 @@ private:
     BitVec *cross_bitsets(BitVec *left, BitVec *right);
 
     void mutate();
-    void mutate_kernel_index(int *index);
+    void mutate_int(int *val, int lower, int higher);
     void mutate_float(float *val, float lower, float upper);
     void mutate_bitset(BitVec *bits);
+    void mutate_initial_proteins(vector<Protein*> *proteins);
 
     void update_fitness(int ga_step);
     float calc_fitness(Grn *grn);
