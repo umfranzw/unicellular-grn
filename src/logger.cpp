@@ -243,7 +243,7 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
 
 
     //note: ga_step may be < 0 when logging initial fitnesses
-    if (ga_step <= 0 || (ga_step + 1) % this->run->fitness_log_interval) {
+    if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval) {
         if (ga_step < 0) {
             cout << "initial:" << endl;
         }
