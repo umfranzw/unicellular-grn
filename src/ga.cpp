@@ -49,7 +49,9 @@ void Ga::run_alg() {
         this->logger->log_fitnesses(i, &this->fitnesses);
     }
 
-    //this->logger->write_db();
+    #if WRITE_DB
+    this->logger->write_db();
+    #endif
 }
 
 int Ga::get_fittest() {
@@ -343,31 +345,23 @@ void Ga::update_fitness(int ga_step) {
     for (int i = 0; i < this->run->pop_size; i++) {
         Grn *grn = this->pop[i];
 
-        //this->logger->log_reg_step(ga_step, -1, grn, i);
+        #if LOG_REG_SIM
+        this->logger->log_reg_step(ga_step, -1, grn, i);
+        #endif
         
         for (int j = 0; j < this->run->reg_steps; j++) {
-            // cout << "j: " << j << endl;
-            // cout.flush();
-
-            // cout << "Running binding" << endl;
-            // cout.flush();
             grn->run_binding();
 
-            // cout << "Updating output proteins" << endl;
-            // cout.flush();
             grn->update_output_proteins();
 
-            // cout << "Running diffusion" << endl;
-            // cout.flush();
             grn->run_diffusion();
 
-            // cout << "Running decay" << endl;
-            // cout.flush();
             grn->run_decay();
 
-            //this->logger->log_reg_step(ga_step, j, grn, i);
+            #if LOG_REG_SIM
+            this->logger->log_reg_step(ga_step, j, grn, i);
+            #endif
         }
-        
 
         //update fitness value
         this->fitnesses[i] = this->calc_fitness(grn);

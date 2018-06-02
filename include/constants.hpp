@@ -3,6 +3,9 @@
 
 #include <string>
 
+#define WRITE_DB 0
+#define LOG_REG_SIM 0
+
 using namespace std;
 
 const string RUN_FILE = "runs.toml";

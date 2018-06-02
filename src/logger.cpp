@@ -243,12 +243,12 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
 
 
     //note: ga_step may be < 0 when logging initial fitnesses
-    if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval) {
+    if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {
         if (ga_step < 0) {
             cout << "initial:" << endl;
         }
         else {
-            cout << "iteration " << ga_step << ":" << endl;
+            cout << "iteration " << ga_step + 1 << ":" << endl;
         }
         cout << "avg fitness: " << this->get_avg_fitness(ga_step) << endl;
         cout << "best fitness: " << this->get_best_fitness(ga_step) << endl;
