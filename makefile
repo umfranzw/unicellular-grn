@@ -8,9 +8,9 @@ SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 #HDRS = $(wildcard $(INC_DIR)/*.h)
 OBJ = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-CC = g++
-CPPFLAGS += -Wall -g --std=c++11 -I$(INC_DIR)
-LDFLAGS += 
+CC = clang++
+CPPFLAGS += -Wall -O3 --std=c++11 -I$(INC_DIR)
+LDFLAGS += -O3
 LDLIBS += -lm -lsqlite3
 
 .PHONY: all clean
