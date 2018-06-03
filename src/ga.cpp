@@ -49,9 +49,7 @@ void Ga::run_alg() {
         this->logger->log_fitnesses(i, &this->fitnesses);
     }
 
-    #if WRITE_DB
     this->logger->write_db();
-    #endif
 }
 
 int Ga::get_fittest() {
@@ -345,9 +343,7 @@ void Ga::update_fitness(int ga_step) {
     for (int i = 0; i < this->run->pop_size; i++) {
         Grn *grn = this->pop[i];
 
-        #if LOG_REG_SIM
         this->logger->log_reg_step(ga_step, -1, grn, i);
-        #endif
         
         for (int j = 0; j < this->run->reg_steps; j++) {
             grn->run_binding();
@@ -358,9 +354,7 @@ void Ga::update_fitness(int ga_step) {
 
             grn->run_decay();
 
-            #if LOG_REG_SIM
             this->logger->log_reg_step(ga_step, j, grn, i);
-            #endif
         }
 
         //update fitness value
@@ -373,7 +367,7 @@ void Ga::update_fitness(int ga_step) {
 }
 
 float Ga::calc_fitness(Grn *grn) {
-    float max_err = 3.0 * this->run->num_genes; //concs are in [0.0, 3.0] so max possible error at over gene is 3.0
+    float max_err = this->run->max_protein_conc * this->run->num_genes; //concs are in [0.0, max_protein_conc] so max possible error at over gene is max_protein_conc
     float result = max_err;
     
     //use the oldest protein (the one with the lowest id)
