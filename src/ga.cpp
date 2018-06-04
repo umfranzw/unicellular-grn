@@ -372,14 +372,8 @@ float Ga::calc_fitness(Grn *grn) {
     
     //use the oldest protein (the one with the lowest id)
     if ((int) grn->proteins->size() > 0) {
-        //get lowest id (note: grn.proteins iterator does not necessarily return ids in ascending order)
-        int lowest_id = -1;
-        for (const int& id : *grn->proteins) {
-            if (lowest_id == -1 || id < lowest_id) {
-                lowest_id = id;
-            }
-        }
-
+        //get lowest id (note: grn.proteins iterator uses map iterator, which is set up to return ids in ascending order);
+        int lowest_id = *(grn->proteins->begin());
         Protein *p = grn->proteins->get(lowest_id);
         result = this->calc_protein_error(p);
     }
