@@ -14,7 +14,7 @@ FIG_HEIGHT = 10
 BAR_WIDTH = 0.8
 #Kelly's 22 colours of max contrast
 KELLY_COLOURS = ['#F2F3F4',
-                 #'#222222',
+                 #'#222222', #thisis too close to black - text written over it doesn't show up well
                  '#F3C300',
                  '#875692',
                  '#F38400',
