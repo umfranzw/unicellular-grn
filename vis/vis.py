@@ -3,10 +3,12 @@
 import sqlite3
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import shutil
+import os
 from run import Run
 
 PLOT_REG_STEPS = True
-GA_STEP = 0
+GA_STEPS = [19]
 POP_INDEX = 0
 
 DB_FILE = '../data/dbs/run0.db'
@@ -41,13 +43,13 @@ KELLY_COLOURS = ['#F2F3F4',
                  '#2B3D26']
 LINE_STYLES = ['-', '--', '-.', ':']
 
-def plot_avg_fitness(conn):
-    _plot_fitness(conn, 'avg', 'Avg Fitness')
+def plot_avg_fitness(run_dir, conn):
+    _plot_fitness(run_dir, conn, 'avg', 'Avg Fitness')
 
-def plot_best_fitness(conn):
-    _plot_fitness(conn, 'min', 'Best Fitness')
+def plot_best_fitness(run_dir, conn):
+    _plot_fitness(run_dir, conn, 'min', 'Best Fitness')
 
-def _plot_fitness(conn, sql_fcn, title):
+def _plot_fitness(run_dir, conn, sql_fcn, title):
     sql = 'SELECT ga_step, {}(fitness) FROM fitness GROUP BY ga_step;'.format(sql_fcn)
     rs = conn.execute(sql)
     xs = []
@@ -63,7 +65,7 @@ def _plot_fitness(conn, sql_fcn, title):
 
     fig, ax = plt.subplots()
     ax.plot(xs, ys)
-    fig.savefig('{}/{}.png'.format(IMG_DIR, title))
+    fig.savefig('{}/{}.png'.format(run_dir, title))
 
 #note: column names have "ps." prefix (for protein_state)
 def _get_conc_sql(run):
@@ -166,7 +168,7 @@ def _draw_outputs(ga_step, reg_step, pop_index, run, conn, ax, colours):
         if bar_texts[i]:
             ax.text(xs[i], ys[i] / 2, bar_texts[i])
 
-def draw_grn(ga_step, reg_step, pop_index, run, conn):
+def draw_grn(run_dir, ga_step, reg_step, pop_index, run, conn):
     fig, ax = plt.subplots(2, 1, figsize=(FIG_WIDTH, FIG_HEIGHT))
     for i in range(run.num_genes):
         rect = mpatches.Rectangle((i * GENE_WIDTH, -GENE_HEIGHT), GENE_WIDTH, GENE_HEIGHT, fill=None)
@@ -187,19 +189,31 @@ def draw_grn(ga_step, reg_step, pop_index, run, conn):
 
     #plt.tight_layout()
 
-    fig.savefig('{}/{}.png'.format(IMG_DIR, reg_step))
+    fig.savefig('{}/{}.png'.format(run_dir, reg_step))
+    plt.close(fig)
     #plt.show()
 
 def main():
     conn = sqlite3.connect(DB_FILE)
     run = Run(conn)
+    run_name = DB_FILE.split('/')[-1].split('.')[0]
     
-    plot_best_fitness(conn)
-    plot_avg_fitness(conn)
+    run_dir = "{}/{}".format(IMG_DIR, run_name)
+    if not os.path.exists(run_dir):
+        os.makedirs(run_dir)
+        
+    plot_best_fitness(run_dir, conn)
+    plot_avg_fitness(run_dir, conn)
 
     if PLOT_REG_STEPS:
-        for i in range(run.reg_steps):
-           draw_grn(GA_STEP, i, POP_INDEX, run, conn)
+        for i in range(len(GA_STEPS)):
+            run_dir = "{}/{}/{}".format(IMG_DIR, run_name, GA_STEPS[i])
+            if os.path.exists(run_dir):
+                shutil.rmtree(run_dir)
+            os.makedirs(run_dir)
+            
+            for j in range(run.reg_steps):
+                draw_grn(run_dir, GA_STEPS[i], j, POP_INDEX, run, conn)
 
     conn.close()
 
