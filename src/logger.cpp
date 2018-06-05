@@ -336,7 +336,6 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
                 if (sqlite3_step(gene_stmt) != SQLITE_DONE) {
                     cerr << "Error inserting gene." << endl;
                 }
-                //cout << "Inserted gene. grn_id: " << grn_id << ", pos: " << gene->pos << endl;
                 sqlite3_reset(gene_stmt);
                 sqlite3_clear_bindings(gene_stmt);
             }
@@ -352,6 +351,9 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
 }
 
 void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
+    cout << "ga_step: " << ga_step << ", reg_step: " << reg_step << ", pop_index: " << pop_index << endl;
+    cout << grn->to_str() << endl;
+    
     //note: must LOG_GA_STEPS in order to LOG_REG_STEPS
     #if LOG_GA_STEPS && LOG_REG_STEPS
     if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {
@@ -416,7 +418,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
             }
             if (rc == SQLITE_ROW) {
                 inserted = true;
-                protein_id = sqlite3_column_int(protein_sel_stmt, 0);
+                protein_id = sqlite3_column_int(protein_sel_stmt, 0); //db id
             }
 
             sqlite3_reset(protein_sel_stmt);
@@ -438,7 +440,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
                     cerr << "Error inserting protein." << endl;
                 }
             
-                protein_id = sqlite3_last_insert_rowid(this->db);
+                protein_id = sqlite3_last_insert_rowid(this->db); //db id
 
                 sqlite3_reset(protein_ins_stmt);
                 sqlite3_clear_bindings(protein_ins_stmt);
@@ -513,6 +515,8 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
             //get the db id of the bound_protein (if any)
             int bound_protein_id = -1;
             if (gene->bound_protein >= 0) {
+                //cout << "gene " << i << " binding protein " << gene->bound_protein << endl;
+
                 bind_index = 1;
                 sqlite3_bind_int(gstate_selp_stmt, bind_index++, gene->bound_protein);
                 sqlite3_bind_int(gstate_selp_stmt, bind_index++, grn_id);

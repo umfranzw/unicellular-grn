@@ -108,20 +108,26 @@ void Grn::run_binding() {
             //build the probability distribution and sample it (roulette-wheel-selection-style)
             float r = this->run->rand.next_float();
             float running_sum = 0.0f;
-            int i = 0;
-            //second part of condition below is in case of floating point error
-            while (r > running_sum && i < (int) weighted_probs.size()) {
-                weighted_probs[i].second /= pos_sum;
-                running_sum += weighted_probs[i].second;
+
+            int i = -1;
+            do {
                 i += 1;
-            }
+                float normal_prob = weighted_probs[i].second / pos_sum; //normalize the probability value
+                running_sum += normal_prob;
+                
+            } while (r > running_sum && i < (int) weighted_probs.size());
+            //note: r should always be < 1.0, so this loop should always stop based on the first part of the condition (r > running_sum),
+            //but we include the second condition just in case floating point error bites us
 
             //deal with potential floating point error
             if (i == (int) weighted_probs.size()) {
                 i = (int) weighted_probs.size() - 1;
             }
 
-            this->genes[pos]->update_binding(&weighted_probs[i], this->proteins);
+            int pid = weighted_probs[i].first;
+            float conc = this->proteins->get(pid)->concs[i];
+            pair<int, float> protein_info = pair<int, float>(pid, conc);
+            this->genes[pos]->update_binding(&protein_info, this->proteins);
         }
         //no proteins above this position => unbind
         else {
@@ -198,12 +204,12 @@ string Grn::to_str() {
     info << "Grn:" << endl;
     info << "****" << endl;
 
-    // info << "------" << endl;
-    // info << "Genes:" << endl;
-    // info << "------" << endl;
-    // for (Gene& gene : this->genes) {
-    //     info << gene.to_str();
-    // }
+    info << "------" << endl;
+    info << "Genes:" << endl;
+    info << "------" << endl;
+    for (Gene *gene : this->genes) {
+        info << gene->to_str();
+    }
 
     info << this->proteins->to_str();
 

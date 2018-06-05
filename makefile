@@ -9,8 +9,8 @@ SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 OBJ = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CC = clang++
-CPPFLAGS += -Wall -O3 --std=c++11 -I$(INC_DIR)
-LDFLAGS += -O3
+CPPFLAGS += -Wall -O3 -fopenmp --std=c++11 -I$(INC_DIR)
+LDFLAGS += -O3 -fopenmp
 LDLIBS += -lm -lsqlite3
 
 .PHONY: all clean

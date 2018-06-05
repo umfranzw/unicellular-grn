@@ -62,7 +62,7 @@ int Ga::get_fittest() {
             min_val = this->fitnesses[i];
         }
     }
-    
+
     return min_index;
 }
 
@@ -289,6 +289,7 @@ BitVec *Ga::cross_bitsets(BitVec *left, BitVec *right) {
 }
 
 void Ga::mutate() {
+    #pragma omp parallel for
     for (int i = 0; i < this->run->pop_size; i++) {
         Grn *grn = this->pop[i];
         for (int j = 0; j < this->run->num_genes; j++) {
@@ -340,11 +341,13 @@ void Ga::mutate_bitset(BitVec *bits) {
 
 void Ga::update_fitness(int ga_step) {
     //do regulatory simulation
+    //note: can't use pragma below when logging! (TODO: fix this in the future by enabling multithreaded access to db)
+    //#pragma omp parallel for
     for (int i = 0; i < this->run->pop_size; i++) {
         Grn *grn = this->pop[i];
 
         this->logger->log_reg_step(ga_step, -1, grn, i);
-        
+
         for (int j = 0; j < this->run->reg_steps; j++) {
             grn->run_binding();
 
