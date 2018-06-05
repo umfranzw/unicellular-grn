@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from run import Run
 
+PLOT_REG_STEPS = True
+GA_STEP = 0
+POP_INDEX = 0
+
 DB_FILE = '../data/dbs/run0.db'
 IMG_DIR = '../data/images'
 GENE_WIDTH = 0.2
@@ -57,8 +61,9 @@ def _plot_fitness(conn, sql_fcn, title):
     plt.xlabel('iteration')
     plt.ylabel('fitness')
 
-    plt.plot(xs, ys)
-    plt.show()
+    fig, ax = plt.subplots()
+    ax.plot(xs, ys)
+    fig.savefig('{}/{}.png'.format(IMG_DIR, title))
 
 #note: column names have "ps." prefix (for protein_state)
 def _get_conc_sql(run):
@@ -188,10 +193,13 @@ def draw_grn(ga_step, reg_step, pop_index, run, conn):
 def main():
     conn = sqlite3.connect(DB_FILE)
     run = Run(conn)
-    #plot_best_fitness(conn)
+    
+    plot_best_fitness(conn)
+    plot_avg_fitness(conn)
 
-    for i in range(run.reg_steps):
-       draw_grn(0, i, 0, run, conn)
+    if PLOT_REG_STEPS:
+        for i in range(run.reg_steps):
+           draw_grn(GA_STEP, i, POP_INDEX, run, conn)
 
     conn.close()
 
