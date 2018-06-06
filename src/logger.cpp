@@ -50,129 +50,129 @@ void Logger::write_db() {
 
 void Logger::create_tables() {
     //run
-    stringstream sql;
-    sql << "CREATE TABLE run (";
-    sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
-    sql << "pop_size INTEGER NOT NULL,";
-    sql << "ga_steps INTEGER NOT NULL,";
-    sql << "reg_steps INTEGER NOT NULL,";
-    sql << "mut_prob REAL NOT NULL,";
-    sql << "cross_frac REAL NOT NULL,";
-    sql << "num_genes INTEGER NOT NULL,";
-    sql << "gene_bits INTEGER NOT NULL,";
-    sql << "min_protein_conc REAL NOT NULL,";
-    sql << "max_protein_conc REAL NOT NULL,";
-    sql << "alpha REAL NOT NULL,";
-    sql << "beta REAL NOT NULL,";
-    sql << "decay_rate REAL NOT NULL,";
-    sql << "initial_proteins INTEGER NOT NULL,";
-    sql << "max_mut_float REAL NOT NULL,";
-    sql << "max_mut_bits INTEGER NOT NULL,";
-    sql << "fitness_log_interval INTEGER NOT NULL";
-    sql << ");";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream run_sql;
+    run_sql << "CREATE TABLE run (";
+    run_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+    run_sql << "pop_size INTEGER NOT NULL,";
+    run_sql << "ga_steps INTEGER NOT NULL,";
+    run_sql << "reg_steps INTEGER NOT NULL,";
+    run_sql << "mut_prob REAL NOT NULL,";
+    run_sql << "cross_frac REAL NOT NULL,";
+    run_sql << "num_genes INTEGER NOT NULL,";
+    run_sql << "gene_bits INTEGER NOT NULL,";
+    run_sql << "min_protein_conc REAL NOT NULL,";
+    run_sql << "max_protein_conc REAL NOT NULL,";
+    run_sql << "alpha REAL NOT NULL,";
+    run_sql << "beta REAL NOT NULL,";
+    run_sql << "decay_rate REAL NOT NULL,";
+    run_sql << "initial_proteins INTEGER NOT NULL,";
+    run_sql << "max_mut_float REAL NOT NULL,";
+    run_sql << "max_mut_bits INTEGER NOT NULL,";
+    run_sql << "fitness_log_interval INTEGER NOT NULL";
+    run_sql << ");";
+    sqlite3_exec(this->db, run_sql.str().c_str(), NULL, NULL, NULL);
 
     //fitness
-    sql = stringstream();
-    sql << "CREATE TABLE fitness (";
-    sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
-    sql << "fitness REAL NOT NULL,";
-    sql << "pop_index INTEGER NOT NULL,";
-    sql << "ga_step INTEGER NOT NULL";
-    sql << ");";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream fit_sql;
+    fit_sql << "CREATE TABLE fitness (";
+    fit_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+    fit_sql << "fitness REAL NOT NULL,";
+    fit_sql << "pop_index INTEGER NOT NULL,";
+    fit_sql << "ga_step INTEGER NOT NULL";
+    fit_sql << ");";
+    sqlite3_exec(this->db, fit_sql.str().c_str(), NULL, NULL, NULL);
 
     #if LOG_GA_STEPS
     //grn
-    sql = stringstream();
-    sql << "CREATE TABLE grn (";
-    sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
-    sql << "ga_step INTEGER NOT NULL,";
-    sql << "pop_index INTEGER NOT NULL";
-    sql << ");";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream grn_sql;
+    grn_sql << "CREATE TABLE grn (";
+    grn_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+    grn_sql << "ga_step INTEGER NOT NULL,";
+    grn_sql << "pop_index INTEGER NOT NULL";
+    grn_sql << ");";
+    sqlite3_exec(this->db, grn_sql.str().c_str(), NULL, NULL, NULL);
 
     //create indices
-    sql = stringstream();
-    sql << "CREATE INDEX index0 ON grn(ga_step);";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream grn_index_sql;
+    grn_index_sql << "CREATE INDEX index0 ON grn(ga_step);";
+    sqlite3_exec(this->db, grn_index_sql.str().c_str(), NULL, NULL, NULL);
 
-    sql = stringstream();
-    sql << "CREATE UNIQUE INDEX index1 ON grn(ga_step, pop_index);";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream grn_index2_sql;
+    grn_index2_sql << "CREATE UNIQUE INDEX index1 ON grn(ga_step, pop_index);";
+    sqlite3_exec(this->db, grn_index2_sql.str().c_str(), NULL, NULL, NULL);
 
     //gene
-    sql = stringstream();
-    sql << "CREATE TABLE gene (";
-    sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
-    sql << "binding_seq TEXT NOT NULL,"; //not the most space-efficient storage method, but it's convenient and works for now
-    sql << "output_seq TEXT NOT NULL,";
-    sql << "threshold REAL NOT NULL,";
-    sql << "output_rate REAL NOT NULL,";
-    sql << "kernel_index INTEGER NOT NULL,";
-    sql << "pos INTEGER NOT NULL,";
-    sql << "grn_id INTEGER NOT NULL,";
-    sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
-    sql << ");";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream gene_sql;
+    gene_sql << "CREATE TABLE gene (";
+    gene_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+    gene_sql << "binding_seq TEXT NOT NULL,"; //not the most space-efficient storage method, but it's convenient and works for now
+    gene_sql << "output_seq TEXT NOT NULL,";
+    gene_sql << "threshold REAL NOT NULL,";
+    gene_sql << "output_rate REAL NOT NULL,";
+    gene_sql << "kernel_index INTEGER NOT NULL,";
+    gene_sql << "pos INTEGER NOT NULL,";
+    gene_sql << "grn_id INTEGER NOT NULL,";
+    gene_sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
+    gene_sql << ");";
+    sqlite3_exec(this->db, gene_sql.str().c_str(), NULL, NULL, NULL);
 
     //create index
-    sql = stringstream();
-    sql << "CREATE UNIQUE INDEX index0 ON gene(grn_id, pos);";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream gene_index_sql;
+    gene_index_sql << "CREATE UNIQUE INDEX index0 ON gene(grn_id, pos);";
+    sqlite3_exec(this->db, gene_index_sql.str().c_str(), NULL, NULL, NULL);
     #endif
 
     //note: must LOG_GA_STEPS in order to LOG_REG_STEPS
 #if LOG_GA_STEPS && LOG_REG_STEPS
     //gene_state
-    sql = stringstream();
-    sql << "CREATE TABLE gene_state (";
-    sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
-    sql << "reg_step INTEGER NOT NULL,";
-    sql << "active_output INTEGER NULL,";
-    sql << "bound_protein INTEGER NULL,";
-    sql << "gene_id INTEGER,";
-    sql << "FOREIGN KEY(active_output) REFERENCES protein(id),"; // note: this and the line below reference the *db id*, not the *pid* (i.e. they do not reference the simulation protein id as their correspondingly-named data members in the Protein class do)
-    sql << "FOREIGN KEY(bound_protein) REFERENCES protein(id),";
-    sql << "FOREIGN KEY(gene_id) REFERENCES gene(id)";
-    sql << ");";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream gs_sql;
+    gs_sql << "CREATE TABLE gene_state (";
+    gs_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+    gs_sql << "reg_step INTEGER NOT NULL,";
+    gs_sql << "active_output INTEGER NULL,";
+    gs_sql << "bound_protein INTEGER NULL,";
+    gs_sql << "gene_id INTEGER,";
+    gs_sql << "FOREIGN KEY(active_output) REFERENCES protein(id),"; // note: this and the line below reference the *db id*, not the *pid* (i.e. they do not reference the simulation protein id as their correspondingly-named data members in the Protein class do)
+    gs_sql << "FOREIGN KEY(bound_protein) REFERENCES protein(id),";
+    gs_sql << "FOREIGN KEY(gene_id) REFERENCES gene(id)";
+    gs_sql << ");";
+    sqlite3_exec(this->db, gs_sql.str().c_str(), NULL, NULL, NULL);
 
     //protein
-    sql = stringstream();
-    sql << "CREATE TABLE protein (";
-    sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,"; //database id
-    sql << "pid INTEGER NOT NULL,"; //protein id from simulation
-    sql << "seq TEXT NOT NULL,";
-    sql << "kernel_index INTEGER NOT NULL,";
-    sql << "src_pos INTEGER NOT NULL,";
-    sql << "grn_id INTEGER NOT NULL,";
-    sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
-    sql << ");";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream protein_sql;
+    protein_sql << "CREATE TABLE protein (";
+    protein_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,"; //database id
+    protein_sql << "pid INTEGER NOT NULL,"; //protein id from simulation
+    protein_sql << "seq TEXT NOT NULL,";
+    protein_sql << "kernel_index INTEGER NOT NULL,";
+    protein_sql << "src_pos INTEGER NOT NULL,";
+    protein_sql << "grn_id INTEGER NOT NULL,";
+    protein_sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
+    protein_sql << ");";
+    sqlite3_exec(this->db, protein_sql.str().c_str(), NULL, NULL, NULL);
 
     //create index
-    sql = stringstream();
-    sql << "CREATE UNIQUE INDEX index0 ON protein(grn_id, pid);";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    stringstream protein_index_sql;
+    protein_index_sql << "CREATE UNIQUE INDEX index0 ON protein(grn_id, pid);";
+    sqlite3_exec(this->db, protein_index_sql.str().c_str(), NULL, NULL, NULL);
 
     //protein_state
-    sql = stringstream();
-    sql << "CREATE TABLE protein_state (";
-    sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
-    sql << "reg_step INTEGER NOT NULL,";
+    stringstream ps_sql;
+    ps_sql << "CREATE TABLE protein_state (";
+    ps_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+    ps_sql << "reg_step INTEGER NOT NULL,";
 
     //conc columns
     for (int i = 0; i < this->run->num_genes; i++) {
-        sql << "conc" << i << " REAL NOT NULL, ";
+        ps_sql << "conc" << i << " REAL NOT NULL, ";
     }
     
-    sql << "protein_id INTEGER NOT NULL,";
-    sql << "grn_id INTEGER NOT NULL,";
-    sql << "FOREIGN KEY(protein_id) REFERENCES protein(id),";
-    sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
-    sql << ");";
-    sqlite3_exec(this->db, sql.str().c_str(), NULL, NULL, NULL);
+    ps_sql << "protein_id INTEGER NOT NULL,";
+    ps_sql << "grn_id INTEGER NOT NULL,";
+    ps_sql << "FOREIGN KEY(protein_id) REFERENCES protein(id),";
+    ps_sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
+    ps_sql << ");";
+    sqlite3_exec(this->db, ps_sql.str().c_str(), NULL, NULL, NULL);
     #endif
 }
 
@@ -184,7 +184,7 @@ void Logger::log_run() {
     int rc;
     string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, cross_frac, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_mut_float, max_mut_bits, fitness_log_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
-    sqlite3_prepare_v3(this->db, run_sql.c_str(), run_sql.size() + 1, 0, &run_stmt, NULL);
+    sqlite3_prepare_v2(this->db, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
     int bind_index = 1;
     sqlite3_bind_int(run_stmt, bind_index++, this->run->pop_size);
@@ -218,7 +218,7 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
         int rc;
         string fitness_sql = "INSERT INTO fitness (fitness, pop_index, ga_step) VALUES (?, ?, ?);";
         sqlite3_stmt *fitness_stmt;
-        sqlite3_prepare_v3(this->db, fitness_sql.c_str(), fitness_sql.size() + 1, SQLITE_PREPARE_PERSISTENT, &fitness_stmt, NULL);
+        sqlite3_prepare_v2(this->db, fitness_sql.c_str(), fitness_sql.size() + 1, &fitness_stmt, NULL);
 
         float avg_fitness = 0.0f;
         float best_fitness = -1.0f;
@@ -262,7 +262,7 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
 float Logger::get_fitness_val(int ga_step, string *sql_fcn) {
     string sql = "SELECT " + *sql_fcn + "(fitness) FROM fitness f JOIN grn g ON f.grn_id = g.id WHERE g.ga_step = ?;";
     sqlite3_stmt *stmt;
-    sqlite3_prepare_v3(this->db, sql.c_str(), sql.size() + 1, 0, &stmt, NULL);
+    sqlite3_prepare_v2(this->db, sql.c_str(), sql.size() + 1, &stmt, NULL);
 
     int bind_index = 1;
     sqlite3_bind_int(stmt, bind_index++, ga_step);
@@ -296,11 +296,11 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
         int bind_index;
         string grn_sql = "INSERT INTO grn (ga_step, pop_index) VALUES (?, ?);";
         sqlite3_stmt *grn_stmt;
-        sqlite3_prepare_v3(this->db, grn_sql.c_str(), grn_sql.size() + 1, SQLITE_PREPARE_PERSISTENT, &grn_stmt, NULL);
+        sqlite3_prepare_v2(this->db, grn_sql.c_str(), grn_sql.size() + 1, &grn_stmt, NULL);
 
         string gene_sql = "INSERT INTO gene (binding_seq, output_seq, threshold, output_rate, kernel_index, pos, grn_id) VALUES (?, ?, ?, ?, ?, ?, ?);";
         sqlite3_stmt *gene_stmt;
-        sqlite3_prepare_v3(this->db, gene_sql.c_str(), gene_sql.size() + 1, SQLITE_PREPARE_PERSISTENT, &gene_stmt, NULL);
+        sqlite3_prepare_v2(this->db, gene_sql.c_str(), gene_sql.size() + 1, &gene_stmt, NULL);
 
         //insert grns
         Grn *grn;
@@ -359,7 +359,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
         //the grn should already be in the database. Get it's id.
         string grn_sql = "SELECT id FROM grn WHERE ga_step = ? AND pop_index = ?;";
         sqlite3_stmt *grn_stmt;
-        rc = sqlite3_prepare_v3(this->db, grn_sql.c_str(), grn_sql.size() + 1, 0, &grn_stmt, NULL);
+        rc = sqlite3_prepare_v2(this->db, grn_sql.c_str(), grn_sql.size() + 1, &grn_stmt, NULL);
     
         sqlite3_bind_int(grn_stmt, 1, ga_step);
         sqlite3_bind_int(grn_stmt, 2, pop_index);
@@ -372,11 +372,11 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
         //insert proteins
         string protein_sel_sql = "SELECT id FROM protein WHERE grn_id = ? AND pid = ?;";
         sqlite3_stmt *protein_sel_stmt;
-        sqlite3_prepare_v3(this->db, protein_sel_sql.c_str(), protein_sel_sql.size() + 1, SQLITE_PREPARE_PERSISTENT, &protein_sel_stmt, NULL);
+        sqlite3_prepare_v2(this->db, protein_sel_sql.c_str(), protein_sel_sql.size() + 1, &protein_sel_stmt, NULL);
 
         string protein_ins_sql = "INSERT INTO protein (pid, seq, kernel_index, src_pos, grn_id) VALUES (?, ?, ?, ?, ?)";
         sqlite3_stmt *protein_ins_stmt;
-        sqlite3_prepare_v3(this->db, protein_ins_sql.c_str(), protein_ins_sql.size() + 1, SQLITE_PREPARE_PERSISTENT, &protein_ins_stmt, NULL);
+        sqlite3_prepare_v2(this->db, protein_ins_sql.c_str(), protein_ins_sql.size() + 1, &protein_ins_stmt, NULL);
 
         stringstream pstate_sql;
         stringstream pstate_vals;
@@ -392,7 +392,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
         pstate_sql << ", protein_id, grn_id) VALUES (" << pstate_vals.str() << ", ?, ?" << ");";
         string pstate_final_sql = pstate_sql.str();
         sqlite3_stmt *pstate_stmt;
-        sqlite3_prepare_v3(this->db, pstate_final_sql.c_str(), pstate_final_sql.size() + 1, SQLITE_PREPARE_PERSISTENT, &pstate_stmt, NULL);
+        sqlite3_prepare_v2(this->db, pstate_final_sql.c_str(), pstate_final_sql.size() + 1, &pstate_stmt, NULL);
 
         //go through all proteins in the grn's store. Some of the proteins may have been inserted on previous iterations.
         //In these cases, we only need to insert a new protein_state record
@@ -463,15 +463,15 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
         //insert gene_state
         string gstate_ins_sql = "INSERT INTO gene_state (reg_step, active_output, bound_protein, gene_id) VALUES (?, ?, ?, ?);";
         sqlite3_stmt *gstate_ins_stmt;
-        sqlite3_prepare_v3(this->db, gstate_ins_sql.c_str(), gstate_ins_sql.size() + 1, 0, &gstate_ins_stmt, NULL);
+        sqlite3_prepare_v2(this->db, gstate_ins_sql.c_str(), gstate_ins_sql.size() + 1, &gstate_ins_stmt, NULL);
 
         string gstate_selp_sql = "SELECT id FROM protein WHERE pid = ? AND grn_id = ?;";
         sqlite3_stmt *gstate_selp_stmt;
-        sqlite3_prepare_v3(this->db, gstate_selp_sql.c_str(), gstate_selp_sql.size() + 1, 0, &gstate_selp_stmt, NULL);
+        sqlite3_prepare_v2(this->db, gstate_selp_sql.c_str(), gstate_selp_sql.size() + 1, &gstate_selp_stmt, NULL);
 
         string gstate_selg_sql = "SELECT id FROM gene WHERE grn_id = ? AND pos = ?";
         sqlite3_stmt *gstate_selg_stmt;
-        sqlite3_prepare_v3(this->db, gstate_selg_sql.c_str(), gstate_selg_sql.size() + 1, 0, &gstate_selg_stmt, NULL);
+        sqlite3_prepare_v2(this->db, gstate_selg_sql.c_str(), gstate_selg_sql.size() + 1, &gstate_selg_stmt, NULL);
 
         Gene *gene;
         for (int i = 0; i < this->run->num_genes; i++) {

@@ -2,7 +2,6 @@
 #include "protein.hpp"
 #include "runs.hpp"
 #include "protein_store.hpp"
-#include <boost/dynamic_bitset.hpp>
 #include "utils.hpp"
 #include "kernels.hpp"
 #include "gene.hpp"
