@@ -21,6 +21,18 @@ Run::Run(toml::Table& t, int file_index) {
     this->max_mut_float = (float) toml::get<toml::Float>(t.at("max_mut_float"));
     this->max_mut_bits = toml::get<toml::Integer>(t.at("max_mut_bits"));
     this->fitness_log_interval = toml::get<toml::Integer>(t.at("fitness_log_interval"));
+    string bmeth = toml::get<toml::String>(t.at("binding_method"));
+    if (bmeth == "scaled") {
+        this->binding_method = BINDING_SCALED;
+    }
+    else if (bmeth == "thresholded") {
+        this->binding_method = BINDING_THRESHOLDED;
+    }
+    else {
+        cerr << "Unrecognized binding method: '" << bmeth << "'" << endl;
+        cerr << "Defaulting to 'thresholded'." << endl;
+        this->binding_method = BINDING_THRESHOLDED;
+    }
 
     this->file_index = file_index;
 }

@@ -13,6 +13,7 @@ Gene::Gene(Run *run, BitVec *binding_seq, BitVec *output_seq, float threshold, f
     this->pos = pos;
     this->active_output = -1;
     this->bound_protein = -1;
+    this->binding_prob = 0.0f;
 }
 
 //randomly initializes components that are not passed
@@ -28,6 +29,7 @@ Gene::Gene(Run *run, int pos) {
     this->kernel_index = run->rand.in_range(0, KERNELS.size());
     this->active_output = -1;
     this->bound_protein = -1;
+    this->binding_prob = 0.0f;
 }
 
 //copy constructor
@@ -43,6 +45,7 @@ Gene::Gene(Gene *gene) {
     //don't copy these, or outputs
     this->active_output = -1;
     this->bound_protein = -1;
+    this->binding_prob = 0.0f;
 }
 
 Gene::~Gene() {
@@ -60,16 +63,32 @@ void Gene::reset() {
 void Gene::update_output_protein(ProteinStore *store) {
     if (this->active_output != -1) {
         Protein *protein = store->get(this->active_output);
-        protein->concs[this->pos] = Utils::clamp<float>(protein->concs[this->pos] + this->output_rate, 0.0, this->run->max_protein_conc);
+        if (this->run->binding_method == BINDING_THRESHOLDED) {
+            protein->concs[this->pos] = Utils::clamp<float>(protein->concs[this->pos] + this->output_rate, 0.0, this->run->max_protein_conc);
+        }
+        else {
+            protein->concs[this->pos] = Utils::clamp<float>(protein->concs[this->pos] + this->binding_prob * this->run->max_protein_conc, 0.0, this->run->max_protein_conc);
+        }
     }
 }
 
 void Gene::update_binding(pair<int, float> *protein_info, ProteinStore *store) {
     if (protein_info != nullptr) {
         int id = protein_info->first;
-        float conc = protein_info->second;
         this->bound_protein = id;
-        if (conc >= this->threshold) {
+        
+        bool cond;
+        if (this->run->binding_method == BINDING_THRESHOLDED) {
+            float conc = protein_info->second;
+            cond = (conc >= this->threshold);
+        }
+        else {
+            cond = true;
+            float binding_prob = protein_info->second;
+            this->binding_prob = binding_prob;
+        }
+        
+        if (cond) {
             if (Utils::contains_id(&this->outputs, id)) {
                 this->active_output = id;
             }
@@ -80,6 +99,7 @@ void Gene::update_binding(pair<int, float> *protein_info, ProteinStore *store) {
                 this->outputs.push_back(id);
             }
         }
+        //note: this path is never taken when binding_method == "scaled"
         else {
             this->active_output = -1;
         }
@@ -87,6 +107,7 @@ void Gene::update_binding(pair<int, float> *protein_info, ProteinStore *store) {
     else {
         this->active_output = -1;
         this->bound_protein = -1;
+        this->binding_prob = 0.0f;
     }
 }
 
@@ -102,6 +123,9 @@ string Gene::to_str() {
     info << "  pos: " << this->pos << endl;
     info << "  bound_protein: " << this->bound_protein << endl;
     info << "  active_output: " << this->active_output << endl;
+    if (this->run->binding_method == BINDING_SCALED) {
+        info << "  binding_prob: " << this->binding_prob << endl;
+    }
     info << "  outputs: [";
 
     for (size_t i = 0; i < this->outputs.size(); i++) {

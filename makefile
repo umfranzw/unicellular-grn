@@ -8,7 +8,7 @@ SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 #HDRS = $(wildcard $(INC_DIR)/*.h)
 OBJ = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-CC = clang++
+CC = g++
 CPPFLAGS += -Wall -O3 -fopenmp --std=c++11 -I$(INC_DIR)
 LDFLAGS += -O3 -fopenmp
 LDLIBS += -lm -lsqlite3

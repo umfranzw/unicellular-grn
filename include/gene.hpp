@@ -31,6 +31,7 @@ public:
     int bound_protein;
     int pos;
     Run *run;
+    float binding_prob;
 };
 
 #endif

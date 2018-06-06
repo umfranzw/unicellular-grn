@@ -123,13 +123,26 @@ void Grn::run_binding() {
                 i = (int) weighted_probs.size() - 1;
             }
 
+            pair<int, float> protein_info;
             int pid = weighted_probs[i].first;
-            float conc = this->proteins->get(pid)->concs[i];
-            pair<int, float> protein_info = pair<int, float>(pid, conc);
+            protein_info.first = pid;
+            //if we're using thresholded binding, the second item is the concentration
+            //(so that gene->update_binding() can check if it meets the gene's activation threshold)
+            if (this->run->binding_method == BINDING_THRESHOLDED) {
+                float conc = this->proteins->get(pid)->concs[i];
+                protein_info.second = conc;
+            }
+            //otherwise, with scaled binding, the second item will be the probability
+            //(so that gene can store it in gene->binding_prob so it'll be available when update_output_protein() is called to increment the concs of the active protein)
+            else {
+                protein_info.second = weighted_probs[i].second;
+            }
+            
             this->genes[pos]->update_binding(&protein_info, this->proteins);
         }
         //no proteins above this position => unbind
         else {
+            //can unbind by passing null
             this->genes[pos]->update_binding(nullptr, this->proteins);
         }
     }

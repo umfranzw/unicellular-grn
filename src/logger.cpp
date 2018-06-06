@@ -68,7 +68,8 @@ void Logger::create_tables() {
     run_sql << "initial_proteins INTEGER NOT NULL,";
     run_sql << "max_mut_float REAL NOT NULL,";
     run_sql << "max_mut_bits INTEGER NOT NULL,";
-    run_sql << "fitness_log_interval INTEGER NOT NULL";
+    run_sql << "fitness_log_interval INTEGER NOT NULL,";
+    run_sql << "binding_method TEXT NOT NULL";
     run_sql << ");";
     sqlite3_exec(this->db, run_sql.str().c_str(), NULL, NULL, NULL);
 
@@ -182,7 +183,7 @@ Logger::~Logger() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, cross_frac, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_mut_float, max_mut_bits, fitness_log_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, cross_frac, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->db, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -203,6 +204,8 @@ void Logger::log_run() {
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->max_mut_float);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->max_mut_bits);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->fitness_log_interval);
+    string bmeth = this->run->binding_method == BINDING_THRESHOLDED ? "thresholded" : "scaled";
+    sqlite3_bind_text(run_stmt, bind_index++, bmeth.c_str(), bmeth.size(), SQLITE_STATIC);
 
     rc = sqlite3_step(run_stmt);
     if (rc != SQLITE_DONE) {
