@@ -1,0 +1,25 @@
+[[runs]]
+pop_size = 100
+ga_steps = 20
+reg_steps = 20
+mut_prob = 0.15
+cross_frac = 0.4
+num_genes = 8
+gene_bits = 8
+min_protein_conc = 1e-2
+max_protein_conc = 5.0
+
+#concentration weight (for binding)
+alpha = 0.5
+
+#sequence weight (for binding)
+beta = 0.5
+
+decay_rate = 0.02
+initial_proteins = 5
+max_mut_float = 2.0
+max_mut_bits = 8
+
+fitness_log_interval = 10
+#note: binding_method should be either "thresholded" or "scaled"
+binding_method = "thresholded"
