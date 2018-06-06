@@ -2,7 +2,6 @@
 #include "kernels.hpp"
 #include "utils.hpp"
 
-#include <boost/dynamic_bitset.hpp>
 #include <sstream>
 
 Protein::Protein(Run *run, BitVec *seq, vector<float> concs, int kernel_index, int src_pos) {

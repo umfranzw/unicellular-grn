@@ -8,11 +8,11 @@ import os
 from run import Run
 
 PLOT_REG_STEPS = True
-GA_STEPS = [19]
+GA_STEPS = [9]
 POP_INDEX = 0
 
-DB_FILE = '../data/dbs/run0.db'
-IMG_DIR = '../data/images'
+DB_FILE = '/home/wayne/Documents/school/thesis/unicellular-grn/data/dbs/run0.db'
+IMG_DIR = '/home/wayne/Documents/school/thesis/unicellular-grn/data/images'
 GENE_WIDTH = 0.2
 GENE_HEIGHT = 0.25
 FIG_WIDTH = 8
