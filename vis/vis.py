@@ -8,8 +8,6 @@ import os
 from run import Run
 
 PLOT_REG_STEPS = True
-GA_STEPS = [9]
-POP_INDEX = 0
 
 DB_FILE = '/home/wayne/Documents/school/thesis/unicellular-grn/data/dbs/run0.db'
 IMG_DIR = '/home/wayne/Documents/school/thesis/unicellular-grn/data/images'
@@ -193,27 +191,34 @@ def draw_grn(run_dir, ga_step, reg_step, pop_index, run, conn):
     plt.close(fig)
     #plt.show()
 
+def get_best(conn):
+    sql = 'SELECT g.ga_step, g.pop_index, min(f.fitness) FROM grn g JOIN fitness f ON f.ga_step = g.ga_step AND f.pop_index = g.pop_index;'
+    rs = conn.execute(sql)
+    row = rs.fetchone()
+
+    return row
+
 def main():
     conn = sqlite3.connect(DB_FILE)
     run = Run(conn)
     run_name = DB_FILE.split('/')[-1].split('.')[0]
     
     run_dir = "{}/{}".format(IMG_DIR, run_name)
-    if not os.path.exists(run_dir):
-        os.makedirs(run_dir)
+    if os.path.exists(run_dir):
+        shutil.rmtree(run_dir)
+    os.makedirs(run_dir)
         
     plot_best_fitness(run_dir, conn)
     plot_avg_fitness(run_dir, conn)
 
+    ga_step, pop_index, best_fitness = get_best(conn)
+    print("Best fitness: {}".format(best_fitness))
+    print("ga_step: {}".format(ga_step))
+    print("pop_index: {}".format(pop_index))
+
     if PLOT_REG_STEPS:
-        for i in range(len(GA_STEPS)):
-            run_dir = "{}/{}/{}".format(IMG_DIR, run_name, GA_STEPS[i])
-            if os.path.exists(run_dir):
-                shutil.rmtree(run_dir)
-            os.makedirs(run_dir)
-            
-            for j in range(run.reg_steps):
-                draw_grn(run_dir, GA_STEPS[i], j, POP_INDEX, run, conn)
+        for j in range(run.reg_steps):
+            draw_grn(run_dir, ga_step, j, pop_index, run, conn)
 
     conn.close()
 
