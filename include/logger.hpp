@@ -23,8 +23,8 @@ public:
     float get_avg_fitness(int ga_step);
 
 private:
-    sqlite3 *db;
     Run *run;
+    sqlite3 *conn;
 
     void create_tables();
     float get_fitness_val(int ga_step, string *sql_fcn);

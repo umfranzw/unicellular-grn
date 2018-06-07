@@ -3,6 +3,7 @@
 #include "constants.hpp"
 #include "utils.hpp"
 #include <cmath>
+#include <omp.h>
 
 Ga::Ga(Run *run) {
     this->run = run;
