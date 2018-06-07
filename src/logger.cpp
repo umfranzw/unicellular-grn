@@ -12,35 +12,15 @@
 Logger::Logger(Run *run) {
     this->run = run;
     
-    //we'll log to an in-memory database during the simulation (since it's an order of magnitude faster than a disk-based db)
-    //Then, when the simulation ends, the user should call write_db() to write it out to disk in one shot
-
-    //first, set some sqlite options
-    //this enables multiple "connections" to an in-memory database
-    // int rc = sqlite3_enable_shared_cache(1);
-    // if (rc != SQLITE_OK) {
-    //     cerr << "Error enabling sqlite shared cache: " << rc << endl;
-    //     exit(1);
-    // }
-    // //this allows us to use URI-style filenames, while allows us to pass options when we open the database (the option we want to pass enables shared cache)
-    // rc = sqlite3_config(SQLITE_CONFIG_URI, 1);
-    // if (rc != SQLITE_OK) {
-    //     cerr << "Error enabling sqlite URI filenames: " << rc << endl;
-    //     exit(1);
-    // }
+    //ensure statements are serialized
     int rc = sqlite3_config(SQLITE_CONFIG_SERIALIZED);
     if (rc != SQLITE_OK) {
         cerr << "Error enabling sqlite serialized mode: " << rc << endl;
         exit(1);
     }
-    // cout << "sqlite3 threadsafe: " << sqlite3_threadsafe() << endl;
 
-    // rc = sqlite3_open("file::memory:?cache=shared", &this->conn);
-    // if (rc) {
-    //     cerr << "Cannot create in-memory database connection" << endl;
-    //     exit(1);
-    // }
-
+    //we'll log to an in-memory database during the simulation (since it's an order of magnitude faster than a disk-based db)
+    //Then, when the simulation ends, the user should call write_db() to write it out to disk in one shot
     rc = sqlite3_open(":memory:", &this->conn);
     if (rc) {
         cerr << "Cannot create in-memory database connection" << endl;
@@ -347,14 +327,12 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
             sqlite3_bind_int(grn_stmt, bind_index++, ga_step);
             sqlite3_bind_int(grn_stmt, bind_index++, i);
 
-            //sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
             rc = sqlite3_step(grn_stmt);
             if (rc != SQLITE_DONE) {
                 cerr << "Error inserting grn: " << rc << endl;
                 exit(1);
             }
             int grn_id = sqlite3_last_insert_rowid(this->conn);
-            //sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
 
             //insert genes
             Gene *gene;
@@ -478,14 +456,12 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
                 sqlite3_bind_int(protein_ins_stmt, bind_index++, protein->src_pos);
                 sqlite3_bind_int(protein_ins_stmt, bind_index++, grn_id);
 
-                //sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
                 rc = sqlite3_step(protein_ins_stmt); 
                 if (rc != SQLITE_DONE) {
                     cerr << "Error inserting protein." << endl;
                     exit(1);
                 }
                 protein_id = sqlite3_last_insert_rowid(this->conn); //db id
-                //sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
 
                 sqlite3_reset(protein_ins_stmt);
                 sqlite3_clear_bindings(protein_ins_stmt);
