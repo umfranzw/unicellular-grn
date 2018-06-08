@@ -63,9 +63,21 @@ void Ga::adjust_params(Run *run, int ga_step) {
         prev_avg = cur_avg;
     }
     else {
-        this->run->mut_prob = max(this->run->min_mut_prob, this->run->mut_prob - this->run->mut_step);
-        this->run->cross_frac = max(this->run->min_cross_frac, this->run->cross_frac - this->run->cross_step);
+        this->run->mut_prob = this->clamp_param(this->run->mut_prob, this->run->mut_step, this->run->mut_prob_limit);
+        
+        this->run->cross_frac = this->clamp_param(this->run->cross_frac, this->run->cross_step, this->run->cross_frac_limit);
     }
+}
+
+float Ga::clamp_param(float cur_val, float step, float limit) {
+    if (step > 0) { //treat limit as an upper bound
+        cur_val = min(cur_val + step, limit);
+    }
+    else { //treat limit as a lower bound
+        cur_val = max(cur_val + step, limit);
+    }
+
+    return cur_val;
 }
 
 int Ga::get_fittest() {

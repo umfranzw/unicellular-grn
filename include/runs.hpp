@@ -19,10 +19,10 @@ public:
     int ga_steps;
     int reg_steps;
     float mut_prob;
-    float min_mut_prob;
+    float mut_prob_limit;
     float mut_step;
     float cross_frac;
-    float min_cross_frac;
+    float cross_frac_limit;
     float cross_step;
     int num_genes;
     int gene_bits;
