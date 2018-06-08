@@ -24,6 +24,7 @@ private:
     float sum_fitnesses();
     vector<pair<int, int>> select();
     int spin_wheel(vector<float> *wheel);
+    void adjust_params(Run *run, int ga_step);
 
     void cross(vector<pair<int, int>> *parents);
     vector<Gene*> build_child_genes(vector<Gene*>::iterator left, int left_len, vector<Gene*>::iterator right, int right_len);

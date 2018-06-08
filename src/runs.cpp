@@ -9,7 +9,11 @@ Run::Run(toml::Table& t, int file_index) {
     this->ga_steps = toml::get<toml::Integer>(t.at("ga_steps"));
     this->reg_steps = toml::get<toml::Integer>(t.at("reg_steps"));
     this->mut_prob = (float) toml::get<toml::Float>(t.at("mut_prob"));
+    this->min_mut_prob = (float) toml::get<toml::Float>(t.at("min_mut_prob"));
+    this->mut_step = (float) toml::get<toml::Float>(t.at("mut_step"));
     this->cross_frac = (float) toml::get<toml::Float>(t.at("cross_frac"));
+    this->min_cross_frac = (float) toml::get<toml::Float>(t.at("min_cross_frac"));
+    this->cross_step = (float) toml::get<toml::Float>(t.at("cross_step"));
     this->num_genes = toml::get<toml::Integer>(t.at("num_genes"));
     this->gene_bits = toml::get<toml::Integer>(t.at("gene_bits"));
     this->min_protein_conc = (float) toml::get<toml::Float>(t.at("min_protein_conc"));

@@ -48,9 +48,24 @@ void Ga::run_alg() {
         this->update_fitness(i); //this will log the reg sim
 
         this->logger->log_fitnesses(i, &this->fitnesses);
+
+        this->adjust_params(this->run, i);
     }
 
     this->logger->write_db();
+}
+
+void Ga::adjust_params(Run *run, int ga_step) {
+    static float prev_avg = numeric_limits<float>::max();
+    float cur_avg = this->logger->get_avg_fitness(ga_step);
+
+    if (cur_avg <= prev_avg) {
+        prev_avg = cur_avg;
+    }
+    else {
+        this->run->mut_prob = max(this->run->min_mut_prob, this->run->mut_prob - this->run->mut_step);
+        this->run->cross_frac = max(this->run->min_cross_frac, this->run->cross_frac - this->run->cross_step);
+    }
 }
 
 int Ga::get_fittest() {

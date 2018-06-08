@@ -72,7 +72,11 @@ void Logger::create_tables() {
     run_sql << "ga_steps INTEGER NOT NULL,";
     run_sql << "reg_steps INTEGER NOT NULL,";
     run_sql << "mut_prob REAL NOT NULL,";
+    run_sql << "min_mut_prob REAL NOT NULL,";
+    run_sql << "mut_step REAL NOT NULL,";
     run_sql << "cross_frac REAL NOT NULL,";
+    run_sql << "min_cross_frac REAL NOT NULL,";
+    run_sql << "cross_step REAL NOT NULL,";
     run_sql << "num_genes INTEGER NOT NULL,";
     run_sql << "gene_bits INTEGER NOT NULL,";
     run_sql << "min_protein_conc REAL NOT NULL,";
@@ -194,7 +198,7 @@ void Logger::create_tables() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, cross_frac, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, min_mut_prob, mut_step, cross_frac, min_cross_frac, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -203,7 +207,11 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, this->run->ga_steps);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->reg_steps);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->mut_prob);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->min_mut_prob);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->mut_step);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->cross_frac);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->min_cross_frac);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->cross_step);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->num_genes);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->gene_bits);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->min_protein_conc);
@@ -270,13 +278,15 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
         }
         cout << "avg fitness: " << avg_fitness << endl;
         cout << "best fitness: " << best_fitness << endl;
+        cout << "mut_prob: " << this->run->mut_prob << endl;
+        cout << "cross_frac: " << this->run->cross_frac << endl;
         cout << endl;
         cout.flush();
     }
 }
 
 float Logger::get_fitness_val(int ga_step, string *sql_fcn) {
-    string sql = "SELECT " + *sql_fcn + "(fitness) FROM fitness f JOIN grn g ON f.grn_id = g.id WHERE g.ga_step = ?;";
+    string sql = "SELECT " + *sql_fcn + "(fitness) FROM fitness WHERE ga_step = ?;";
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2(this->conn, sql.c_str(), sql.size() + 1, &stmt, NULL);
 

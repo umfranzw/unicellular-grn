@@ -1,15 +1,20 @@
 class Run():
     def __init__(self, conn):
-        sql = "SELECT pop_size, ga_steps, reg_steps, mut_prob, cross_frac, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method FROM run;"
+        sql = "SELECT pop_size, ga_steps, reg_steps, mut_prob, min_mut_prob, mut_step, cross_frac, min_cross_frac, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method FROM run;"
         rs = conn.execute(sql)
-        self.pop_size, self.ga_steps, self.reg_steps, self.mut_prob, self.cross_frac, self.num_genes, self.gene_bits, self.min_protein_conc, self.max_protein_conc, self.alpha, self.beta, self.decay_rate, self.initial_proteins, self.max_mut_float, self.max_mut_bits, self.fitness_log_interval, self.binding_method = rs.fetchone()
+        self.pop_size, self.ga_steps, self.reg_steps, self.mut_prob, self.min_mut_prob, self.mut_step, self.cross_frac, self.min_cross_frac, self.cross_step, self.num_genes, self.gene_bits, self.min_protein_conc, self.max_protein_conc, self.alpha, self.beta, self.decay_rate, self.initial_proteins, self.max_mut_float, self.max_mut_bits, self.fitness_log_interval, self.binding_method = rs.fetchone()
 
     def __str__(self):
         info = "pop_size: {}\n".format(self.pop_size)
         info += "ga_steps: {}\n".format(self.ga_steps)
         info += "reg_steps: {}\n".format(self.reg_steps)
         info += "mut_prob: {}\n".format(self.mut_prob)
+        info += "min_mut_prob: {}\n".format(self.min_mut_prob)
+        info += "mut_prob: {}\n".format(self.mut_prob)
+        info += "mut_step: {}\n".format(self.mut_step)
         info += "cross_frac: {}\n".format(self.cross_frac)
+        info += "min_cross_frac: {}\n".format(self.min_cross_frac)
+        info += "cross_step: {}\n".format(self.cross_step)
         info += "num_genes: {}\n".format(self.num_genes)
         info += "gene_bits: {}\n".format(self.gene_bits)
         info += "min_protein_conc: {}\n".format(self.min_protein_conc)

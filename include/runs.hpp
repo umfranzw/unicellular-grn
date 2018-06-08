@@ -19,7 +19,11 @@ public:
     int ga_steps;
     int reg_steps;
     float mut_prob;
+    float min_mut_prob;
+    float mut_step;
     float cross_frac;
+    float min_cross_frac;
+    float cross_step;
     int num_genes;
     int gene_bits;
     float min_protein_conc; //proteins in which all conc values dip below this are deleted
