@@ -12,7 +12,7 @@
 Logger::Logger(Run *run) {
     this->run = run;
     
-    //ensure statements are serialized
+    //ensure statements are serialized so that using multiple openMP threads in the simulation (which may call logger member functions) won't mess up the order of transactions
     int rc = sqlite3_config(SQLITE_CONFIG_SERIALIZED);
     if (rc != SQLITE_OK) {
         cerr << "Error enabling sqlite serialized mode: " << rc << endl;
@@ -25,6 +25,12 @@ Logger::Logger(Run *run) {
     if (rc) {
         cerr << "Cannot create in-memory database connection" << endl;
         exit(1);
+    }
+
+    //we won't be rolling back, so turn this off.
+    rc = sqlite3_exec(this->conn, "PRAGMA journal_mode = OFF;", nullptr, nullptr, nullptr);
+    if (rc != SQLITE_OK) {
+        cerr << "Error turning off sqlite journaling: " << rc << endl;
     }
     
     this->create_tables();
@@ -50,9 +56,15 @@ void Logger::write_db() {
             cerr << "Cannot create disk database file" << endl;
             exit(1);
         }
+        rc = sqlite3_exec(disk_conn, "PRAGMA journal_mode = OFF;", nullptr, nullptr, nullptr);
+        if (rc != SQLITE_OK) {
+            cerr << "Error turning off sqlite journaling: " << rc << endl;
+        }
     
         sqlite3_backup *backup = sqlite3_backup_init(disk_conn, "main", this->conn, "main");
+        sqlite3_exec(disk_conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
         sqlite3_backup_step(backup, -1); //pass -1 to copy entire db
+        sqlite3_exec(disk_conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
         sqlite3_backup_finish(backup); //cleans up resources allocated for copy operation
 
         sqlite3_close(disk_conn);
@@ -64,6 +76,8 @@ Logger::~Logger() {
 }
 
 void Logger::create_tables() {
+    sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
+    
     //run
     stringstream run_sql;
     run_sql << "CREATE TABLE run (";
@@ -196,6 +210,7 @@ void Logger::create_tables() {
         ps_sql << ");";
         sqlite3_exec(this->conn, ps_sql.str().c_str(), NULL, NULL, NULL);
     }
+    sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
 }
 
 void Logger::log_run() {
@@ -230,7 +245,9 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_ga_steps);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_reg_steps);
 
+    sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
     rc = sqlite3_step(run_stmt);
+    sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
     if (rc != SQLITE_DONE) {
         cerr << "Error inserting run." << endl;
         exit(1);
@@ -251,6 +268,7 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
         float best_fitness = -1.0f;
         int bind_index;
 
+        sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
         for (int i = 0; i < this->run->pop_size; i++) {
             avg_fitness += (*fitnesses)[i];
             if (i == 0 || best_fitness < (*fitnesses)[i]) {
@@ -269,6 +287,8 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
             sqlite3_reset(fitness_stmt);
             sqlite3_clear_bindings(fitness_stmt);
         }
+        sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
+        
         avg_fitness /= (float) this->run->pop_size;
 
         sqlite3_finalize(fitness_stmt);
@@ -334,6 +354,7 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
             sqlite3_prepare_v2(this->conn, gene_sql.c_str(), gene_sql.size() + 1, &gene_stmt, NULL);
 
             //insert grns
+            sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
             Grn *grn;
             for (int i = 0; i < (int) grns->size(); i++) {
                 grn = (*grns)[i];
@@ -377,6 +398,7 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
                 sqlite3_reset(grn_stmt);
                 sqlite3_clear_bindings(grn_stmt);
             }
+            sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
 
             sqlite3_finalize(grn_stmt);
             sqlite3_finalize(gene_stmt);
@@ -436,6 +458,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
             Protein *protein;
             int bind_index;
 
+            sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
             for (int pid : *store) {
                 int protein_id; //db id
                 protein = store->get(pid);
@@ -593,6 +616,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
                 sqlite3_reset(gstate_ins_stmt);
                 sqlite3_clear_bindings(gstate_ins_stmt);
             }
+            sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
     
             sqlite3_finalize(protein_sel_stmt);
             sqlite3_finalize(protein_ins_stmt);
