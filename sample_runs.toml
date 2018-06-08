@@ -1,7 +1,7 @@
 [[runs]]
-pop_size = 100
-ga_steps = 100
-reg_steps = 20
+pop_size = 10
+ga_steps = 10
+reg_steps = 10
 mut_prob = 0.15
 min_mut_prob = 0.1
 mut_step = 0.01
@@ -24,10 +24,12 @@ initial_proteins = 5
 max_mut_float = 2.0
 max_mut_bits = 8
 
+#note: this is in ga steps
 fitness_log_interval = 10
+
 #note: binding_method should be either "thresholded" or "scaled"
 binding_method = "scaled"
 
 #note: must log_ga_steps in order to log_reg_steps
-log_ga_steps = false
-log_reg_steps = false
+log_ga_steps = true
+log_reg_steps = true
