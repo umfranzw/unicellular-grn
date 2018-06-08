@@ -3,7 +3,11 @@ pop_size = 100
 ga_steps = 100
 reg_steps = 20
 mut_prob = 0.15
+min_mut_prob = 0.1
+mut_step = 0.01
 cross_frac = 0.4
+min_cross_frac = 0.2
+cross_step = 0.01
 num_genes = 8
 gene_bits = 8
 min_protein_conc = 1e-2
@@ -15,11 +19,15 @@ alpha = 0.5
 #sequence weight (for binding)
 beta = 0.5
 
-decay_rate = 0.03
+decay_rate = 0.02
 initial_proteins = 5
 max_mut_float = 2.0
 max_mut_bits = 8
 
 fitness_log_interval = 10
 #note: binding_method should be either "thresholded" or "scaled"
-binding_method = "thresholded"
+binding_method = "scaled"
+
+#note: must log_ga_steps in order to log_reg_steps
+log_ga_steps = false
+log_reg_steps = false

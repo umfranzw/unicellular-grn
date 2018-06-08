@@ -38,6 +38,10 @@ Run::Run(toml::Table& t, int file_index) {
         this->binding_method = BINDING_THRESHOLDED;
     }
 
+    this->log_ga_steps = toml::get<toml::Boolean>(t.at("log_ga_steps"));
+    this->log_reg_steps = toml::get<toml::Boolean>(t.at("log_reg_steps"));
+    
+    //this is not in the TOML file - it's used to name the output directories ("run0", "run1", etc.)
     this->file_index = file_index;
 }
 

@@ -3,11 +3,6 @@
 
 #include <string>
 
-#define WRITE_DB 0
-#define LOG_GA_STEPS 0
-//note: must LOG_GA_STEPS in order to LOG_REG_STEPS
-#define LOG_REG_STEPS 0
-
 using namespace std;
 
 const string RUN_FILE = "runs.toml";
