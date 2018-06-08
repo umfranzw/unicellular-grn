@@ -31,5 +31,5 @@ fitness_log_interval = 10
 binding_method = "scaled"
 
 #note: must log_ga_steps in order to log_reg_steps
-log_ga_steps = true
-log_reg_steps = true
+log_ga_steps = false
+log_reg_steps = false
