@@ -8,6 +8,7 @@
 #include "protein_store.hpp"
 #include <cstdio>
 #include <fstream>
+#include <cmath>
 
 Logger::Logger(Run *run) {
     this->run = run;
