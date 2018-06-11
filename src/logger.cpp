@@ -297,10 +297,20 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<float> *fitnes
 
         //print status
         if (ga_step < 0) {
+            cout << "********" << endl;
             cout << "initial:" << endl;
+            cout << "********" << endl;
         }
         else {
-            cout << "iteration " << ga_step + 1 << ":" << endl;
+            //we're going to be looking at this output a lot, so we might as well make it pretty...
+            string msg = "iteration ";
+            stringstream div;
+            for (int i = 0; i < (int) msg.length() + (int) log10(ga_step + 1) + 1 + 1; i++) { //last +1 is for the ":" below
+                div << "*";
+            }
+            cout << div.str() << endl;
+            cout << msg << ga_step + 1 << ":" << endl;
+            cout << div.str() << endl;
         }
         cout << "best fitness: " << best_fitness << endl;
         cout << "avg fitness: " << avg_fitness << endl;
