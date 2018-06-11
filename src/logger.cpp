@@ -256,7 +256,7 @@ void Logger::log_run() {
     sqlite3_finalize(run_stmt);
 }
 
-void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
+void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<float> *fitnesses) {
     //note: ga_step may be < 0 when logging initial fitnesses
     if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {
         int rc;
@@ -266,6 +266,7 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
 
         float avg_fitness = 0.0f;
         float best_fitness = -1.0f;
+        int best_index = -1;
         int bind_index;
 
         sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
@@ -273,6 +274,7 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
             avg_fitness += (*fitnesses)[i];
             if (i == 0 || best_fitness < (*fitnesses)[i]) {
                 best_fitness = (*fitnesses)[i];
+                best_index = i;
             }
 
             bind_index = 1;
@@ -300,8 +302,9 @@ void Logger::log_fitnesses(int ga_step, vector<float> *fitnesses) {
         else {
             cout << "iteration " << ga_step + 1 << ":" << endl;
         }
-        cout << "avg fitness: " << avg_fitness << endl;
         cout << "best fitness: " << best_fitness << endl;
+        cout << "avg fitness: " << avg_fitness << endl;
+        cout << "final protein count in best individual: " << (*pop)[best_index]->proteins->size() << endl;
         cout << "mut_prob: " << this->run->mut_prob << endl;
         cout << "cross_frac: " << this->run->cross_frac << endl;
         cout << endl;
