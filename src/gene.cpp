@@ -93,10 +93,13 @@ void Gene::update_binding(pair<int, float> *protein_info, ProteinStore *store) {
                 this->active_output = id;
             }
             else {
-                Protein *protein = new Protein(this->run, this->output_seq, Utils::zeros(this->run->num_genes), this->kernel_index, this->pos);
-                int id = store->add(protein);
-                this->active_output = id;
-                this->outputs.push_back(id);
+                //add a new protein (if we haven't already reached the max allowable number)
+                if ((int) store->size() < this->run->max_proteins) {
+                    Protein *protein = new Protein(this->run, this->output_seq, Utils::zeros(this->run->num_genes), this->kernel_index, this->pos);
+                    int id = store->add(protein);
+                    this->active_output = id;
+                    this->outputs.push_back(id);
+                }
             }
         }
         //note: this path is never taken when binding_method == "scaled"

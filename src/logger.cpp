@@ -100,6 +100,7 @@ void Logger::create_tables() {
     run_sql << "beta REAL NOT NULL,";
     run_sql << "decay_rate REAL NOT NULL,";
     run_sql << "initial_proteins INTEGER NOT NULL,";
+    run_sql << "max_proteins INTEGER NOT NULL,";
     run_sql << "max_mut_float REAL NOT NULL,";
     run_sql << "max_mut_bits INTEGER NOT NULL,";
     run_sql << "fitness_log_interval INTEGER NOT NULL,";
@@ -216,7 +217,7 @@ void Logger::create_tables() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, log_ga_steps, log_reg_steps) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, log_ga_steps, log_reg_steps) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -238,6 +239,7 @@ void Logger::log_run() {
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->beta);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->decay_rate);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->initial_proteins);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->max_proteins);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->max_mut_float);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->max_mut_bits);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->fitness_log_interval);

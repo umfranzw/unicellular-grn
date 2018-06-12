@@ -32,6 +32,7 @@ public:
     float beta; //sequence weight (for binding)
     float decay_rate;
     int initial_proteins;
+    int max_proteins;
     float max_mut_float;
     int max_mut_bits;
     int fitness_log_interval;

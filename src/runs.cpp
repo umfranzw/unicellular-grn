@@ -22,6 +22,7 @@ Run::Run(toml::Table& t, int file_index) {
     this->beta = (float) toml::get<toml::Float>(t.at("beta"));
     this->decay_rate = (float) toml::get<toml::Float>(t.at("decay_rate"));
     this->initial_proteins = toml::get<toml::Integer>(t.at("initial_proteins"));
+    this->max_proteins = toml::get<toml::Integer>(t.at("max_proteins"));
     this->max_mut_float = (float) toml::get<toml::Float>(t.at("max_mut_float"));
     this->max_mut_bits = toml::get<toml::Integer>(t.at("max_mut_bits"));
     this->fitness_log_interval = toml::get<toml::Integer>(t.at("fitness_log_interval"));
@@ -36,6 +37,12 @@ Run::Run(toml::Table& t, int file_index) {
         cerr << "Unrecognized binding method: '" << bmeth << "'" << endl;
         cerr << "Defaulting to 'thresholded'." << endl;
         this->binding_method = BINDING_THRESHOLDED;
+    }
+
+    if (this->initial_proteins > this->max_proteins) {
+        cerr << "Error: initial_proteins > max_proteins." << endl;
+        cerr << "Setting initial_proteins = max_proteins" << endl;
+        this->initial_proteins = this->max_proteins;
     }
 
     this->log_ga_steps = toml::get<toml::Boolean>(t.at("log_ga_steps"));
