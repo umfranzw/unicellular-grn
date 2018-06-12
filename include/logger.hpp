@@ -22,9 +22,13 @@ public:
     float get_best_fitness(int ga_step);
     float get_avg_fitness(int ga_step);
 
+    void print_run_best_grn();
+
 private:
     Run *run;
     sqlite3 *conn;
+    Grn *run_best_grn;
+    float run_best_fitness;
 
     void create_tables();
     float get_fitness_val(int ga_step, string *sql_fcn);

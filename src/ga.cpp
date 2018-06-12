@@ -52,6 +52,8 @@ void Ga::run_alg() {
         this->adjust_params(this->run, i);
     }
 
+    this->logger->print_run_best_grn();
+
     this->logger->write_db();
 }
 

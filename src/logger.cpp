@@ -12,6 +12,7 @@
 
 Logger::Logger(Run *run) {
     this->run = run;
+    this->run_best_grn = nullptr;
     
     //ensure statements are serialized so that using multiple openMP threads in the simulation (which may call logger member functions) won't mess up the order of transactions
     int rc = sqlite3_config(SQLITE_CONFIG_SERIALIZED);
@@ -72,8 +73,19 @@ void Logger::write_db() {
     }
 }
 
+void Logger::print_run_best_grn() {
+    cout << "****************" << endl;
+    cout << "Best GRN of run:" << endl;
+    cout << "fitness: " << this->run_best_fitness << endl;
+    cout << this->run_best_grn->to_str() << endl;
+    cout << "****************" << endl;
+}
+
 Logger::~Logger() {
     sqlite3_close(this->conn);
+    if (this->run_best_grn != nullptr) {
+        delete this->run_best_grn;
+    }
 }
 
 void Logger::create_tables() {
@@ -278,6 +290,14 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<float> *fitnes
             if (i == 0 || best_fitness < (*fitnesses)[i]) {
                 best_fitness = (*fitnesses)[i];
                 best_index = i;
+            }
+
+            if (i == 0 || best_fitness < this->run_best_fitness) {
+                this->run_best_fitness = best_fitness;
+                if (this->run_best_grn != nullptr) { //remove old best individual
+                    delete this->run_best_grn;
+                }
+                this->run_best_grn = new Grn((*pop)[best_index]); //create a copy
             }
 
             bind_index = 1;
