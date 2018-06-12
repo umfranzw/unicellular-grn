@@ -2,6 +2,7 @@
 #include "runs.hpp"
 #include "ga.hpp"
 #include <string>
+#include "bitvec.hpp"
 
 using namespace std;
 

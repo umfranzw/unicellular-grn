@@ -5,8 +5,9 @@
 
 BitVec::BitVec(int len) {
     this->len = len;
-    
-    for (int i = 0; i < len / 8; i++) {
+
+    int num_blocks = len / 8 + (len % 8 ? 1 : 0);
+    for (int i = 0; i < num_blocks; i++) {
         this->blocks.push_back((unsigned char) 0);
     }
 }
