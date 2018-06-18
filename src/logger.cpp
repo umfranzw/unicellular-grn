@@ -77,7 +77,7 @@ void Logger::print_run_best_grn() {
     cout << "****************" << endl;
     cout << "Best GRN of run:" << endl;
     cout << "fitness: " << this->run_best_fitness << endl;
-    cout << this->run_best_grn->to_str() << endl;
+    cout << this->run_best_grn->to_str();
     cout << "****************" << endl;
 }
 

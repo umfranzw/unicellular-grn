@@ -223,7 +223,7 @@ string Grn::to_str() {
         info << gene->to_str();
     }
 
-    info << this->proteins->to_str();
+    //info << this->proteins->to_str();
 
     return info.str();
 }
