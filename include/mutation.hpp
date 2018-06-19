@@ -5,17 +5,19 @@
 #include "runs.hpp"
 #include "protein.hpp"
 #include "bitvec.hpp"
+#include "genetic_op.hpp"
 #include <vector>
 
-class Mutation {
+class Mutation : public GeneticOp {
 public:
-    static void mutate(Run *run, vector<Grn*> *pop);
-    static void mutate_initial_proteins(Run *run, vector<Protein*> *proteins);
+    Mutation(Run *run);
+    void run_op(vector<Grn*> *pop, vector<float> *fitnesses);
+    void mutate_initial_proteins(vector<Protein*> *proteins);
     
 private:
-    static void mutate_int(Run *run, int *val, int lower, int upper);
-    static void mutate_float(Run *run, float *val, float lower, float upper);
-    static void mutate_bitset(Run *run, BitVec *bits);
+    void mutate_int(int *val, int lower, int upper);
+    void mutate_float(float *val, float lower, float upper);
+    void mutate_bitset(BitVec *bits);
 };
 
 #endif

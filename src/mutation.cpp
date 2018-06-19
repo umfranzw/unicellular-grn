@@ -2,51 +2,54 @@
 #include "utils.hpp"
 #include "kernels.hpp"
 
-void Mutation::mutate(Run *run, vector<Grn*> *pop) {
+Mutation::Mutation(Run *run) : GeneticOp(run) {
+}
+
+void Mutation::run_op(vector<Grn*> *pop, vector<float> *fitnesses) {
     #pragma omp parallel for
-    for (int i = 0; i < run->pop_size; i++) {
+    for (int i = 0; i < this->run->pop_size; i++) {
         Grn *grn = (*pop)[i];
-        for (int j = 0; j < run->num_genes; j++) {
+        for (int j = 0; j < this->run->num_genes; j++) {
             Gene *gene = grn->genes[j];
-            Mutation::mutate_bitset(run, gene->binding_seq);
-            Mutation::mutate_bitset(run, gene->output_seq);
-            Mutation::mutate_float(run, &gene->threshold, 0.0f, run->max_protein_conc);
-            Mutation::mutate_float(run, &gene->output_rate, 0.0f, run->max_protein_conc);
-            Mutation::mutate_int(run, &gene->kernel_index, 0, (int) KERNELS.size());
+            this->mutate_bitset(gene->binding_seq);
+            this->mutate_bitset(gene->output_seq);
+            this->mutate_float(&gene->threshold, 0.0f, this->run->max_protein_conc);
+            this->mutate_float(&gene->output_rate, 0.0f, this->run->max_protein_conc);
+            this->mutate_int(&gene->kernel_index, 0, (int) KERNELS.size());
         }
-        Mutation::mutate_initial_proteins(run, &grn->initial_proteins);
+        this->mutate_initial_proteins(&grn->initial_proteins);
     }
 }
 
-void Mutation::mutate_initial_proteins(Run *run, vector<Protein*> *proteins) {
+void Mutation::mutate_initial_proteins(vector<Protein*> *proteins) {
     for (Protein *p : *proteins) {
-        Mutation::mutate_bitset(run, p->seq);
-        for (int i = 0; i < run->num_genes; i++) {
-            Mutation::mutate_float(run, &p->concs[i], 0.0f, run->max_protein_conc);
+        this->mutate_bitset(p->seq);
+        for (int i = 0; i < this->run->num_genes; i++) {
+            this->mutate_float(&p->concs[i], 0.0f, this->run->max_protein_conc);
         }
-        Mutation::mutate_int(run, &p->kernel_index, 0, (int) KERNELS.size());
-        Mutation::mutate_int(run, &p->src_pos, 0, run->num_genes);
+        this->mutate_int(&p->kernel_index, 0, (int) KERNELS.size());
+        this->mutate_int(&p->src_pos, 0, this->run->num_genes);
     }
 }
 
-void Mutation::mutate_int(Run *run, int *val, int lower, int upper) {
-    if (run->rand.next_float() < run->mut_prob) {
-        *val = run->rand.in_range(lower, upper);
+void Mutation::mutate_int(int *val, int lower, int upper) {
+    if (this->run->rand.next_float() < this->run->mut_prob) {
+        *val = this->run->rand.in_range(lower, upper);
     }
 }
 
-void Mutation::mutate_float(Run *run, float *val, float lower, float upper) {
-    if (run->rand.next_float() < run->mut_prob) { 
-        float eps = run->rand.in_range(-run->max_mut_float, run->max_mut_float);
+void Mutation::mutate_float(float *val, float lower, float upper) {
+    if (this->run->rand.next_float() < this->run->mut_prob) { 
+        float eps = this->run->rand.in_range(-this->run->max_mut_float, this->run->max_mut_float);
         *val = Utils::clamp(*val + eps, lower, upper);
     }
 }
 
-void Mutation::mutate_bitset(Run *run, BitVec *bits) {
+void Mutation::mutate_bitset(BitVec *bits) {
     int i = 0;
     int count = 0;
-    while (i < run->gene_bits && count < run->max_mut_bits) {
-        if (run->rand.next_float() < run->mut_prob) {
+    while (i < this->run->gene_bits && count < this->run->max_mut_bits) {
+        if (this->run->rand.next_float() < this->run->mut_prob) {
             (*bits)[i] = ~((*bits)[i]);
         }
         i++;

@@ -35,15 +35,23 @@ void Ga::print_pop() {
 }
 
 void Ga::run_alg() {
+    vector<GeneticOp> gen_ops;
+    gen_ops.push_back(Crossover(this->run));
+    gen_ops.push_back(Mutation(this->run));
+    
     this->logger->log_run(); //log the parameters used in this run
     this->logger->log_ga_step(-1, &this->pop); //log initial grns using ga_step = -1
     
     Fitness::update_fitness(this->run, this->logger, &this->pop, &this->fitnesses, -1); //this will log initial reg sim using ga_step = -1
     this->logger->log_fitnesses(-1, &this->pop, &this->fitnesses); //and finally the fitnesses
+    Crossover cross(this->run);
+    Mutation mutate(this->run);
 
     for (int i = 0; i < this->run->ga_steps; i++) {
-        Crossover::crossover(this->run, &this->pop, &this->fitnesses);
-        Mutation::mutate(this->run, &this->pop);
+        //run all of the genetic operators (in the order they were inserted into the vector)
+        for (GeneticOp& op : gen_ops) {
+            op.run_op(&this->pop, &this->fitnesses);
+        }
 
         this->logger->log_ga_step(i, &this->pop);
 
