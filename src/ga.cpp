@@ -4,7 +4,8 @@
 #include "utils.hpp"
 #include "mutation.hpp"
 #include "crossover.hpp"
-#include "fitness.hpp"
+#include "sine_evalor.hpp"
+#include "genetic_op.hpp"
 #include <cmath>
 #include <omp.h>
 
@@ -38,11 +39,12 @@ void Ga::run_alg() {
     vector<GeneticOp> gen_ops;
     gen_ops.push_back(Crossover(this->run));
     gen_ops.push_back(Mutation(this->run));
+    SineEvalor evalor = SineEvalor(this->run, this->logger);
     
     this->logger->log_run(); //log the parameters used in this run
     this->logger->log_ga_step(-1, &this->pop); //log initial grns using ga_step = -1
     
-    Fitness::update_fitness(this->run, this->logger, &this->pop, &this->fitnesses, -1); //this will log initial reg sim using ga_step = -1
+    evalor.update_fitness(&this->pop, &this->fitnesses, -1); //this will log initial reg sim using ga_step = -1
     this->logger->log_fitnesses(-1, &this->pop, &this->fitnesses); //and finally the fitnesses
     Crossover cross(this->run);
     Mutation mutate(this->run);
@@ -55,7 +57,7 @@ void Ga::run_alg() {
 
         this->logger->log_ga_step(i, &this->pop);
 
-        Fitness::update_fitness(this->run, this->logger, &this->pop, &this->fitnesses, i); //this will log the reg sim
+        evalor.update_fitness(&this->pop, &this->fitnesses, i); //this will log the reg sim
 
         this->logger->log_fitnesses(i, &this->pop, &this->fitnesses);
 
