@@ -5,6 +5,8 @@
 #include "grn.hpp"
 #include "logger.hpp"
 #include "utils.hpp"
+#include "evaluator.hpp"
+#include "genetic_op.hpp"
 #include <vector>
 
 class Ga {
@@ -19,6 +21,8 @@ private:
     vector<float> fitnesses;
     Run *run;
     Logger *logger;
+    vector<GeneticOp*> gen_ops;
+    Evaluator *evalor;
 
     void adjust_params(Run *run, int ga_step);
     float clamp_param(float cur_val, float step, float limit);

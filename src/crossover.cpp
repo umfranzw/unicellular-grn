@@ -4,6 +4,9 @@ Crossover::Crossover(Run *run)
     : GeneticOp(run) {
 }
 
+Crossover::~Crossover() {
+}
+
 void Crossover::run_op(vector<Grn*> *pop, vector<float> *fitnesses) {
     vector<pair<int, int>> parents = this->select(fitnesses);
     

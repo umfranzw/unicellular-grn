@@ -3,6 +3,9 @@
 SineEvalor::SineEvalor(Run *run, Logger *logger) : Evaluator(run, logger) {
 }
 
+SineEvalor::~SineEvalor() {
+}
+
 float SineEvalor::eval(Grn *grn) {
     float max_err = this->run->max_protein_conc * run->num_genes; //concs are in [0.0, max_protein_conc] so max possible error at over gene is max_protein_conc
     float result = max_err;

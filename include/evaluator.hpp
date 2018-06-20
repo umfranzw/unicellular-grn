@@ -9,8 +9,9 @@
 class Evaluator {
 public:
     Evaluator(Run *run, Logger *logger);
+    virtual ~Evaluator();
     void update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, int ga_step);
-    virtual float eval(Grn *grn);
+    virtual float eval(Grn *grn) = 0;
 
 protected:
     Run *run;

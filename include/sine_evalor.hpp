@@ -11,6 +11,7 @@
 class SineEvalor : public Evaluator {
 public:
     SineEvalor(Run *run, Logger *logger);
+    ~SineEvalor();
     float eval(Grn *grn);
     
 private:

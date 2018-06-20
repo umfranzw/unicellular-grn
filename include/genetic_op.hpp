@@ -8,7 +8,8 @@
 class GeneticOp {
 public:
     GeneticOp(Run *run);
-    virtual void run_op(vector<Grn*> *pop, vector<float> *fitnesses);
+    virtual ~GeneticOp();
+    virtual void run_op(vector<Grn*> *pop, vector<float> *fitnesses) = 0;
 
 protected:
     Run *run;

@@ -13,6 +13,10 @@ Ga::Ga(Run *run) {
     this->run = run;
     
     this->logger = new Logger(run);
+    this->evalor = new SineEvalor(run, logger);
+    this->gen_ops.push_back(new Crossover(this->run));
+    this->gen_ops.push_back(new Mutation(this->run));
+    
 
     //initialize population (randomly)
     for (int i = 0; i < run->pop_size; i++) {
@@ -23,6 +27,10 @@ Ga::Ga(Run *run) {
 
 Ga::~Ga() {
     delete this->logger;
+    delete this->evalor;
+    for (int i = 0; i < (int) this->gen_ops.size(); i++) {
+        delete this->gen_ops[i];
+    }
 
     for (Grn *grn : this->pop) {
         delete grn;
@@ -36,28 +44,21 @@ void Ga::print_pop() {
 }
 
 void Ga::run_alg() {
-    vector<GeneticOp> gen_ops;
-    gen_ops.push_back(Crossover(this->run));
-    gen_ops.push_back(Mutation(this->run));
-    SineEvalor evalor = SineEvalor(this->run, this->logger);
-    
     this->logger->log_run(); //log the parameters used in this run
     this->logger->log_ga_step(-1, &this->pop); //log initial grns using ga_step = -1
     
-    evalor.update_fitness(&this->pop, &this->fitnesses, -1); //this will log initial reg sim using ga_step = -1
+    this->evalor->update_fitness(&this->pop, &this->fitnesses, -1); //this will log initial reg sim using ga_step = -1
     this->logger->log_fitnesses(-1, &this->pop, &this->fitnesses); //and finally the fitnesses
-    Crossover cross(this->run);
-    Mutation mutate(this->run);
 
     for (int i = 0; i < this->run->ga_steps; i++) {
         //run all of the genetic operators (in the order they were inserted into the vector)
-        for (GeneticOp& op : gen_ops) {
-            op.run_op(&this->pop, &this->fitnesses);
+        for (GeneticOp *op : this->gen_ops) {
+            op->run_op(&this->pop, &this->fitnesses);
         }
 
         this->logger->log_ga_step(i, &this->pop);
 
-        evalor.update_fitness(&this->pop, &this->fitnesses, i); //this will log the reg sim
+        this->evalor->update_fitness(&this->pop, &this->fitnesses, i); //this will log the reg sim
 
         this->logger->log_fitnesses(i, &this->pop, &this->fitnesses);
 

@@ -5,6 +5,9 @@ Evaluator::Evaluator(Run *run, Logger *logger) {
     this->logger = logger;
 }
 
+Evaluator::~Evaluator() {
+}
+
 void Evaluator::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, int ga_step) {
     //do regulatory simulation
     #pragma omp parallel for
@@ -32,9 +35,4 @@ void Evaluator::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, int 
     //TODO: translate final grn proteins to phenotype
 
     //TODO: run phenotype through fitness function
-}
-
-//subclasses should override this
-float Evaluator::eval(Grn *grn) {
-    return 0.0f;
 }

@@ -13,6 +13,7 @@
 class Crossover : public GeneticOp {
 public:
     Crossover(Run *run);
+    ~Crossover();
     void run_op(vector<Grn*> *pop, vector<float> *fitnesses);
 
 private:
