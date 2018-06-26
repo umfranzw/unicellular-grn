@@ -19,8 +19,6 @@ public:
 private:
     vector<pair<int, int>> select(vector<float> *fitnesses);
     int get_fittest(vector<float> *fitnesses);
-    float sum_fitnesses(vector<float> *fitnesses);
-    int spin_wheel(vector<float> *wheel);
     vector<Protein *> build_child_init_proteins(vector<Protein*>::iterator left, int left_len, vector<Protein*>::iterator right, int right_len);
     vector<Gene*> build_child_genes(vector<Gene*>::iterator left, int left_len, vector<Gene*>::iterator right, int right_len);
     Gene *cross_genes(Gene *left, Gene *right, int pos);

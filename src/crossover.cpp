@@ -1,4 +1,5 @@
 #include "crossover.hpp"
+#include "prob_dist.hpp"
 
 Crossover::Crossover(Run *run)
     : GeneticOp(run) {
@@ -92,50 +93,29 @@ int Crossover::get_fittest(vector<float> *fitnesses) {
     return min_index;
 }
 
-float Crossover::sum_fitnesses(vector<float> *fitnesses) {
-    float sum = 0.0f;
+// float Crossover::sum_fitnesses(vector<float> *fitnesses) {
+//     float sum = 0.0f;
 
-    for (int i = 0; i < this->run->pop_size; i++) {
-        sum += (*fitnesses)[i];
-    }
+//     for (int i = 0; i < this->run->pop_size; i++) {
+//         sum += (*fitnesses)[i];
+//     }
 
-    return sum;
-}
+//     return sum;
+// }
 
 vector<pair<int, int>> Crossover::select(vector<float> *fitnesses) {
     int num_cross = (int) (this->run->cross_frac * this->run->pop_size);
     num_cross = max(num_cross - (num_cross % 2), 0);  //ensure it's even
 
-    //build the roulette wheel
-    float fit_sum = sum_fitnesses(fitnesses);
-    //note: last slot is not needed because we are recording boundaries (it will always be 1.0)
-    vector<float> wheel;
-    float acc = 0.0f;
-    for (int i = 0; i < this->run->pop_size - 1; i++) {
-        float slice = 1.0 - (*fitnesses)[i] / fit_sum; //note: we're minimizing
-        float bound = acc + slice;
-        wheel.push_back(bound);
-        acc = bound;
-    }
+    ProbDist dist = ProbDist(this->run, *fitnesses, true, true);
 
-    //pick the individuals using the wheel (with replacement)
     vector<pair<int, int>> parents;
     for (int i = 0; i < num_cross / 2; i++) {
-        pair<int, int> couple = pair<int, int>(this->spin_wheel(&wheel), this->spin_wheel(&wheel));
+        pair<int, int> couple = pair<int, int>(dist.sample(), dist.sample());
         parents.push_back(couple);
     }
 
     return parents;
-}
-
-int Crossover::spin_wheel(vector<float> *wheel) {
-    float spin = this->run->rand.next_float();
-    int i = 0;
-    while (i < (int) wheel->size() && spin > (*wheel)[i]) {
-        i++;
-    }
-
-    return i;
 }
 
 vector<Protein *> Crossover::build_child_init_proteins(vector<Protein*>::iterator left, int left_len, vector<Protein*>::iterator right, int right_len) {
