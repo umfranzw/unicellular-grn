@@ -4,7 +4,7 @@ SRC_DIR = src
 INC_DIR = include
 OBJ_DIR = obj
 
-SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+SRCS = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/s_exp/*.cpp)
 #HDRS = $(wildcard $(INC_DIR)/*.h)
 OBJ = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
@@ -25,6 +25,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
+	mkdir -p $(OBJ_DIR)/s_exp
 
 clean:
 	rm -r $(OBJ_DIR)
