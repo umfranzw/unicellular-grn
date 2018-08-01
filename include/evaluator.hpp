@@ -4,14 +4,15 @@
 #include "runs.hpp"
 #include "logger.hpp"
 #include "grn.hpp"
+#include "phenotype.hpp"
 #include <vector>
 
 class Evaluator {
 public:
     Evaluator(Run *run, Logger *logger);
     virtual ~Evaluator();
-    void update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, int ga_step);
-    virtual float eval(Grn *grn) = 0;
+    virtual void update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step);
+    virtual float eval(Grn *grn, Phenotype *ptype) = 0;
 
 protected:
     Run *run;

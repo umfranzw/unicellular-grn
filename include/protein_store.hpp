@@ -3,8 +3,10 @@
 
 #include "protein.hpp"
 #include "store_iterator.hpp"
+#include "bitvec.hpp"
 #include <map>
 #include <iterator>
+#include <vector>
 
 using namespace std;
 
@@ -19,15 +21,15 @@ public:
     ~ProteinStore();
     int add(Protein* protein);
     bool remove(int id);
-    Protein *get(int id);
+    Protein *get(int id); //constant time operation
+    vector<Protein *>get_all(const BitVec *bv); //linear time operation
     size_t size();
-    bool contains(int id);
     vector<int> get_ids();
     string to_str();
     void reset();
 
 private:
-    map<int, Protein*> proteins;
+    map<int, Protein*> id_map;
     int next_id;
 };
 

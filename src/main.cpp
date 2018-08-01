@@ -2,6 +2,9 @@
 #include "runs.hpp"
 #include "ga.hpp"
 #include <string>
+#include <sstream>
+#include "logger.hpp"
+#include "vis_adapter.hpp"
 
 using namespace std;
 

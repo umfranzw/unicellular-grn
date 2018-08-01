@@ -7,9 +7,10 @@ import shutil
 import os
 from run import Run
 
-PLOT_REG_STEPS = True
+PLOT_REG_STEPS = False
 
-DB_FILE = '/home/wayne/Documents/school/thesis/unicellular-grn/data/dbs/run0.db'
+#DB_FILE = '/home/wayne/Documents/school/thesis/unicellular-grn/data/dbs/run0.db'
+DB_FILE = 'file::memory:?cache=shared'
 IMG_DIR = '/home/wayne/Documents/school/thesis/unicellular-grn/data/images'
 GENE_WIDTH = 0.2
 GENE_HEIGHT = 0.25

@@ -7,7 +7,10 @@
 #include "utils.hpp"
 #include "evaluator.hpp"
 #include "genetic_op.hpp"
+#include "phenotype.hpp"
 #include <vector>
+
+#define SHELL_BUFF_SIZE 128
 
 class Ga {
 public:
@@ -15,10 +18,13 @@ public:
     ~Ga();
     void run_alg();
     void print_pop();
+    void graph_results();
     
 private:
     vector<Grn*> pop;
     vector<float> fitnesses;
+    vector<Phenotype*> phenotypes;
+    
     Run *run;
     Logger *logger;
     vector<GeneticOp*> gen_ops;

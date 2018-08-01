@@ -4,14 +4,14 @@ SRC_DIR = src
 INC_DIR = include
 OBJ_DIR = obj
 
-SRCS = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/s_exp/*.cpp)
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 #HDRS = $(wildcard $(INC_DIR)/*.h)
 OBJ = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CC = g++
-CPPFLAGS += -Wall -O3 -fopenmp --std=c++11 -I$(INC_DIR)
+CPPFLAGS += -g -Wall -O3 -fopenmp --std=c++11 -I$(INC_DIR)
 LDFLAGS += -O3 -fopenmp
-LDLIBS += -lm -lsqlite3
+LDLIBS += -lm -lsqlite3 -lzmq
 
 .PHONY: all clean
 
@@ -25,7 +25,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
-	mkdir -p $(OBJ_DIR)/s_exp
 
 clean:
 	rm -r $(OBJ_DIR)

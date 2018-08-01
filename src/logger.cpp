@@ -13,6 +13,7 @@
 Logger::Logger(Run *run) {
     this->run = run;
     this->run_best_grn = nullptr;
+    this->run_best_ptype = nullptr;
     
     //ensure statements are serialized so that using multiple openMP threads in the simulation (which may call logger member functions) won't mess up the order of transactions
     int rc = sqlite3_config(SQLITE_CONFIG_SERIALIZED);
@@ -21,8 +22,16 @@ Logger::Logger(Run *run) {
         exit(1);
     }
 
+    //enable URI filenames so that we can share a single cache between multiple connections (so we can open multiple connections to the same in-memory database)
+    // rc = sqlite3_config(SQLITE_CONFIG_URI, 1);
+    // if (rc != SQLITE_OK) {
+    //     cerr << "Error enabling sqlite URI filenames: " << rc << endl;
+    //     exit(1);
+    // }
+
     //we'll log to an in-memory database during the simulation (since it's an order of magnitude faster than a disk-based db)
     //Then, when the simulation ends, the user should call write_db() to write it out to disk in one shot
+    //rc = sqlite3_open("file::memory:?cache=shared", &this->conn);
     rc = sqlite3_open(":memory:", &this->conn);
     if (rc) {
         cerr << "Cannot create in-memory database connection" << endl;
@@ -73,18 +82,23 @@ void Logger::write_db() {
     }
 }
 
-void Logger::print_run_best_grn() {
+void Logger::print_run_best() {
     cout << "****************" << endl;
     cout << "Best GRN of run:" << endl;
     cout << "fitness: " << this->run_best_fitness << endl;
-    cout << this->run_best_grn->to_str();
+    //cout << this->run_best_grn->to_str();
     cout << "****************" << endl;
+
+    cout << this->run_best_ptype->to_str();
 }
 
 Logger::~Logger() {
     sqlite3_close(this->conn);
     if (this->run_best_grn != nullptr) {
         delete this->run_best_grn;
+    }
+    if (this->run_best_ptype != nullptr) {
+        delete this->run_best_ptype;
     }
 }
 
@@ -271,7 +285,7 @@ void Logger::log_run() {
     sqlite3_finalize(run_stmt);
 }
 
-void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<float> *fitnesses) {
+void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *phenotypes, vector<float> *fitnesses) {
     //note: ga_step may be < 0 when logging initial fitnesses
     if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {
         int rc;
@@ -287,17 +301,9 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<float> *fitnes
         sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
         for (int i = 0; i < this->run->pop_size; i++) {
             avg_fitness += (*fitnesses)[i];
-            if (i == 0 || best_fitness < (*fitnesses)[i]) {
+            if (i == 0 || (*fitnesses)[i] < best_fitness) {
                 best_fitness = (*fitnesses)[i];
                 best_index = i;
-            }
-
-            if (i == 0 || best_fitness < this->run_best_fitness) {
-                this->run_best_fitness = best_fitness;
-                if (this->run_best_grn != nullptr) { //remove old best individual
-                    delete this->run_best_grn;
-                }
-                this->run_best_grn = new Grn((*pop)[best_index]); //create a copy
             }
 
             bind_index = 1;
@@ -306,12 +312,25 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<float> *fitnes
             sqlite3_bind_int(fitness_stmt, bind_index++, ga_step);
             rc = sqlite3_step(fitness_stmt);
             if (rc != SQLITE_DONE) {
-                cerr << "Error inserting fitness." << endl;
+                cerr << "Error inserting fitness. Error code: " << rc << endl;
+                cerr << "Data to insert: " << (*fitnesses)[i] << ", " << i << ", " << ga_step << endl;
                 exit(1);
             }
             sqlite3_reset(fitness_stmt);
             sqlite3_clear_bindings(fitness_stmt);
         }
+
+        //record run-best
+        if (ga_step == -1 || best_fitness < this->run_best_fitness) {
+            this->run_best_fitness = best_fitness;
+            if (this->run_best_grn != nullptr) { //remove old best individual
+                delete this->run_best_grn;
+                delete this->run_best_ptype;
+            }
+            this->run_best_grn = new Grn((*pop)[best_index]); //create a copy
+            this->run_best_ptype = new Phenotype((*phenotypes)[best_index]); //create a copy
+        }
+        
         sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
         
         avg_fitness /= (float) this->run->pop_size;
@@ -336,6 +355,13 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<float> *fitnes
             cout << div.str() << endl;
         }
         cout << "best fitness: " << best_fitness << endl;
+        // for (int z = 0; z < this->run->pop_size; z++) {
+        //     cout << (*fitnesses)[z];
+        //     if (z < this->run->pop_size - 1) {
+        //         cout << ", ";
+        //     }
+        // }
+        // cout << endl;
         cout << "avg fitness: " << avg_fitness << endl;
         cout << "final protein count in best individual: " << (*pop)[best_index]->proteins->size() << endl;
         cout << "mut_prob: " << this->run->mut_prob << endl;
@@ -374,6 +400,11 @@ float Logger::get_best_fitness(int ga_step) {
 float Logger::get_avg_fitness(int ga_step) {
     string fcn = "avg";
     return this->get_fitness_val(ga_step, &fcn);
+}
+
+//best fitness *so far*
+float Logger::get_run_best_fitness() {
+    return this->run_best_fitness;
 }
 
 void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {

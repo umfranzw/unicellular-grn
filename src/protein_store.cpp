@@ -31,23 +31,23 @@ void ProteinStore::reset() {
         delete protein;
     }
     
-    this->proteins.clear();
+    this->id_map.clear();
     this->next_id = 0;
 }
 
 int ProteinStore::add(Protein *protein) {
     int id = this->next_id;
-    this->proteins.insert(make_pair(id, protein));
+    this->id_map.insert(make_pair(id, protein));
     this->next_id++;
 
     return id;
 }
 
 bool ProteinStore::remove(int id) {
-    map<int, Protein*>::iterator item = this->proteins.find(id);
+    map<int, Protein*>::iterator item = this->id_map.find(id);
     int num_erased = 0;
-    if (item != this->proteins.end()) {
-        num_erased = this->proteins.erase(id);
+    if (item != this->id_map.end()) {
+        num_erased = this->id_map.erase(id);
         delete item->second;
     }
     
@@ -56,25 +56,33 @@ bool ProteinStore::remove(int id) {
 
 Protein *ProteinStore::get(int id) {
     Protein *protein = nullptr;
-    map<int, Protein*>::iterator result = this->proteins.find(id);
-    if (result != this->proteins.end()) {
+    map<int, Protein*>::iterator result = this->id_map.find(id);
+    if (result != this->id_map.end()) {
         protein = result->second;
     }
 
     return protein;
 }
 
-size_t ProteinStore::size() {
-    return this->proteins.size();
+vector<Protein *>ProteinStore::get_all(const BitVec *bv) {
+    vector<Protein *> proteins;
+
+    for (auto it = this->id_map.begin(); it != this->id_map.end(); it++) {
+        if (*(it->second->seq) == *bv) {
+            proteins.push_back(it->second);
+        }
+    }
+
+    return proteins;
 }
 
-bool ProteinStore::contains(int id) {
-    return this->proteins.find(id) == this->proteins.end();
+size_t ProteinStore::size() {
+    return this->id_map.size();
 }
 
 vector<int> ProteinStore::get_ids() {
     vector<int> ids;
-    for (pair<int, Protein*> entry : this->proteins) {
+    for (pair<int, Protein*> entry : this->id_map) {
         ids.push_back(entry.first);
     }
     
@@ -95,9 +103,9 @@ string ProteinStore::to_str() {
 }
 
 ProteinStore::iterator ProteinStore::begin() const {
-    return StoreIterator(this->proteins.begin());
+    return StoreIterator(this->id_map.begin());
 }
 
 ProteinStore::iterator ProteinStore::end() const {
-    return StoreIterator(this->proteins.end());
+    return StoreIterator(this->id_map.end());
 }

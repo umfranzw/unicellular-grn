@@ -4,24 +4,30 @@
 #include "utils.hpp"
 #include "mutation.hpp"
 #include "crossover.hpp"
-#include "sine_evalor.hpp"
+#include "program_evalor.hpp"
 #include "genetic_op.hpp"
+#include "vis_adapter.hpp"
 #include <cmath>
 #include <omp.h>
+#include <cstdio>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <array>
 
 Ga::Ga(Run *run) {
     this->run = run;
     
     this->logger = new Logger(run);
-    this->evalor = new SineEvalor(run, logger);
+    this->evalor = new ProgramEvalor(run, logger);
     this->gen_ops.push_back(new Crossover(this->run));
     this->gen_ops.push_back(new Mutation(this->run));
-    
 
     //initialize population (randomly)
     for (int i = 0; i < run->pop_size; i++) {
         this->pop.push_back(new Grn(run));
         this->fitnesses.push_back(0.0f);
+        this->phenotypes.push_back(new Phenotype());
     }
 }
 
@@ -32,8 +38,9 @@ Ga::~Ga() {
         delete this->gen_ops[i];
     }
 
-    for (Grn *grn : this->pop) {
-        delete grn;
+    for (int i = 0; i < this->run->pop_size; i++) {
+        delete this->pop[i];
+        delete this->phenotypes[i];
     }
 }
 
@@ -47,10 +54,10 @@ void Ga::run_alg() {
     this->logger->log_run(); //log the parameters used in this run
     this->logger->log_ga_step(-1, &this->pop); //log initial grns using ga_step = -1
     
-    this->evalor->update_fitness(&this->pop, &this->fitnesses, -1); //this will log initial reg sim using ga_step = -1
-    this->logger->log_fitnesses(-1, &this->pop, &this->fitnesses); //and finally the fitnesses
+    this->evalor->update_fitness(&this->pop, &this->fitnesses, &this->phenotypes, -1); //this will log initial reg sim using ga_step = -1
+    this->logger->log_fitnesses(-1, &this->pop, &this->phenotypes, &this->fitnesses); //and finally the fitnesses
 
-    for (int i = 0; i < this->run->ga_steps; i++) {
+    for (int i = 0; i < this->run->ga_steps && this->logger->get_run_best_fitness() > 0.0f; i++) {
         //run all of the genetic operators (in the order they were inserted into the vector)
         for (GeneticOp *op : this->gen_ops) {
             op->run_op(&this->pop, &this->fitnesses);
@@ -58,16 +65,23 @@ void Ga::run_alg() {
 
         this->logger->log_ga_step(i, &this->pop);
 
-        this->evalor->update_fitness(&this->pop, &this->fitnesses, i); //this will log the reg sim
+        this->evalor->update_fitness(&this->pop, &this->fitnesses, &this->phenotypes, i); //this will log the reg sim
 
-        this->logger->log_fitnesses(i, &this->pop, &this->fitnesses);
+        this->logger->log_fitnesses(i, &this->pop, &this->phenotypes, &this->fitnesses);
 
         this->adjust_params(this->run, i);
     }
 
-    this->logger->print_run_best_grn();
+    this->logger->print_run_best();
 
     this->logger->write_db();
+
+    this->graph_results();
+}
+
+void Ga::graph_results() {
+    VisAdapter adapter = VisAdapter(this->logger->conn);
+    adapter.listen();
 }
 
 void Ga::adjust_params(Run *run, int ga_step) {
