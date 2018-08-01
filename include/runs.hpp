@@ -38,7 +38,7 @@ public:
     int fitness_log_interval;
     int binding_method;
 
-    bool log_ga_steps;
+    bool log_grns;
     bool log_reg_steps;
 
     int file_index; //index of run in file (this is filled in by the Runs() constructor and is not part of toml file)

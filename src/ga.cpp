@@ -83,7 +83,7 @@ void Ga::graph_results() {
     cout << endl;
     cout << "Generating graphs..." << endl;
     cout.flush();
-    VisAdapter adapter = VisAdapter(this->logger->conn);
+    VisAdapter adapter = VisAdapter(this->run, this->logger->conn);
     adapter.listen();
     cout << "done." << endl;
 }

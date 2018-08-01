@@ -1,6 +1,7 @@
 #ifndef _VIS_ADAPTER_HPP
 #define _VIS_ADAPTER_HPP
 
+#include "runs.hpp"
 #include <sqlite3.h>
 #include <vector>
 #include <string>
@@ -14,7 +15,7 @@ using namespace std;
 
 class VisAdapter {
 public:
-    VisAdapter(sqlite3 *db);
+    VisAdapter(Run *run, sqlite3 *db);
     ~VisAdapter();
     void listen();
     void select(string sql, vector<string> params, vector<char> types);
@@ -26,6 +27,7 @@ private:
     void run_script();
     int read_stream(int fd, char **buf);
 
+    Run *run;
     sqlite3 *db;
     sqlite3_stmt *stmt;
 };

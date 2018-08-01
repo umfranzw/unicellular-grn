@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import shutil
 import os
+import sys
+import argparse
 from run import Run
 from ipc import Ipc
-
-PLOT_REG_STEPS = True
 
 IMG_DIR = '/home/wayne/Documents/school/thesis/unicellular-grn/data/images'
 GENE_WIDTH = 0.2
@@ -198,6 +198,11 @@ def get_best(conn):
     return row
 
 def main():
+    parser = argparse.ArgumentParser(description="Graph the simulation results, using IPC to access the simulation's in-memory database.")
+    parser.add_argument('--plot_reg_steps', type=str, default="false", help='set to "true" to generate graphs of regulatory steps')
+    args = parser.parse_args()
+    plot_reg_steps = args.plot_reg_steps.lower() == "true"
+    
     conn = Ipc()
 
     run = Run(conn)
@@ -212,7 +217,7 @@ def main():
 
     ga_step, pop_index, best_fitness = get_best(conn)
 
-    if PLOT_REG_STEPS:
+    if plot_reg_steps:
         for j in range(run.reg_steps):
             draw_grn(run_dir, ga_step, j, pop_index, run, conn)
 

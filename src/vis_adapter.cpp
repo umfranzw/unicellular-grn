@@ -4,9 +4,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <cstring>
+#include <sstream>
 #include "vis_adapter.hpp"
 
-VisAdapter::VisAdapter(sqlite3 *db) {
+VisAdapter::VisAdapter(Run *run, sqlite3 *db) {
+    this->run = run;
     this->db = db;
 }
 
@@ -148,7 +150,10 @@ void VisAdapter::run_script() {
     }
     
     else if (child_pid == 0) {
-        execlp(SCRIPT_PATH, "", NULL);
+        stringstream args;
+        //note: must log grns to log reg_steps
+        args << "--plot_reg_steps=" << (run->log_grns && run->log_reg_steps ? "true" : "false");
+        execlp(SCRIPT_PATH, "", args.str().c_str(), NULL); //note: first arg is empty string since execlp seems to ignore it for some reason
         perror("execlp");
         exit(1);
     }

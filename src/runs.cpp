@@ -45,7 +45,7 @@ Run::Run(toml::Table& t, int file_index) {
         this->initial_proteins = this->max_proteins;
     }
 
-    this->log_ga_steps = toml::get<toml::Boolean>(t.at("log_ga_steps"));
+    this->log_grns = toml::get<toml::Boolean>(t.at("log_grns"));
     this->log_reg_steps = toml::get<toml::Boolean>(t.at("log_reg_steps"));
     
     //this is not in the TOML file - it's used to name the output directories ("run0", "run1", etc.)
