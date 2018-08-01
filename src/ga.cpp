@@ -80,8 +80,12 @@ void Ga::run_alg() {
 }
 
 void Ga::graph_results() {
+    cout << endl;
+    cout << "Generating graphs..." << endl;
+    cout.flush();
     VisAdapter adapter = VisAdapter(this->logger->conn);
     adapter.listen();
+    cout << "done." << endl;
 }
 
 void Ga::adjust_params(Run *run, int ga_step) {

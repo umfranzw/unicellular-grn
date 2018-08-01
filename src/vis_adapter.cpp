@@ -11,10 +11,9 @@ VisAdapter::VisAdapter(sqlite3 *db) {
 }
 
 void VisAdapter::listen() {
-    cout << "Starting server" << endl;
     zmq::context_t context(1);
     zmq::socket_t socket(context, ZMQ_PAIR);
-    socket.bind("ipc://pipe");
+    socket.bind(SOCKET_URI);
 
     this->run_script();
 
@@ -22,11 +21,9 @@ void VisAdapter::listen() {
     while (!done) {
         //wait for client to send command
         char *cmd = this->recv_string(&socket);
-        cout << "Server received cmd: " << cmd << endl;
         if (strcmp(cmd, "stmt") == 0) {
             //receive sql
             char *sql = this->recv_string(&socket);
-            cout << "Server received sql: " << endl << sql << endl;
             sqlite3_prepare_v2(this->db, sql, strlen(sql) + 1, &this->stmt, NULL);
             free(sql);
         }
@@ -34,25 +31,19 @@ void VisAdapter::listen() {
         else if (strcmp(cmd, "bind_int") == 0) {
             //receive param index
             int index = this->recv_int(&socket);
-            cout << "Server received index: " << index << endl;
             int val = this->recv_int(&socket);
-            cout << "Server received value: " << val << endl;
             sqlite3_bind_int(this->stmt, index, val);
         }
         
         else if (strcmp(cmd, "bind_double") == 0) {
             int index = this->recv_int(&socket);
-            cout << "Server received index: " << index << endl;
             double val = this->recv_double(&socket);
-            cout << "Server received value: " << val << endl;
             sqlite3_bind_double(this->stmt, index, val);
         }
 
         else if (strcmp(cmd, "bind_text") == 0) {
             int index = this->recv_int(&socket);
-            cout << "Server received index: " << index << endl;
             char *val = this->recv_string(&socket);
-            cout << "Server received value: " << val << endl;
             sqlite3_bind_text(this->stmt, index, val, strlen(val), SQLITE_TRANSIENT);
             free(val); //safe since TRANSIENT param causes SQLite to copy the string above
         }
@@ -67,13 +58,11 @@ void VisAdapter::listen() {
             zmq::message_t resp(sizeof(int));
             memcpy(resp.data(), &resp_val, sizeof(int));
             socket.send(resp);
-            cout << "Server sent response code: " << resp_val << endl;
         }
 
         else if (strcmp(cmd, "column_int") == 0) {
             //receive index
             int index = this->recv_int(&socket);
-            cout << "Server received index: " << index << endl;
             
             int val = sqlite3_column_int(this->stmt, index);
             zmq::message_t resp(sizeof(int));
@@ -83,7 +72,6 @@ void VisAdapter::listen() {
 
         else if (strcmp(cmd, "column_double") == 0) {
             int index = this->recv_int(&socket);
-            cout << "Server received index: " << index << endl;
 
             double val = sqlite3_column_double(this->stmt, index);
             zmq::message_t resp(sizeof(double));
@@ -93,7 +81,6 @@ void VisAdapter::listen() {
 
         else if (strcmp(cmd, "column_text") == 0) {
             int index = this->recv_int(&socket);
-            cout << "Server received index: " << index << endl;
 
             char *val = (char *) sqlite3_column_text(this->stmt, index);
             int len = strlen(val);
@@ -104,12 +91,10 @@ void VisAdapter::listen() {
 
         else if (strcmp(cmd, "finalize") == 0) {
             sqlite3_finalize(this->stmt);
-            cout << "Server finalized statement" << endl;
         }
 
         else if (strcmp(cmd, "exit") == 0) {
             done = true;
-            cout << "Server exited" << endl;
         }
         
         free(cmd);
@@ -154,15 +139,8 @@ VisAdapter::~VisAdapter() {
 }
 
 void VisAdapter::run_script() {
-    // int output_pipe[2]; //stdin, stdout
-    // int error_pipe[2];
     pid_t child_pid;
-    ////int status;
-    
-    // pipe(output_pipe);
-    // pipe(error_pipe);
 
-    //note: CPU/core affinity will be inherited by child processes by default
     child_pid = fork();
     if (child_pid == -1) {
         perror("fork");
@@ -170,42 +148,10 @@ void VisAdapter::run_script() {
     }
     
     else if (child_pid == 0) {
-        //duplicate the output side of the pipe to stdout
-        //loop is in case of interruption by signal
-        // while ((dup2(output_pipe[1], STDOUT_FILENO) == -1) && (errno == EINTR));
-        // close(output_pipe[1]);
-        // close(output_pipe[0]);
-        
-        // while ((dup2(error_pipe[1], STDERR_FILENO) == -1) && (errno == EINTR));
-        // close(error_pipe[1]);
-        // close(error_pipe[0]);
-        
         execlp(SCRIPT_PATH, "", NULL);
         perror("execlp");
         exit(1);
     }
-    // close(output_pipe[1]);
-    // close(error_pipe[1]);
-
-    ////waitpid(child_pid, &status, 0);
-
-    // char *out_buf;
-    // int count = this->read_stream(output_pipe[0], &out_buf);
-    // if (count > 0) {
-    //     cout << string(out_buf) << endl;
-    // }
-
-    // char *err_buf;
-    // count = this->read_stream(error_pipe[0], &err_buf);
-    // if (count > 0) {
-    //     cerr << string(err_buf) << endl;
-    // }
-
-    // //clean up
-    // free(out_buf);
-    // free(err_buf);
-    // close(output_pipe[0]);
-    // close(error_pipe[0]);
 }
 
 //note: count does not include null terminator

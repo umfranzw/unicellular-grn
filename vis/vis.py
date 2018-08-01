@@ -6,11 +6,10 @@ import matplotlib.patches as mpatches
 import shutil
 import os
 from run import Run
+from ipc import Ipc
 
-PLOT_REG_STEPS = False
+PLOT_REG_STEPS = True
 
-#DB_FILE = '/home/wayne/Documents/school/thesis/unicellular-grn/data/dbs/run0.db'
-DB_FILE = 'file::memory:?cache=shared'
 IMG_DIR = '/home/wayne/Documents/school/thesis/unicellular-grn/data/images'
 GENE_WIDTH = 0.2
 GENE_HEIGHT = 0.25
@@ -50,7 +49,7 @@ def plot_best_fitness(run_dir, conn):
 
 def _plot_fitness(run_dir, conn, sql_fcn, title):
     sql = 'SELECT ga_step, {}(fitness) FROM fitness GROUP BY ga_step;'.format(sql_fcn)
-    rs = conn.execute(sql)
+    rs = conn.select(sql, (), (int, float))
     xs = []
     ys = []
     for row in rs:
@@ -78,9 +77,10 @@ def _get_conc_sql(run):
 
 def _plot_concs(ga_step, reg_step, pop_index, run, conn, ax):
     plt.sca(ax) #note: sca=set current axis
-    
-    sql = 'SELECT p.pid, {} FROM grn JOIN protein_state ps ON grn.id = ps.grn_id JOIN protein p ON ps.protein_id = p.id WHERE grn.ga_step = ? AND ps.reg_step = ? AND grn.pop_index = ?;'.format(_get_conc_sql(run))
-    rs = conn.execute(sql, (ga_step, reg_step, pop_index))
+
+    conc_cols = _get_conc_sql(run)
+    sql = 'SELECT p.pid, {} FROM grn JOIN protein_state ps ON grn.id = ps.grn_id JOIN protein p ON ps.protein_id = p.id WHERE grn.ga_step = ? AND ps.reg_step = ? AND grn.pop_index = ?;'.format(conc_cols)
+    rs = conn.select(sql, (ga_step, reg_step, pop_index), [int] + [float] * run.num_genes)
     colours = {} #maps pid to and index of KELLY_COLOURS
 
     xs = [0] + [(i + 0.5) * GENE_WIDTH for i in range(run.num_genes)] + [run.num_genes * GENE_WIDTH]
@@ -107,12 +107,11 @@ def _draw_bindings(ga_step, reg_step, pop_index, run, conn, ax, colours):
            'WHERE grn.ga_step = ? AND grn.pop_index = ? AND g.pos = ? AND gs.reg_step = ?;')
 
     for i in range(run.num_genes):
-        rs = conn.execute(sql, (ga_step, pop_index, i, reg_step))
-        row = rs.fetchone()
+        rs = conn.select(sql, (ga_step, pop_index, i, reg_step), (int,))
         colour = 'white'
         text = ''
-        if row:
-            pid = row[0]
+        if rs:
+            pid = rs[0][0]
             text = "{}".format(pid)
             if pid in colours:
                 colour_index = colours[pid]
@@ -137,12 +136,11 @@ def _draw_outputs(ga_step, reg_step, pop_index, run, conn, ax, colours):
     bar_colours = []
     bar_texts = []
     for i in range(run.num_genes):
-        rs = conn.execute(sql, (ga_step, pop_index, i, reg_step))
-        row = rs.fetchone()
+        rs = conn.select(sql, (ga_step, pop_index, i, reg_step), (int, float))
         colour = 'white'
         text = ''
-        if row:
-            pid, output_rate = row
+        if rs:
+            pid, output_rate = rs[0]
             ys.append(output_rate)
             text = "{}".format(pid)
             if pid in colours:
@@ -194,16 +192,16 @@ def draw_grn(run_dir, ga_step, reg_step, pop_index, run, conn):
 
 def get_best(conn):
     sql = 'SELECT g.ga_step, g.pop_index, min(f.fitness) FROM grn g JOIN fitness f ON f.ga_step = g.ga_step AND f.pop_index = g.pop_index;'
-    rs = conn.execute(sql)
-    row = rs.fetchone()
+    rs = conn.select(sql, (), (int, int, float))
+    row = rs[0]
 
     return row
 
 def main():
-    conn = sqlite3.connect(DB_FILE)
+    conn = Ipc()
+
     run = Run(conn)
-    run_name = DB_FILE.split('/')[-1].split('.')[0]
-    
+    run_name = "run{}".format(run.run_id)
     run_dir = "{}/{}".format(IMG_DIR, run_name)
     if os.path.exists(run_dir):
         shutil.rmtree(run_dir)
@@ -213,9 +211,6 @@ def main():
     plot_avg_fitness(run_dir, conn)
 
     ga_step, pop_index, best_fitness = get_best(conn)
-    print("Best fitness: {}".format(best_fitness))
-    print("ga_step: {}".format(ga_step))
-    print("pop_index: {}".format(pop_index))
 
     if PLOT_REG_STEPS:
         for j in range(run.reg_steps):

@@ -6,16 +6,11 @@
 #include <string>
 #include <zmq.hpp>
 
-#define SCRIPT_PATH "/home/wayne/Documents/school/thesis/unicellular-grn/vis/test.py"
+#define SCRIPT_PATH "vis/vis.py"
 #define CHUNK_SIZE 20
+#define SOCKET_URI "ipc://pipe"
 
 using namespace std;
-
-typedef enum STATES {
-    INITIAL,
-    PARAMS,
-    STEP
-} STATES;
 
 class VisAdapter {
 public:
@@ -32,7 +27,6 @@ private:
     int read_stream(int fd, char **buf);
 
     sqlite3 *db;
-    int state;
     sqlite3_stmt *stmt;
 };
 
