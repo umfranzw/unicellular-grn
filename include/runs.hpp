@@ -38,6 +38,7 @@ public:
     int fitness_log_interval;
     int binding_method;
 
+    bool graph_results;
     bool log_grns;
     bool log_reg_steps;
 

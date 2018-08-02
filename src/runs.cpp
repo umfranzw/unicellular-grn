@@ -45,6 +45,7 @@ Run::Run(toml::Table& t, int file_index) {
         this->initial_proteins = this->max_proteins;
     }
 
+    this->graph_results = toml::get<toml::Boolean>(t.at("graph_results"));
     this->log_grns = toml::get<toml::Boolean>(t.at("log_grns"));
     this->log_reg_steps = toml::get<toml::Boolean>(t.at("log_reg_steps"));
     

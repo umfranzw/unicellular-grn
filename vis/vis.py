@@ -215,9 +215,8 @@ def main():
     plot_best_fitness(run_dir, conn)
     plot_avg_fitness(run_dir, conn)
 
-    ga_step, pop_index, best_fitness = get_best(conn)
-
     if plot_reg_steps:
+        ga_step, pop_index, best_fitness = get_best(conn)
         for j in range(run.reg_steps):
             draw_grn(run_dir, ga_step, j, pop_index, run, conn)
 

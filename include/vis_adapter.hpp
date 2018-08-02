@@ -9,7 +9,7 @@
 
 #define SCRIPT_PATH "vis/vis.py"
 #define CHUNK_SIZE 20
-#define SOCKET_URI "ipc://pipe"
+#define SOCKET_URI "ipc:///tmp/pipe"
 
 using namespace std;
 

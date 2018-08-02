@@ -131,6 +131,7 @@ void Logger::create_tables() {
     run_sql << "max_mut_bits INTEGER NOT NULL,";
     run_sql << "fitness_log_interval INTEGER NOT NULL,";
     run_sql << "binding_method TEXT NOT NULL,";
+    run_sql << "graph_results INTEGER NOT NULL,";
     run_sql << "log_grns INTEGER NOT NULL,";
     run_sql << "log_reg_steps INTEGER NOT NULL";
     run_sql << ");";
@@ -243,7 +244,7 @@ void Logger::create_tables() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, log_grns, log_reg_steps) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -271,6 +272,7 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, this->run->fitness_log_interval);
     string bmeth = this->run->binding_method == BINDING_THRESHOLDED ? "thresholded" : "scaled";
     sqlite3_bind_text(run_stmt, bind_index++, bmeth.c_str(), bmeth.size(), SQLITE_STATIC);
+    sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->graph_results);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_grns);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_reg_steps);
 
