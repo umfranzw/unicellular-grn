@@ -380,6 +380,29 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
         cout << endl;
         cout.flush();
     }
+
+    else {
+        float avg_fitness = 0.0f;
+        float best_fitness = -1.0f;
+        int best_index = -1;
+        for (int i = 0; i < this->run->pop_size; i++) {
+            avg_fitness += (*fitnesses)[i];
+            if (i == 0 || (*fitnesses)[i] < best_fitness) {
+                best_fitness = (*fitnesses)[i];
+                best_index = i;
+            }
+        }
+
+        if (best_fitness < this->run_best_fitness) {
+            this->run_best_fitness = best_fitness;
+            if (this->run_best_grn != nullptr) { //remove old best individual
+                delete this->run_best_grn;
+                delete this->run_best_ptype;
+            }
+            this->run_best_grn = new Grn((*pop)[best_index]); //create a copy
+            this->run_best_ptype = new Phenotype((*phenotypes)[best_index]); //create a copy
+        }
+    }
 }
 
 float Logger::get_fitness_val(int ga_step, string *sql_fcn) {

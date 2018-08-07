@@ -6,9 +6,8 @@ ProgramEvalor::ProgramEvalor(Run* run, Logger* logger) : Evaluator(run, logger) 
 ProgramEvalor::~ProgramEvalor() {
 }
 
-float ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
+void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
     //do regulatory simulation
-    float best_fitness = -1.0f;
     for (int i = 0; i < this->run->pop_size; i++) {
         (*phenotypes)[i]->reset();
         Grn *grn = (*pop)[i];
@@ -30,13 +29,8 @@ float ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses,
         }
 
         //update fitness value
-        float fitness = this->eval(grn, (*phenotypes)[i]);
-        if (i == 0 || fitness < best_fitness) {
-            best_fitness = fitness;
-        }
+        (*fitnesses)[i] = this->eval(grn, (*phenotypes)[i]);
     }
-
-    return best_fitness;
 }
 
 void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int reg_step) {
