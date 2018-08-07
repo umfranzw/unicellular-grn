@@ -49,6 +49,8 @@ public:
 
     string growth_seq;
     float growth_threshold;
+
+    float term_cutoff;
     
     int file_index; //index of run in file (this is filled in by the Runs() constructor and is not part of toml file)
 };

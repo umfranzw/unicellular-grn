@@ -58,7 +58,7 @@ void Ga::run_alg() {
     this->logger->log_fitnesses(-1, &this->pop, &this->phenotypes, &this->fitnesses); //and finally the fitnesses
 
     int i = 0;
-    while (i < this->run->ga_steps && this->logger->get_run_best_fitness() > 0.0f) {
+    while (i < this->run->ga_steps && this->logger->get_run_best_fitness() > this->run->term_cutoff) {
         //run all of the genetic operators (in the order they were inserted into the vector)
         for (GeneticOp *op : this->gen_ops) {
             op->run_op(&this->pop, &this->fitnesses);

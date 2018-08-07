@@ -59,16 +59,22 @@ void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int reg_step) {
 }
 
 float ProgramEvalor::eval(Grn* grn, Phenotype *ptype) {
+    const float target_bf = 2.0f;
+    const int target_size = 7;
+    const int target_height = 3; //root is at height 1
+    const float scale_factor = 10.0f;
+    
     float fitness = 0.0f;
     float bf = ptype->branching_factor();
     if (bf < 0) { //no nodes
-        fitness += 30;
+        //penalize slightly more than the max bf penalty in the else clause below
+        fitness += (target_bf * scale_factor) + scale_factor;
     }
     else {
-        fitness += abs(2.0f - ptype->branching_factor()) * 10.0f;
+        fitness += abs(target_bf - ptype->branching_factor()) * scale_factor;
     }
-    fitness += abs(2 - ptype->height()) * 10.0f;
-    fitness += abs(3 - ptype->size()) * 10.0f;
+    fitness += abs(target_height - ptype->height()) * scale_factor;
+    fitness += abs(target_size - ptype->size()) * scale_factor;
 
     return fitness;
 }
