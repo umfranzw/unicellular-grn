@@ -1,17 +1,14 @@
 #include "program_evalor.hpp"
 
-#define FORM_START 10
-const BitVec ProgramEvalor::GROWTH_SEQ("1100");
-const float ProgramEvalor::GROWTH_THRESHOLD = 0.5f;
-
 ProgramEvalor::ProgramEvalor(Run* run, Logger* logger) : Evaluator(run, logger) {
 }
 
 ProgramEvalor::~ProgramEvalor() {
 }
 
-void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
+float ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
     //do regulatory simulation
+    float best_fitness = -1.0f;
     for (int i = 0; i < this->run->pop_size; i++) {
         (*phenotypes)[i]->reset();
         Grn *grn = (*pop)[i];
@@ -29,39 +26,48 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
 
             this->logger->log_reg_step(ga_step, j, grn, i);
 
-            if (j > FORM_START) {
-                this->grow_step(grn, (*phenotypes)[i]);
-            }
+            this->grow_step(grn, (*phenotypes)[i], j);
         }
 
         //update fitness value
-        (*fitnesses)[i] = this->eval(grn, (*phenotypes)[i]);
-    }
-}
-
-void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype) {
-    vector<Protein*> proteins = grn->proteins->get_all((const BitVec*) &ProgramEvalor::GROWTH_SEQ);
-
-    map<int, bool> grow_indices;
-    for (Protein *p : proteins) {
-        for (int i = 0; i < this->run->num_genes; i++) {
-            if (p->concs[i] > ProgramEvalor::GROWTH_THRESHOLD) {
-                grow_indices.insert(pair<int, bool>(i, true));
-            }
+        float fitness = this->eval(grn, (*phenotypes)[i]);
+        if (i == 0 || fitness < best_fitness) {
+            best_fitness = fitness;
         }
     }
 
-    //note: map is sorted by keys by default
-    for (auto it = grow_indices.begin(); it != grow_indices.end(); it++) {
-        int grow_index = it->first;
-        ptype->add_child(grow_index);
+    return best_fitness;
+}
+
+void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int reg_step) {
+    bool growing = reg_step >= this->run->growth_start && reg_step <= this->run->growth_end;
+    bool sampling = (reg_step - this->run->growth_start) % this->run->growth_sample_interval == 0;
+    
+    if (growing && sampling) {
+        const static BitVec growth_seq(this->run->growth_seq);
+        vector<Protein*> proteins = grn->proteins->get_all((const BitVec*) &growth_seq);
+
+        map<int, bool> grow_indices;
+        for (Protein *p : proteins) {
+            for (int i = 0; i < this->run->num_genes; i++) {
+                if (p->concs[i] > this->run->growth_threshold) {
+                    grow_indices.insert(pair<int, bool>(i, true));
+                }
+            }
+        }
+
+        //note: map is sorted by keys by default
+        for (auto it = grow_indices.begin(); it != grow_indices.end(); it++) {
+            int grow_index = it->first;
+            ptype->add_child(grow_index);
+        }
     }
 }
 
 float ProgramEvalor::eval(Grn* grn, Phenotype *ptype) {
     float fitness = 0.0f;
     float bf = ptype->branching_factor();
-    if (bf < 0) {
+    if (bf < 0) { //no nodes
         fitness += 30;
     }
     else {

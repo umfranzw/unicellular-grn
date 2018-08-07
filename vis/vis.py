@@ -47,6 +47,30 @@ def plot_avg_fitness(run_dir, conn):
 def plot_best_fitness(run_dir, conn):
     _plot_fitness(run_dir, conn, 'min', 'Best Fitness')
 
+def plot_cumulative_best_fitness(run_dir, conn):
+    sql = ('SELECT f1.ga_step, (' +
+           'SELECT min(f2.fitness) ' +
+           'FROM fitness f2 ' +
+           'WHERE f2.ga_step <= f1.ga_step' +
+           ') AS min_fitness FROM fitness f1 ' +
+           'GROUP BY f1.ga_step;')
+    
+    rs = conn.select(sql, (), (int, float))
+    xs = []
+    ys = []
+    for row in rs:
+        ga_step, fitness = row
+        xs.append(ga_step + 1)
+        ys.append(fitness)
+
+    plt.title('Best Fitness')
+    plt.xlabel('iteration')
+    plt.ylabel('fitness')
+
+    fig, ax = plt.subplots()
+    ax.plot(xs, ys)
+    fig.savefig('{}/{}.png'.format(run_dir, 'Best Fitness'))
+
 def _plot_fitness(run_dir, conn, sql_fcn, title):
     sql = 'SELECT ga_step, {}(fitness) FROM fitness GROUP BY ga_step;'.format(sql_fcn)
     rs = conn.select(sql, (), (int, float))
@@ -212,7 +236,7 @@ def main():
         shutil.rmtree(run_dir)
     os.makedirs(run_dir)
         
-    plot_best_fitness(run_dir, conn)
+    plot_cumulative_best_fitness(run_dir, conn)
     plot_avg_fitness(run_dir, conn)
 
     if plot_reg_steps:

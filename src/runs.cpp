@@ -48,6 +48,13 @@ Run::Run(toml::Table& t, int file_index) {
     this->graph_results = toml::get<toml::Boolean>(t.at("graph_results"));
     this->log_grns = toml::get<toml::Boolean>(t.at("log_grns"));
     this->log_reg_steps = toml::get<toml::Boolean>(t.at("log_reg_steps"));
+
+    this->growth_start = toml::get<toml::Integer>(t.at("growth_start"));
+    this->growth_end = toml::get<toml::Integer>(t.at("growth_end"));
+    this->growth_sample_interval = toml::get<toml::Integer>(t.at("growth_sample_interval"));
+
+    this->growth_seq = toml::get<toml::String>(t.at("growth_seq"));
+    this->growth_threshold = toml::get<toml::Float>(t.at("growth_threshold"));
     
     //this is not in the TOML file - it's used to name the output directories ("run0", "run1", etc.)
     this->file_index = file_index;

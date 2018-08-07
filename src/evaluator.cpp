@@ -8,9 +8,10 @@ Evaluator::Evaluator(Run *run, Logger *logger) {
 Evaluator::~Evaluator() {
 }
 
-void Evaluator::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
+float Evaluator::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
     //do regulatory simulation
-    #pragma omp parallel for
+    //#pragma omp parallel for
+    float best_fitness = -1.0f;
     for (int i = 0; i < this->run->pop_size; i++) {
         (*phenotypes)[i]->reset();
         Grn *grn = (*pop)[i];
@@ -30,6 +31,12 @@ void Evaluator::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vect
         }
 
         //update fitness value
-        (*fitnesses)[i] = this->eval(grn, (*phenotypes)[i]);
+        float fitness = this->eval(grn, (*phenotypes)[i]);
+        (*fitnesses)[i] = fitness;
+        if (i == 0 || fitness < best_fitness) {
+            best_fitness = fitness;
+        }
     }
+
+    return best_fitness;
 }

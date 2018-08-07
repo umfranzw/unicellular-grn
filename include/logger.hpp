@@ -24,7 +24,7 @@ public:
     float get_avg_fitness(int ga_step);
     float get_run_best_fitness(); //so far
 
-    void print_run_best();
+    void print_results(int total_iters);
     sqlite3 *conn;
 
 private:

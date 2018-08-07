@@ -82,13 +82,13 @@ void Logger::write_db() {
     }
 }
 
-void Logger::print_run_best() {
-    cout << "****************" << endl;
-    cout << "Best GRN of run:" << endl;
-    cout << "fitness: " << this->run_best_fitness << endl;
-    //cout << this->run_best_grn->to_str();
-    cout << "****************" << endl;
-
+void Logger::print_results(int total_iters) {
+    cout << "********" << endl;
+    cout << "Results:" << endl;
+    cout << "********" << endl;
+    cout << "Total iterations: " << total_iters << endl;
+    cout << "Run-best fitness: " << this->run_best_fitness << endl;
+    cout << "Run-best GRN:" << endl;
     cout << this->run_best_ptype->to_str();
 }
 
@@ -133,7 +133,12 @@ void Logger::create_tables() {
     run_sql << "binding_method TEXT NOT NULL,";
     run_sql << "graph_results INTEGER NOT NULL,";
     run_sql << "log_grns INTEGER NOT NULL,";
-    run_sql << "log_reg_steps INTEGER NOT NULL";
+    run_sql << "log_reg_steps INTEGER NOT NULL,";
+    run_sql << "growth_start INTEGER NOT NULL,";
+    run_sql << "growth_end INTEGER NOT NULL,";
+    run_sql << "growth_sample_interval INTEGER NOT NULL,";
+    run_sql << "growth_seq TEXT NOT NULL,";
+    run_sql << "growth_threshold INT NOT NULL";
     run_sql << ");";
     sqlite3_exec(this->conn, run_sql.str().c_str(), NULL, NULL, NULL);
 
@@ -244,7 +249,7 @@ void Logger::create_tables() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -275,6 +280,11 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->graph_results);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_grns);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_reg_steps);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_start);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_end);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_sample_interval);
+    sqlite3_bind_text(run_stmt, bind_index++, this->run->growth_seq.c_str(), this->run->growth_seq.size(), SQLITE_STATIC);
+    sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->growth_threshold);
 
     sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
     rc = sqlite3_step(run_stmt);
@@ -357,17 +367,16 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
             cout << div.str() << endl;
         }
         cout << "best fitness: " << best_fitness << endl;
-        // for (int z = 0; z < this->run->pop_size; z++) {
-        //     cout << (*fitnesses)[z];
-        //     if (z < this->run->pop_size - 1) {
-        //         cout << ", ";
-        //     }
-        // }
-        // cout << endl;
         cout << "avg fitness: " << avg_fitness << endl;
-        cout << "final protein count in best individual: " << (*pop)[best_index]->proteins->size() << endl;
         cout << "mut_prob: " << this->run->mut_prob << endl;
         cout << "cross_frac: " << this->run->cross_frac << endl;
+
+        Grn *best_grn = (*pop)[best_index];
+        Phenotype *best_ptype = (*phenotypes)[best_index];
+        cout << "best index: " << best_index << endl;
+        cout << "best phenotype: " << endl;
+        cout << best_ptype->to_str() << endl;
+        cout << "final protein count in best individual: " << best_grn->proteins->size() << endl;
         cout << endl;
         cout.flush();
     }

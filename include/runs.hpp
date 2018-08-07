@@ -4,6 +4,7 @@
 #include "rand.hpp"
 #include "TOMLParser/toml.hpp"
 #include <vector>
+#include <string>
 
 typedef enum BINDING_METHOD {
     BINDING_SCALED,
@@ -42,6 +43,13 @@ public:
     bool log_grns;
     bool log_reg_steps;
 
+    int growth_start;
+    int growth_end;
+    int growth_sample_interval;
+
+    string growth_seq;
+    float growth_threshold;
+    
     int file_index; //index of run in file (this is filled in by the Runs() constructor and is not part of toml file)
 };
 
