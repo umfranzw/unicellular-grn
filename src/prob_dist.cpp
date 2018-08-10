@@ -56,6 +56,7 @@ string ProbDist::to_str() {
     
     stringstream info;
     info << "Probability Distribution:" << endl;
+    info << "    Buckets:  Wheel:" << endl;
     for (int i = 0; i < (int) this->buckets.size(); i++) {
         info << "i = " << i << ": " << this->buckets[i] << ", " << this->wheel[i] << endl;
     }
