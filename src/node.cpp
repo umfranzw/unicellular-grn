@@ -2,15 +2,15 @@
 #include <sstream>
 #include <iostream>
 
-Node::Node(int id, Atom *atom, int parent) {
+Node::Node(int id, Instr *instr, int parent) {
     this->id = id;
-    this->atom = atom;
+    this->instr = instr;
     this->parent = parent;
 }
 
 Node::Node(Node *node) {
     this->id = node->id;
-    this->atom = node->atom;
+    this->instr = node->instr;
     for (int child_id : node->children) {
         this->children.push_back(child_id);
     }
@@ -18,8 +18,8 @@ Node::Node(Node *node) {
 }
 
 Node::~Node() {
-    if (this->atom != nullptr) {
-        delete this->atom;
+    if (this->instr != nullptr) {
+        delete this->instr;
     }
     //note: children will be deleted by Tree class
 }
@@ -29,12 +29,12 @@ string Node::to_str() {
 
     info << "Node:" << endl;
     info << "  id: " << this->id << endl;
-    info << "  atom: ";
-    if (this->atom == nullptr) {
+    info << "  instr: ";
+    if (this->instr == nullptr) {
         info << "null";
     }
     else {
-        info << this->atom->to_code();
+        info << this->instr->to_code(nullptr); //does not print children (i.e. args)
     }
     info << endl;
     

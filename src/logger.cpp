@@ -139,7 +139,10 @@ void Logger::create_tables() {
     run_sql << "growth_sample_interval INTEGER NOT NULL,";
     run_sql << "growth_seq TEXT NOT NULL,";
     run_sql << "growth_threshold INT NOT NULL,";
-    run_sql << "term_cutoff FLOAT NOT NULL";
+    run_sql << "term_cutoff FLOAT NOT NULL,";
+    run_sql << "code_start INTEGER NOT NULL,";
+    run_sql << "code_end INTEGER NOT NULL,";
+    run_sql << "code_sample_interval INTEGER NOT NULL";
     run_sql << ");";
     sqlite3_exec(this->conn, run_sql.str().c_str(), NULL, NULL, NULL);
 
@@ -250,7 +253,7 @@ void Logger::create_tables() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -287,6 +290,9 @@ void Logger::log_run() {
     sqlite3_bind_text(run_stmt, bind_index++, this->run->growth_seq.c_str(), this->run->growth_seq.size(), SQLITE_STATIC);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->growth_threshold);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->term_cutoff);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->code_start);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->code_end);
+    sqlite3_bind_int(run_stmt, bind_index++, this->run->code_sample_interval);
 
     sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
     rc = sqlite3_step(run_stmt);

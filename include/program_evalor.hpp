@@ -14,6 +14,7 @@ public:
     ~ProgramEvalor();
     void update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step);
     void grow_step(Grn *grn, Phenotype *ptype, int reg_step);
+    void code_step(Grn *grn, Phenotype *ptype, int reg_step);
     float eval(Grn *grn, Phenotype *ptype);
 };
 

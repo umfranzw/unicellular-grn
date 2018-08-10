@@ -14,8 +14,8 @@ Phenotype::~Phenotype() {
     delete this->tree;
 }
 
-bool Phenotype::add_child(int parent_index) {
-    return this->tree->add_child(parent_index);
+bool Phenotype::add_child(int parent_index, Instr *instr) {
+    return this->tree->add_child(parent_index, instr);
 }
 
 string Phenotype::to_str() {

@@ -9,7 +9,7 @@ Mutation::~Mutation() {
 }
 
 void Mutation::run_op(vector<Grn*> *pop, vector<float> *fitnesses) {
-    #pragma omp parallel for
+//    #pragma omp parallel for
     for (int i = 0; i < this->run->pop_size; i++) {
         Grn *grn = (*pop)[i];
         for (int j = 0; j < this->run->num_genes; j++) {

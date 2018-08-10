@@ -51,6 +51,10 @@ public:
     float growth_threshold;
 
     float term_cutoff;
+
+    int code_start;
+    int code_end;
+    int code_sample_interval;
     
     int file_index; //index of run in file (this is filled in by the Runs() constructor and is not part of toml file)
 };

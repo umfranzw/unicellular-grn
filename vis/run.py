@@ -6,11 +6,11 @@ class Run():
         self.run_id = rs[0][0]
 
         #get all other stuff
-        sql = "SELECT pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff FROM run;"
+        sql = "SELECT pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval FROM run;"
         
-        rs = conn.select(sql, [], [int, int, int, float, float, float, float, float, float, int, int, float, float, float, float, float, int, int, float, int, int, str, int, int, int, int, int, int, str, float, float])
+        rs = conn.select(sql, [], [int, int, int, float, float, float, float, float, float, int, int, float, float, float, float, float, int, int, float, int, int, str, int, int, int, int, int, int, str, float, float, int, int, int])
         
-        self.pop_size, self.ga_steps, self.reg_steps, self.mut_prob, self.mut_prob_limit, self.mut_step, self.cross_frac, self.cross_frac_limit, self.cross_step, self.num_genes, self.gene_bits, self.min_protein_conc, self.max_protein_conc, self.alpha, self.beta, self.decay_rate, self.initial_proteins, self.max_proteins, self.max_mut_float, self.max_mut_bits, self.fitness_log_interval, self.binding_method, self.graph_results, self.log_grns, self.log_reg_steps, self.growth_start, self.growth_end, self.growth_sample_interval, self.growth_seq, self.growth_threshold, self.term_cutoff = rs[0]
+        self.pop_size, self.ga_steps, self.reg_steps, self.mut_prob, self.mut_prob_limit, self.mut_step, self.cross_frac, self.cross_frac_limit, self.cross_step, self.num_genes, self.gene_bits, self.min_protein_conc, self.max_protein_conc, self.alpha, self.beta, self.decay_rate, self.initial_proteins, self.max_proteins, self.max_mut_float, self.max_mut_bits, self.fitness_log_interval, self.binding_method, self.graph_results, self.log_grns, self.log_reg_steps, self.growth_start, self.growth_end, self.growth_sample_interval, self.growth_seq, self.growth_threshold, self.term_cutoff, self.code_start, self.code_end, self.code_sample_interval = rs[0]
 
     def __str__(self):
         info += "run_id: {}\n".format(self.run_id)
@@ -45,5 +45,8 @@ class Run():
         info += "growth_seq: {}".format(self.growth_seq)
         info += "growth_threshold: {}".format(self.growth_threshold)
         info += "term_cutoff: {}".format(self.term_cutoff)
+        info += "code_start: {}".format(self.code_start)
+        info += "code_end: {}".format(self.code_end)
+        info += "code_sample_interval: {}".format(self.code_sample_interval)
 
         return info

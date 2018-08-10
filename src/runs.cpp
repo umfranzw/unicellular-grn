@@ -57,6 +57,10 @@ Run::Run(toml::Table& t, int file_index) {
     this->growth_threshold = toml::get<toml::Float>(t.at("growth_threshold"));
 
     this->term_cutoff = toml::get<toml::Float>(t.at("term_cutoff"));
+
+    this->code_start = toml::get<toml::Integer>(t.at("code_start"));
+    this->code_end = toml::get<toml::Integer>(t.at("code_end"));
+    this->code_sample_interval = toml::get<toml::Integer>(t.at("code_sample_interval"));
     
     //this is not in the TOML file - it's used to name the output directories ("run0", "run1", etc.)
     this->file_index = file_index;

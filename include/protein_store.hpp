@@ -22,6 +22,7 @@ public:
     int add(Protein* protein);
     bool remove(int id);
     Protein *get(int id); //constant time operation
+    //retreives all proteins with a given seq
     vector<Protein *>get_all(const BitVec *bv); //linear time operation
     size_t size();
     vector<int> get_ids();
