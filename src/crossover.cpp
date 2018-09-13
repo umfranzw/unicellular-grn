@@ -107,7 +107,7 @@ vector<pair<int, int>> Crossover::select(vector<float> *fitnesses) {
     int num_cross = (int) (this->run->cross_frac * this->run->pop_size);
     num_cross = max(num_cross - (num_cross % 2), 0);  //ensure it's even
 
-    ProbDist dist = ProbDist(this->run, *fitnesses, true, true);
+    ProbDist dist = ProbDist(this->run, fitnesses, true, true);
 
     vector<pair<int, int>> parents;
     for (int i = 0; i < num_cross / 2; i++) {

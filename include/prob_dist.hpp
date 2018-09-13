@@ -11,7 +11,10 @@ class BucketRef;
 
 class ProbDist {
 public:
-    ProbDist(Run *run, vector<float> buckets, bool normalize, bool invert);
+    ProbDist(Run *run, vector<float> *buckets, bool normalize, bool invert);
+    void replace_buckets(vector<float> *buckets);
+    ProbDist(ProbDist *other);
+    ~ProbDist();
     int sample();
     
     BucketRef operator[](size_t index);
@@ -21,9 +24,11 @@ public:
 private:
     void update_wheel();
         
-    vector<float> buckets;
-    vector<float> wheel;
-    int dirty_index;
+    vector<float> *buckets;
+    vector<float> *wheel;
+    bool normalize;
+    bool invert;
+    bool dirty;
     Run *run;
 
     friend class BucketRef;

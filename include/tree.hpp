@@ -20,12 +20,17 @@ public:
     float branching_factor();
     string to_str();
     string to_code();
+    int get_num_children(int id);
+    int get_num_filled_nodes();
+    int get_num_unfilled_nodes();
+    void set_instr(int id, Instr *instr);
     
 private:
     Node *root;
     map<int, Node*> id_to_node;
     int next_id;
     int max_depth;
+    int filled_nodes;
 
     string to_code(Node *cur);
     void to_str(Node *cur, stringstream *info, string prefix, int depth);

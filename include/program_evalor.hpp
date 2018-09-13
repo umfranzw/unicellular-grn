@@ -7,6 +7,8 @@
 #include "evaluator.hpp"
 #include "phenotype.hpp"
 #include "bitvec.hpp"
+#include "instr_factory.hpp"
+#include "program.hpp"
 
 class ProgramEvalor : public Evaluator {
 public:
@@ -16,6 +18,12 @@ public:
     void grow_step(Grn *grn, Phenotype *ptype, int reg_step);
     void code_step(Grn *grn, Phenotype *ptype, int reg_step);
     float eval(Grn *grn, Phenotype *ptype);
+    float test_pgm(Program *pgm);
+
+private:
+    int num_grow_samples;
+    int num_code_samples;
+    InstrFactory *instr_factory;
 };
 
 #endif

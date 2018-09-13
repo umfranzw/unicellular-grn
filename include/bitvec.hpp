@@ -16,8 +16,10 @@ public:
     BitVec(const BitVec& bv);
     
     int size();
-    string to_str();
     int count();
+    string to_str();
+    static unsigned int to_uint(BitVec *bv);
+    static BitVec *from_uint(unsigned int val, int size);
 
     BitVec operator&=(const BitVec& rhs);
     BitVec operator|=(const BitVec& rhs);

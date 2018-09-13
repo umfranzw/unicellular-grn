@@ -27,7 +27,7 @@ Ga::Ga(Run *run) {
     for (int i = 0; i < run->pop_size; i++) {
         this->pop.push_back(new Grn(run));
         this->fitnesses.push_back(0.0f);
-        this->phenotypes.push_back(new Phenotype());
+        this->phenotypes.push_back(new Phenotype(run));
     }
 }
 

@@ -51,6 +51,35 @@ BitVec::BitVec(const BitVec& bv) {
     this->blocks = bv.blocks;
 }
 
+unsigned int BitVec::to_uint(BitVec *bv) {
+    unsigned int val = 0;
+    int num_chunks = bv->len / 8 + (bv->len % 8 ? 1 : 0);
+    int offset = bv->len % 8 ? 8 - (bv->len % 8) : 0;
+    unsigned int cur_chunk;
+    for (int i = 0; i < num_chunks; i++) {
+        val <<= 8;
+        cur_chunk = (unsigned int) bv->blocks[i];
+        cur_chunk >>= offset;
+        val |= cur_chunk;
+    }
+
+    return val;
+}
+
+BitVec *BitVec::from_uint(unsigned int val, int size) {
+    vector<unsigned char> blocks;
+    unsigned char chunk;
+    int num_chunks = size / 8 + (size % 8 ? 1 : 0);
+    int offset = size % 8 ? 8 - (size % 8) : 0;
+    for (int i = 0; i < num_chunks; i++) {
+        chunk = (unsigned char) (val >> (8 * (num_chunks - i - 1)));
+        chunk <<= offset;
+        blocks.push_back(chunk);
+    }
+
+    return new BitVec(&blocks, size);
+}
+
 unsigned char BitVec::make_block_mask(int start, int end) {
     unsigned char mask = (unsigned char) 0;
 

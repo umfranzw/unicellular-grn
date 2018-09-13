@@ -1,0 +1,37 @@
+#ifndef _FRAC_INSTR_HPP
+#define _FRAC_INSTR_HPP
+
+#include "typed_instr.hpp"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <sstream>
+
+using namespace std;
+
+//for LISP's fraction type
+class FracInstr : public TypedInstr<pair<int, int>> {
+public:
+    FracInstr(pair<int, int> val) : TypedInstr<pair<int, int>>(0, 0, val) {
+    }
+
+    string to_code(vector<string> *args) {
+        this->check_args(args);
+        
+        stringstream code;
+        code << this->val.first << "/" << this->val.second;
+        return code.str();
+    }
+
+    FracInstr (FracInstr *other) : TypedInstr<pair<int, int>>(0, 0, other->val) {
+    }
+
+    FracInstr *clone() {
+        return new FracInstr(this);
+    }
+
+    ~FracInstr() {
+    }
+};
+
+#endif
