@@ -1,5 +1,6 @@
 #include "tree.hpp"
 #include <iostream>
+#include <assert.h>
 
 Tree::Tree() {
     this->root = nullptr;
@@ -29,6 +30,17 @@ Tree::~Tree() {
     }
 }
 
+bool Tree::invariant() {
+    bool success = true;
+    int prev = -1;
+    for (auto it = this->id_to_node.begin(); success && it != this->id_to_node.end(); it++) {
+        success = it->first == prev + 1;
+        prev++;
+    }
+    
+    return success;
+}
+
 int Tree::get_num_children(int id) {
     return id_to_node[id]->children.size();
 }
@@ -51,7 +63,8 @@ void Tree::set_instr(int id, Instr *instr) {
 
 bool Tree::add_child(int parent_id, Instr *instr) {
     bool success = false;
-    if (this->root == nullptr && parent_id == 0) {
+    //if (this->root == nullptr && parent_id == 0) { //only allow gene 0 to create root
+    if (this->root == nullptr) { //allow root to be generated from any node
         this->root = new Node(0, instr, -1);
         this->id_to_node[0] = this->root;
         if (this->next_id == 0) {

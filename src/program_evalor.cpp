@@ -17,6 +17,7 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
     for (int i = 0; i < this->run->pop_size; i++) {
         (*phenotypes)[i]->reset();
         Grn *grn = (*pop)[i];
+        Phenotype *ptype = (*phenotypes)[i];
 
         this->logger->log_reg_step(ga_step, -1, grn, i);
 
@@ -31,9 +32,9 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
 
             this->logger->log_reg_step(ga_step, j, grn, i);
 
-            this->grow_step(grn, (*phenotypes)[i], j);
+            this->grow_step(grn, ptype, i, j);
 
-            this->code_step(grn, (*phenotypes)[i], j);
+            this->code_step(grn, ptype, j);
         }
 
         //update fitness value
@@ -41,11 +42,12 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
     }
 }
 
-void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int reg_step) {
+void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step) {
     bool growing = reg_step >= this->run->growth_start && reg_step <= this->run->growth_end;
     bool sampling = (reg_step - this->run->growth_start) % this->run->growth_sample_interval == 0;
     
     if (growing && sampling) {
+        
         const static BitVec growth_seq(this->run->growth_seq);
         vector<Protein*> proteins = grn->proteins->get_all((const BitVec*) &growth_seq);
 
@@ -57,7 +59,7 @@ void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int reg_step) {
                 }
             }
         }
-
+        
         //note: map is sorted by keys by default
         for (auto it = grow_indices.begin(); it != grow_indices.end(); it++) {
             int grow_index = it->first;
@@ -73,11 +75,11 @@ void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int reg_step) {
     if (coding && sampling) {
         int code_step = (reg_step - this->run->code_start) / this->run->code_sample_interval;
         int samples_left = this->num_code_samples - code_step;
-        int instr_per_sample = ptype->get_num_unfilled_nodes() / samples_left;
 
-        if (instr_per_sample > 0) {
+        if (samples_left > 0 && ptype->get_num_unfilled_nodes() > 0) {
+            int instr_per_sample = (ptype->get_num_unfilled_nodes() / samples_left) || ptype->get_num_unfilled_nodes();
             vector<int> pids = grn->proteins->get_ids();
-            int start = (reg_step / this->run->code_sample_interval) * instr_per_sample;
+            int start = ptype->get_num_filled_nodes();
             int end = start + instr_per_sample;
             for (int i = start; i < end; i++) { //for each phenotype node
                 int grn_index = i % this->run->num_genes;
@@ -104,9 +106,7 @@ void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int reg_step) {
                     InstrDist *dist = ptype->get_dist(i);
                     dist->set_probs(&buckets);
                     int index = dist->sample();
-                    int instr_type = this->instr_factory->seq_to_type(seqs[index]);
-                    int instr_sel = this->instr_factory->seq_to_sel(seqs[index]);
-                    Instr *instr = this->instr_factory->create_instr(instr_type, instr_sel); //don't pass second arg (val). Let's work with fixed constants for now
+                    Instr *instr = this->instr_factory->create_instr(seqs[index]);
                     ptype->set_instr(i, instr);
                 }
                 //else if no proteins or no instructions with correct number of args,

@@ -8,11 +8,14 @@
 #include "fn_call_instr.hpp"
 #include "bitvec.hpp"
 #include "runs.hpp"
+#include "bitvec.hpp"
 #include <map>
 #include <vector>
 
 using namespace std;
 
+//note: should comment out the ones you're not currently using
+//will fix this later...
 typedef enum INSTR_TYPES {
     ADD = 0,
     SUB,
@@ -23,7 +26,7 @@ typedef enum INSTR_TYPES {
     LIST,
     FLOAT_CONST,
     INT_CONST,
-    FRAC_CONST,
+    //FRAC_CONST,
     VAR_CONST,
     NUM_INSTR_TYPES
 } INSTR_TYPES;
@@ -32,7 +35,7 @@ class InstrFactory {
 public:
     static InstrFactory *create(Run *run);
     ~InstrFactory();
-    Instr *create_instr(int instr_type, int instr_sel);
+    Instr *create_instr(BitVec *seq);
     //vector<int> filter_by_args(int num);
     unsigned int seq_to_type(BitVec *seq);
     unsigned int seq_to_sel(BitVec *seq);

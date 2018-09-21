@@ -22,6 +22,7 @@ public:
     int get_num_children(int id);
     void set_instr(int id, Instr *instr);
     int get_num_unfilled_nodes();
+    int get_num_filled_nodes();
     
     Tree *tree;
     

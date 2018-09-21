@@ -41,19 +41,18 @@ InstrFactory::~InstrFactory() {
         for (Instr *instr : item.second) {
             delete instr;
         }
-    }
-    
-    //delete instance
-    delete InstrFactory::instance;
+    }    
 }
 
-Instr *InstrFactory::create_instr(int instr_type, int instr_sel) {
+Instr *InstrFactory::create_instr(BitVec *seq) {
+    int type = (int) this->seq_to_type(seq);
     Instr *instr;
-    if (this->F.find(instr_type) != this->F.end()) {
-        instr = this->F[instr_type]->clone();
+    if (this->F.find(type) != this->F.end()) {
+        instr = this->F[type]->clone();
     }
     else {
-        instr = this->T[instr_type][instr_sel]->clone();
+        int sel = (int) this->seq_to_sel(seq);
+        instr = this->T[type][sel]->clone();
     }
 
     return instr;
@@ -78,8 +77,7 @@ Instr *InstrFactory::create_instr(int instr_type, int instr_sel) {
 
 unsigned int InstrFactory::seq_to_type(BitVec *seq) {
     BitVec type_bits = (*seq) >> (this->run->gene_bits - this->type_bits);
-    unsigned int type_val = BitVec::to_uint(&type_bits);
-    unsigned int type = type_val % NUM_INSTR_TYPES;
+    unsigned int type = BitVec::to_uint(&type_bits) % NUM_INSTR_TYPES;
 
     return type;
 }
@@ -89,7 +87,7 @@ unsigned int InstrFactory::seq_to_sel(BitVec *seq) {
     BitVec sel_bits = (*seq) << this->type_bits;
     sel_bits >>= this->const_sel_bits;
     unsigned int sel_val = BitVec::to_uint(&sel_bits);
-    unsigned int sel = sel_val % (int) this->T[type].size();
+    unsigned int sel = sel_val % (unsigned int) this->T[type].size();
 
     return sel;
 }
@@ -137,11 +135,11 @@ void InstrFactory::init_F() {
 void InstrFactory::init_T() {
     vector<Instr*> floats;
     floats.push_back((Instr *) new FloatInstr(0.0f));
+    this->T[FLOAT_CONST] = floats;
 
     vector<Instr*> ints;
     ints.push_back((Instr *) new IntInstr(0));
-
-    this->T[FLOAT_CONST] = floats;
     this->T[INT_CONST] = ints;
+
     this->T[VAR_CONST] = this->vars;
 }

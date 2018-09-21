@@ -33,6 +33,10 @@ int Phenotype::get_num_unfilled_nodes() {
     return this->tree->size() - this->tree->get_num_filled_nodes();
 }
 
+int Phenotype::get_num_filled_nodes() {
+    return this->tree->get_num_filled_nodes();
+}
+
 string Phenotype::to_str() {
     stringstream info;
     info << "Phenotype:" << endl;
