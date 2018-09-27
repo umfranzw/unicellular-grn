@@ -1,41 +1,69 @@
 [[runs]]
-pop_size = 5
-ga_steps = 5
-reg_steps = 5
-mut_prob = 0.2
+######
+# GA #
+######
+pop_size = 100
+ga_steps = 1
+mut_prob = 0.1
 mut_prob_limit = 0.2
-mut_step = 0.00
+mut_step = 0.0
 cross_frac = 0.4
 cross_frac_limit = 0.4
-cross_step = 0.00
+cross_step = 0.0
 num_genes = 8
 gene_bits = 8
-min_protein_conc = 0.25
-max_protein_conc = 5.0
+#GA will terminate when best fitness drops below this value
+term_cutoff = 0.0
+
+######################
+# Regulatory Simulation #
+######################
+reg_steps = 50
+min_protein_conc = 0.05
+max_protein_conc = 1.0
 
 #concentration weight (for binding)
-alpha = 0.2
+alpha = 0.4
 
 #sequence weight (for binding)
-beta = 0.8
+beta = 0.6
 
 decay_rate = 0.05
 initial_proteins = 5
 max_proteins = 20
-max_mut_float = 2.0
+max_mut_float = 0.5
 max_mut_bits = 8
 
-#note: this is in ga steps
-fitness_log_interval = 1
-
-#note: binding_method should be either "thresholded" or "scaled"
+#options are "thresholded" or "scaled"
 binding_method = "scaled"
 
-#note: must log_grns in order to log_reg_steps
+###############################
+# Genotype -> Phenotype Mapping #
+###############################
+# note: bounds are inclusive
+growth_start = 10
+growth_end = 29
+growth_sample_interval = 2
+growth_seq = "1111"
+growth_threshold = 0.5
+
+code_start = 30
+code_end = 49
+code_sample_interval = 2
+
+#####################
+#Graphing and Logging #
+#####################
+#note: this is in ga steps
+fitness_log_interval = 10
+
 #causes best fitness and avg fitness graphs to be generated
-graph_results = true
+graph_results = false
+
 #causes grns to be save to the db
-log_grns = false
+log_grns = true
+
 #causes reg sim info to be saved to the db
 #in addition, if graph_results is true, generates graphs of reg sim for best individual
-log_reg_steps = false
+#note: to use this, log_grns must be set to true
+log_reg_steps = true
