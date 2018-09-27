@@ -1,33 +1,28 @@
 #ifndef _INSTR_DIST_HPP
 #define _INSTR_DIST_HPP
 
-#include "prob_dist.hpp"
 #include "runs.hpp"
-#include <vector>
+#include "bitvec.hpp"
+#include "instr.hpp"
+#include "instr_factory.hpp"
+#include <map>
 
 using namespace std;
 
 class InstrDist {
 public:
-    InstrDist(Run *run);
+    InstrDist(Run *run, InstrFactory *factory, map<BitVec*, float, bool(*)(BitVec*, BitVec*)> *buckets);
     InstrDist(InstrDist *other);
     ~InstrDist();
-    int sample();
-    float get_weight(int index);
-    void set_weight(int index, float val);
-    void set_weights(vector<float> *weights);
-    float get_prob(int index);
-    void set_prob(int index, float val);
-    void set_probs(vector<float> *probs);
+    Instr *sample();
     string to_str();
 
 private:
     void update_prob_dist();
     
     Run *run;
-    vector<float> *probs;
-    vector<float> *weights;
-    ProbDist *dist;
+    map<BitVec*, float, bool(*)(BitVec*, BitVec*)> *buckets;
+    InstrFactory *factory;
 };
 
 #endif

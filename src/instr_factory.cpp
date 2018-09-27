@@ -28,7 +28,6 @@ InstrFactory::InstrFactory(Run *run) {
         cerr << "Error: num_bits is too small to support the number of instructions given." << endl;
         exit(1);
     }
-
 }
 
 InstrFactory::~InstrFactory() {

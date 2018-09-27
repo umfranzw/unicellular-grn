@@ -271,6 +271,29 @@ BitVec BitVec::operator<<(const int dist) {
     return result;
 }
 
+bool BitVec::operator<(const BitVec& rhs) {
+    if (this->len != rhs.len) {
+        cerr << "Attempt to compare (<) two bitvecs of different lengths." << endl;
+    }
+
+    bool less = false;
+    bool equal = true;
+    for (int i = 0; !less && equal && i < this->len; i++) {
+        int block = i / 8;
+        int offset = i % 8;
+        unsigned char left_bit = (this->blocks[block] >> (8 - offset - 1)) & 0x01;
+        unsigned char right_bit = (rhs.blocks[block] >> (8 - offset - 1)) & 0x01;
+        less = !left_bit && right_bit;
+        equal = left_bit == right_bit;
+    }
+
+    return less || (less && equal);
+}
+
+bool BitVec::compare(BitVec *x, BitVec *y) {
+    return *x < *y;
+}
+
 bool BitVec::operator[](size_t pos) const {
     int block_index = pos / 8;
     int bit_index = pos % 8;
@@ -300,7 +323,7 @@ BitRef BitVec::operator[](size_t pos) {
 
 bool BitVec::operator==(const BitVec& rhs) {
     //note: if all is well we should have zeroed out any extra bits, so we don't need to worry about them here...
-    return this->blocks == rhs.blocks;
+    return this->blocks == rhs.blocks; //will compare contents
 }
 
 bool BitVec::operator!=(const BitVec& rhs) {

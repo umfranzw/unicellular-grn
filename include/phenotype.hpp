@@ -1,9 +1,9 @@
-#ifndef _PHEOTYPE_HPP
-#define _PHEOTYPE_HPP
+#ifndef _PHENOTYPE_HPP
+#define _PHENOTYPE_HPP
 
 #include "tree.hpp"
 #include "instr.hpp"
-#include "instr_dist.hpp"
+//#include "instr_dist.hpp"
 #include "runs.hpp"
 #include <string>
 
@@ -18,7 +18,7 @@ public:
     int height();
     float branching_factor();
     void reset();
-    InstrDist *get_dist(int index);
+    //InstrDist *get_dist(int index);
     int get_num_children(int id);
     void set_instr(int id, Instr *instr);
     int get_num_unfilled_nodes();
@@ -28,7 +28,7 @@ public:
     
 private:
     Run *run;
-    vector<InstrDist *> dists;
+    //vector<InstrDist *> dists;
 };
 
 #endif

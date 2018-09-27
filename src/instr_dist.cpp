@@ -1,91 +1,59 @@
 #include "instr_dist.hpp"
-#include "instr_factory.hpp"
-#include <vector>
-#include <cstring>
 #include <sstream>
-#include "constants.hpp"
 
-InstrDist::InstrDist(Run *run) {
+//don't store non-zero probs
+InstrDist::InstrDist(Run *run, InstrFactory *factory, map<BitVec*, float, bool(*)(BitVec*, BitVec*)> *buckets) {
     this->run = run;
-    this->probs = new vector<float>();
-    this->weights = new vector<float>();
-    
-    float prob = 1.0f / NUM_INSTR_TYPES;
-    float weight = 1.0f;
-    vector<float> buckets;
-    for (int i = 0; i < NUM_INSTR_TYPES; i++) {
-        this->probs->push_back(prob);
-        this->weights->push_back(weight);
-        buckets.push_back(prob * weight);
+    this->buckets = new map<BitVec*, float, bool(*)(BitVec*, BitVec*)>(BitVec::compare);
+    this->factory = factory;
+
+    float sum = 0.0f;
+    for (pair<BitVec*, float> item : *buckets) {
+        sum += item.second;
+        (*this->buckets)[item.first] = item.second; //!!! requires < operator
     }
 
-    this->dist = new ProbDist(this->run, &buckets, true, false);
+    if (sum > 0.0f) {
+        for (pair<BitVec*, float> item : *(this->buckets)) {
+            item.second /= sum;
+        }
+    }
 }
 
 InstrDist::InstrDist(InstrDist *other) {
     this->run = other->run;
-    this->probs = new vector<float>(*other->probs);
-    this->weights = new vector<float>(*other->weights);
-    this->dist = new ProbDist(other->dist);
+    this->buckets = new map<BitVec*, float, bool(*)(BitVec*, BitVec*)>(*other->buckets);
+    this->factory = other->factory;
 }
 
 InstrDist::~InstrDist() {
-    delete this->dist;
-    delete this->probs;
-    delete this->weights;
+    delete this->buckets;
 }
 
-int InstrDist::sample() {
-    return this->dist->sample();
-}
-
-float InstrDist::get_weight(int index) {
-    return (*this->weights)[index];
-}
-
-void InstrDist::set_weight(int index, float val) {
-    (*this->weights)[index] = val;
-    (*(this->dist))[index] = (*this->probs)[index] * (*this->weights)[index];
-}
-
-void InstrDist::set_weights(vector<float> *weights) {
-    delete this->weights;
-    this->weights = new vector<float>(*weights);
-    this->update_prob_dist();
-}
-
-float InstrDist::get_prob(int index) {
-    return (*this->probs)[index];
-}
-
-void InstrDist::set_prob(int index, float val) {
-    (*this->probs)[index] = val;
-    (*(this->dist))[index] = (*this->probs)[index] * (*this->weights)[index];
-}
-
-void InstrDist::set_probs(vector<float> *probs) {
-    delete this->probs;
-    this->probs = new vector<float>(*probs);
-    this->update_prob_dist();
-}
-
-void InstrDist::update_prob_dist() {
-    vector<float> buckets;
-    for (int i = 0; i < NUM_INSTR_TYPES; i++) {
-        buckets.push_back((*this->probs)[i] * (*this->weights)[i]);
+Instr *InstrDist::sample() {
+    float spin = this->run->rand.next_float();
+    auto it = this->buckets->begin();
+    float accum = 0.0f;
+    while (it != this->buckets->end() && spin > accum) {
+        accum += it->second;
+        it++;
     }
 
-    this->dist->replace_buckets(&buckets);
+    Instr *instr = nullptr;
+    if (it != this->buckets->end()) {
+        BitVec *result = it->first;
+        instr = this->factory->create_instr(result);
+    }
+    
+    return instr;
 }
 
 string InstrDist::to_str() {
     stringstream info;
     info << "Instruction Prob. Dist.:" << endl;
-    info << "     Prob.   Weight" << endl;
-    for (int i = 0; i < (int) this->probs->size(); i++) {
-        info << "i = " << i << ": " << (*this->probs)[i] << ", " << (*this->weights)[i] << endl;
+    for (auto it = this->buckets->begin(); it != this->buckets->end(); it++) {
+        info << it->first->to_str() << " - " << it->second << endl;
     }
-    info << this->dist->to_str();
 
     return info.str();
 }

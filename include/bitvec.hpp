@@ -41,6 +41,9 @@ public:
 
     bool operator==(const BitVec& rhs);
     bool operator!=(const BitVec& rhs);
+
+    bool operator<(const BitVec& rhs);
+    static bool compare(BitVec *x, BitVec *y);
     
 private:
     vector<unsigned char> blocks;
