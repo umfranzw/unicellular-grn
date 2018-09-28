@@ -76,7 +76,8 @@ Instr *InstrFactory::create_instr(BitVec *seq) {
 
 unsigned int InstrFactory::seq_to_type(BitVec *seq) {
     BitVec type_bits = (*seq) >> (this->run->gene_bits - this->type_bits);
-    unsigned int type = BitVec::to_uint(&type_bits) % (unsigned int) this->active_instr_types.size();
+    unsigned int type_index = BitVec::to_uint(&type_bits) % (unsigned int) this->active_instr_types.size();
+    unsigned int type = (unsigned int) this->active_instr_types[type_index];
 
     return type;
 }

@@ -258,8 +258,10 @@ void Logger::create_tables() {
         ptype_sql << "reg_step INTEGER NOT NULL,";
         ptype_sql << "tree TEXT NULL,";
         ptype_sql << "size INTEGER NOT NULL,";
-        ptype_sql << "height INTEGER NOT NULL";
-        ptype_sql << ")";
+        ptype_sql << "height INTEGER NOT NULL,";
+        ptype_sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
+        ptype_sql << ");";
+        sqlite3_exec(this->conn, ptype_sql.str().c_str(), NULL, NULL, NULL);
     }
     sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
 }
@@ -747,6 +749,32 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
                 sqlite3_reset(gstate_ins_stmt);
                 sqlite3_clear_bindings(gstate_ins_stmt);
             }
+
+            //insert phenotype state
+            sqlite3_stmt *ptype_stmt;
+            string ptype_sql = "INSERT INTO ptype_state (grn_id, reg_step, tree, size, height) VALUES (?, ?, ?, ?, ?);";
+            sqlite3_prepare_v2(this->conn, ptype_sql.c_str(), ptype_sql.size() + 1, &ptype_stmt, NULL);
+            
+            bind_index = 1;
+            sqlite3_bind_int(ptype_stmt, bind_index++, grn_id);
+            sqlite3_bind_int(ptype_stmt, bind_index++, reg_step);
+            string tree_str = ptype->to_str();
+            if (tree_str == "") {
+                sqlite3_bind_null(ptype_stmt, bind_index++);
+            }
+            else {
+                sqlite3_bind_text(ptype_stmt, bind_index++, tree_str.c_str(), tree_str.size() + 1, SQLITE_STATIC);
+            }
+            sqlite3_bind_int(ptype_stmt, bind_index++, ptype->size());
+            sqlite3_bind_int(ptype_stmt, bind_index++, ptype->height());
+
+            rc = sqlite3_step(ptype_stmt);
+            if (rc != SQLITE_DONE) {
+                cerr << "Error inserting phenotype state: " << rc << endl;
+                cerr << sqlite3_errmsg(this->conn) << endl;
+                exit(1);
+            }
+            
             sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
     
             sqlite3_finalize(protein_sel_stmt);
@@ -755,6 +783,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
             sqlite3_finalize(gstate_ins_stmt);
             sqlite3_finalize(gstate_selp_stmt);
             sqlite3_finalize(gstate_selg_stmt);
+            sqlite3_finalize(ptype_stmt);
         }
     }
 }
