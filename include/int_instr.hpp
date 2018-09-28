@@ -2,6 +2,7 @@
 #define _INT_INSTR_HPP
 
 #include "typed_instr.hpp"
+#include "instr_types.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -11,7 +12,7 @@ using namespace std;
 
 class IntInstr : public TypedInstr<int> {
 public:
-    IntInstr(int val) : TypedInstr<int>(0, 0, val) {
+    IntInstr(int val) : TypedInstr<int>(0, 0, val, INT_CONST) {
     }
 
     string to_code(vector<string> *args) {
@@ -22,7 +23,7 @@ public:
         return code.str();
     }
 
-    IntInstr(IntInstr *other) : TypedInstr<int>(0, 0, other->val) {
+    IntInstr(IntInstr *other) : TypedInstr<int>(0, 0, other->val, other->type) {
     }
 
     IntInstr *clone() {

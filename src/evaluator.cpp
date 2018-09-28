@@ -14,8 +14,9 @@ void Evaluator::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vect
     for (int i = 0; i < this->run->pop_size; i++) {
         (*phenotypes)[i]->reset();
         Grn *grn = (*pop)[i];
+        Phenotype *ptype = (*phenotypes)[i];
 
-        this->logger->log_reg_step(ga_step, -1, grn, i);
+        this->logger->log_reg_step(ga_step, -1, grn, i, ptype);
 
         for (int j = 0; j < this->run->reg_steps; j++) {
             grn->run_binding();
@@ -26,7 +27,7 @@ void Evaluator::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vect
 
             grn->run_decay();
 
-            this->logger->log_reg_step(ga_step, j, grn, i);
+            this->logger->log_reg_step(ga_step, j, grn, i, ptype);
         }
 
         //update fitness value

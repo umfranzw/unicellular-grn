@@ -17,7 +17,7 @@ public:
     void log_run();
     void log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *phenotypes, vector<float> *fitnesses);
     void log_ga_step(int ga_step, vector<Grn*> *grns);
-    void log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index);
+    void log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Phenotype *ptype);
     void write_db();
 
     float get_best_fitness(int ga_step);

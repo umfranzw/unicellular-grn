@@ -2,6 +2,7 @@
 #define _INSTR_FACTORY_HPP
 
 #include "instr.hpp"
+#include "instr_types.hpp"
 #include "float_instr.hpp"
 #include "int_instr.hpp"
 #include "frac_instr.hpp"
@@ -14,23 +15,6 @@
 
 using namespace std;
 
-//note: should comment out the ones you're not currently using
-//will fix this later...
-typedef enum INSTR_TYPES {
-    ADD = 0,
-    SUB,
-    MULT,
-    DIV,
-    EQ,
-    IF,
-    LIST,
-    FLOAT_CONST,
-    INT_CONST,
-    //FRAC_CONST,
-    VAR_CONST,
-    NUM_INSTR_TYPES
-} INSTR_TYPES;
-
 class InstrFactory {
 public:
     static InstrFactory *create(Run *run);
@@ -42,8 +26,11 @@ public:
     pair<int, int> seq_to_arg_range(BitVec *seq);
     vector<Instr*> *get_vars();
 
+    vector<int> active_instr_types;
+
 private:
     InstrFactory(Run *run);
+    void init_active_instr_types();
     void init_F();
     void init_vars();
     void init_T();

@@ -11,9 +11,10 @@ using namespace std;
 
 class Instr {
 public:
-    Instr(int min_args, int max_args) {
+    Instr(int min_args, int max_args, int type) {
         this->min_args = min_args;
         this->max_args = max_args;
+        this->type = type;
     }
 
     virtual string to_code(vector<string> *args) = 0;
@@ -33,6 +34,7 @@ public:
 
     int min_args;
     int max_args;
+    int type;
 };
 
 #endif

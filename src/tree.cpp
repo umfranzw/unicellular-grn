@@ -167,13 +167,14 @@ string Tree::to_code(Node *cur) {
 string Tree::to_str() {
     stringstream info;
     string prefix = "";
-    info << "height: " << this->height() << endl;
-    info << "branching factor: " << this->branching_factor() << endl;
+    //info << "height: " << this->height() << endl;
+    //info << "branching factor: " << this->branching_factor() << endl;
     if (this->root != nullptr) {
         this->to_str(this->root, &info, prefix, 0);
     }
     else {
-        info << "<empty tree>" << endl;
+        //info << "<empty tree>" << endl;
+        info << "" << endl;
     }
 
     //make it pretty with unicode
@@ -209,7 +210,14 @@ string Tree::to_str() {
 }
 
 void Tree::to_str(Node *cur, stringstream *info, string prefix, int depth) {
-    *info << prefix << "(" << cur->id << ")" << endl;
+    *info << prefix << "(" << cur->id << ":";
+    if (cur->instr == nullptr) {
+        *info << "-";
+    }
+    else {
+        *info << cur->instr->type;
+    }
+    *info << ")" << endl;
 
     for (int i = 0; i < (int) cur->children.size(); i++) {
         string child_prefix = "";

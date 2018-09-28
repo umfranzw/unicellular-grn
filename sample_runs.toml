@@ -61,9 +61,11 @@ fitness_log_interval = 10
 graph_results = false
 
 #causes grns to be save to the db
-log_grns = true
+log_grns = false
 
 #causes reg sim info to be saved to the db
 #in addition, if graph_results is true, generates graphs of reg sim for best individual
 #note: to use this, log_grns must be set to true
-log_reg_steps = true
+log_reg_steps = false
+
+log_code_with_fitness = false

@@ -1,5 +1,4 @@
 #include "instr_factory.hpp"
-#include "constant_instr.hpp"
 
 InstrFactory *InstrFactory::instance = nullptr;
 
@@ -13,11 +12,12 @@ InstrFactory *InstrFactory::create(Run *run) {
 
 InstrFactory::InstrFactory(Run *run) {
     this->run = run;
+    this->init_active_instr_types();
     this->init_F();
     this->init_vars();
     this->init_T();
 
-    this->type_bits = (int) ceil(log2((float) NUM_INSTR_TYPES));
+    this->type_bits = (int) ceil(log2((float) this->active_instr_types.size()));
     int max_vec_size = 0;
     for (pair<int, vector<Instr*>> item : this->T) {
         max_vec_size = max(max_vec_size, (int) item.second.size());
@@ -76,7 +76,7 @@ Instr *InstrFactory::create_instr(BitVec *seq) {
 
 unsigned int InstrFactory::seq_to_type(BitVec *seq) {
     BitVec type_bits = (*seq) >> (this->run->gene_bits - this->type_bits);
-    unsigned int type = BitVec::to_uint(&type_bits) % NUM_INSTR_TYPES;
+    unsigned int type = BitVec::to_uint(&type_bits) % (unsigned int) this->active_instr_types.size();
 
     return type;
 }
@@ -116,19 +116,32 @@ vector<Instr*> *InstrFactory::get_vars() {
     return &this->vars;
 }
 
+void InstrFactory::init_active_instr_types() {
+    this->active_instr_types.push_back(ADD);
+    this->active_instr_types.push_back(SUB);
+    this->active_instr_types.push_back(MULT);
+    this->active_instr_types.push_back(DIV);
+    this->active_instr_types.push_back(EQ);
+    this->active_instr_types.push_back(IF);
+    this->active_instr_types.push_back(LIST);
+    this->active_instr_types.push_back(FLOAT_CONST);
+    this->active_instr_types.push_back(INT_CONST);
+    this->active_instr_types.push_back(VAR_CONST);
+}
+
 void InstrFactory::init_vars() {
-    this->vars.push_back((Instr *) new SymInstr("x0"));
-    this->vars.push_back((Instr *) new SymInstr("x1"));
+    this->vars.push_back((Instr *) new SymInstr("x0", VAR_CONST));
+    this->vars.push_back((Instr *) new SymInstr("x1", VAR_CONST));
 }
 
 void InstrFactory::init_F() {
-    this->F[ADD] = (Instr *) new FnCallInstr(1, UNLIMITED_ARGS, "+");
-    this->F[SUB] = (Instr *) new FnCallInstr(1, UNLIMITED_ARGS, "-");
-    this->F[MULT] = (Instr *) new FnCallInstr(1, UNLIMITED_ARGS, "*");
-    this->F[DIV] = (Instr *) new FnCallInstr(1, UNLIMITED_ARGS, "//");
-    this->F[EQ] = (Instr *) new FnCallInstr(2, 2, "=");
-    this->F[IF] = (Instr *) new FnCallInstr(3, 3, "if");
-    this->F[LIST] = (Instr *) new FnCallInstr(0, UNLIMITED_ARGS, "list");
+    this->F[ADD] = (Instr *) new FnCallInstr(1, UNLIMITED_ARGS, "+", ADD);
+    this->F[SUB] = (Instr *) new FnCallInstr(1, UNLIMITED_ARGS, "-", SUB);
+    this->F[MULT] = (Instr *) new FnCallInstr(1, UNLIMITED_ARGS, "*", MULT);
+    this->F[DIV] = (Instr *) new FnCallInstr(1, UNLIMITED_ARGS, "//", DIV);
+    this->F[EQ] = (Instr *) new FnCallInstr(2, 2, "=", EQ);
+    this->F[IF] = (Instr *) new FnCallInstr(3, 3, "if", IF);
+    this->F[LIST] = (Instr *) new FnCallInstr(0, UNLIMITED_ARGS, "list", LIST);
 }
 
 void InstrFactory::init_T() {

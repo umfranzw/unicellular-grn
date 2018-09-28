@@ -134,6 +134,7 @@ void Logger::create_tables() {
     run_sql << "graph_results INTEGER NOT NULL,";
     run_sql << "log_grns INTEGER NOT NULL,";
     run_sql << "log_reg_steps INTEGER NOT NULL,";
+    run_sql << "log_code_with_fitness INTEGER NOT NULL,";
     run_sql << "growth_start INTEGER NOT NULL,";
     run_sql << "growth_end INTEGER NOT NULL,";
     run_sql << "growth_sample_interval INTEGER NOT NULL,";
@@ -152,7 +153,8 @@ void Logger::create_tables() {
     fit_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
     fit_sql << "fitness REAL NOT NULL,";
     fit_sql << "pop_index INTEGER NOT NULL,";
-    fit_sql << "ga_step INTEGER NOT NULL";
+    fit_sql << "ga_step INTEGER NOT NULL,";
+    fit_sql << "code TEXT NULL";
     fit_sql << ");";
     sqlite3_exec(this->conn, fit_sql.str().c_str(), NULL, NULL, NULL);
 
@@ -247,13 +249,24 @@ void Logger::create_tables() {
         ps_sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
         ps_sql << ");";
         sqlite3_exec(this->conn, ps_sql.str().c_str(), NULL, NULL, NULL);
+
+        //ptype_state (phenotype)
+        stringstream ptype_sql;
+        ptype_sql << "CREATE TABLE ptype_state (";
+        ptype_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+        ptype_sql << "grn_id INTEGER NOT NULL,";
+        ptype_sql << "reg_step INTEGER NOT NULL,";
+        ptype_sql << "tree TEXT NULL,";
+        ptype_sql << "size INTEGER NOT NULL,";
+        ptype_sql << "height INTEGER NOT NULL";
+        ptype_sql << ")";
     }
     sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
 }
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -284,6 +297,7 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->graph_results);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_grns);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_reg_steps);
+    sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_code_with_fitness);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_start);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_end);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_sample_interval);
@@ -309,7 +323,7 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
     //note: ga_step may be < 0 when logging initial fitnesses
     if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {
         int rc;
-        string fitness_sql = "INSERT INTO fitness (fitness, pop_index, ga_step) VALUES (?, ?, ?);";
+        string fitness_sql = "INSERT INTO fitness (fitness, pop_index, ga_step, code) VALUES (?, ?, ?, ?);";
         sqlite3_stmt *fitness_stmt;
         sqlite3_prepare_v2(this->conn, fitness_sql.c_str(), fitness_sql.size() + 1, &fitness_stmt, NULL);
 
@@ -330,6 +344,14 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
             sqlite3_bind_double(fitness_stmt, bind_index++, (double) (*fitnesses)[i]);
             sqlite3_bind_int(fitness_stmt, bind_index++, i);
             sqlite3_bind_int(fitness_stmt, bind_index++, ga_step);
+
+            if (this->run->log_code_with_fitness) {
+            string code = (*phenotypes)[i]->to_code();
+            sqlite3_bind_text(fitness_stmt, bind_index++, code.c_str(), code.size(), SQLITE_STATIC);
+            }
+            else {
+                sqlite3_bind_null(fitness_stmt, bind_index++);
+            }
             rc = sqlite3_step(fitness_stmt);
             if (rc != SQLITE_DONE) {
                 cerr << "Error inserting fitness. Error code: " << rc << endl;
@@ -515,7 +537,7 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
     }
 }
 
-void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index) {
+void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Phenotype *ptype) {
     //note: must log_grns in order to log_reg_steps
     if (this->run->log_grns && this->run->log_reg_steps) {
         if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {

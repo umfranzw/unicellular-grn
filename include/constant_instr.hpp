@@ -7,7 +7,7 @@ using namespace std;
 
 class ConstantInstr : public Instr {
 public:
-    ConstantInstr(int min_args, int max_args) : Instr(min_args, max_args) {
+    ConstantInstr(int min_args, int max_args, int type) : Instr(min_args, max_args, type) {
     }
 
     virtual ~ConstantInstr() {

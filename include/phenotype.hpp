@@ -14,6 +14,7 @@ public:
     ~Phenotype();
     bool add_child(int parent_index, Instr *instr);
     string to_str();
+    string to_code();
     int size();
     int height();
     float branching_factor();

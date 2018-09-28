@@ -19,7 +19,7 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
         Grn *grn = (*pop)[i];
         Phenotype *ptype = (*phenotypes)[i];
 
-        this->logger->log_reg_step(ga_step, -1, grn, i);
+        this->logger->log_reg_step(ga_step, -1, grn, i, ptype);
 
         for (int j = 0; j < this->run->reg_steps; j++) {
             grn->run_binding();
@@ -30,11 +30,11 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
 
             grn->run_decay();
 
-            this->logger->log_reg_step(ga_step, j, grn, i);
-
             this->grow_step(grn, ptype, i, j);
 
             this->code_step(grn, ptype, i, j);
+            
+            this->logger->log_reg_step(ga_step, j, grn, i, ptype);
         }
 
         //update fitness value

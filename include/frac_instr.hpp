@@ -2,6 +2,7 @@
 #define _FRAC_INSTR_HPP
 
 #include "typed_instr.hpp"
+#include "instr_types.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -12,7 +13,7 @@ using namespace std;
 //for LISP's fraction type
 class FracInstr : public TypedInstr<pair<int, int>> {
 public:
-    FracInstr(pair<int, int> val) : TypedInstr<pair<int, int>>(0, 0, val) {
+    FracInstr(pair<int, int> val) : TypedInstr<pair<int, int>>(0, 0, val, FRAC_CONST) {
     }
 
     string to_code(vector<string> *args) {
@@ -23,7 +24,7 @@ public:
         return code.str();
     }
 
-    FracInstr (FracInstr *other) : TypedInstr<pair<int, int>>(0, 0, other->val) {
+    FracInstr (FracInstr *other) : TypedInstr<pair<int, int>>(0, 0, other->val, other->type) {
     }
 
     FracInstr *clone() {

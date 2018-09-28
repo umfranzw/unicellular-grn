@@ -42,6 +42,7 @@ public:
     bool graph_results;
     bool log_grns;
     bool log_reg_steps;
+    bool log_code_with_fitness;
 
     int growth_start;
     int growth_end;

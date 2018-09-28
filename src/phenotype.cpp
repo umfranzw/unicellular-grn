@@ -37,11 +37,11 @@ int Phenotype::get_num_filled_nodes() {
 }
 
 string Phenotype::to_str() {
-    stringstream info;
-    info << "Phenotype:" << endl;
-    info << this->tree->to_str();
+    return this->tree->to_str();
+}
 
-    return info.str();
+string Phenotype::to_code() {
+    return this->tree->to_code();
 }
 
 int Phenotype::size() {

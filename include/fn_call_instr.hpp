@@ -10,7 +10,7 @@ using namespace std;
 
 class FnCallInstr : public SymInstr {
 public:
-    FnCallInstr(int min_args, int max_args, string val) : SymInstr(min_args, max_args, val) {
+    FnCallInstr(int min_args, int max_args, string val, int type) : SymInstr(min_args, max_args, val, type) {
     }
 
     string to_code(vector<string> *args) {
@@ -26,7 +26,7 @@ public:
         return code.str();
     }
     
-    FnCallInstr (FnCallInstr *other) : SymInstr(other->min_args, other->max_args, other->val) {
+    FnCallInstr (FnCallInstr *other) : SymInstr(other->min_args, other->max_args, other->val, other->type) {
     }
 
     FnCallInstr *clone() {

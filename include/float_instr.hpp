@@ -2,6 +2,7 @@
 #define _FLOAT_INSTR_HPP
 
 #include "typed_instr.hpp"
+#include "instr_types.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -11,7 +12,7 @@ using namespace std;
 
 class FloatInstr : public TypedInstr<float> {
 public:
-    FloatInstr(float val) : TypedInstr<float>(0, 0, val) {
+    FloatInstr(float val) : TypedInstr<float>(0, 0, val, FLOAT_CONST) {
     }
 
     string to_code(vector<string> *args) {
@@ -22,7 +23,7 @@ public:
         return code.str();
     }
 
-    FloatInstr(FloatInstr *other) : TypedInstr<float>(0, 0, other->val) {
+    FloatInstr(FloatInstr *other) : TypedInstr<float>(0, 0, other->val, other->type) {
     }
 
     FloatInstr *clone() {

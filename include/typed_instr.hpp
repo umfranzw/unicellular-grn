@@ -9,7 +9,7 @@ using namespace std;
 template <class T>
 class TypedInstr : public ConstantInstr {
 public:
-    TypedInstr(int min_args, int max_args, T val) : ConstantInstr(min_args, max_args) {
+    TypedInstr(int min_args, int max_args, T val, int type) : ConstantInstr(min_args, max_args, type) {
         this->val = val;
     }
 

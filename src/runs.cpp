@@ -48,6 +48,7 @@ Run::Run(toml::Table& t, int file_index) {
     this->graph_results = toml::get<toml::Boolean>(t.at("graph_results"));
     this->log_grns = toml::get<toml::Boolean>(t.at("log_grns"));
     this->log_reg_steps = toml::get<toml::Boolean>(t.at("log_reg_steps"));
+    this->log_code_with_fitness = toml::get<toml::Boolean>(t.at("log_code_with_fitness"));
 
     this->growth_start = toml::get<toml::Integer>(t.at("growth_start"));
     this->growth_end = toml::get<toml::Integer>(t.at("growth_end"));
