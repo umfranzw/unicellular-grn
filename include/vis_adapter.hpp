@@ -1,7 +1,6 @@
 #ifndef _VIS_ADAPTER_HPP
 #define _VIS_ADAPTER_HPP
 
-#include "constants.hpp"
 #if HAVE_ZMQ
 #include "runs.hpp"
 #include <sqlite3.h>

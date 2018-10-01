@@ -3,15 +3,20 @@ EXE = grn
 SRC_DIR = src
 INC_DIR = include
 OBJ_DIR = obj
+HAVE_ZMQ = 1
 
 SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 #HDRS = $(wildcard $(INC_DIR)/*.h)
 OBJ = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CC = g++
-CPPFLAGS += -g -Wall --std=c++11 -I$(INC_DIR)
+CPPFLAGS += -g -Wall --std=c++11 -I$(INC_DIR) -DHAVE_ZMQ=$(HAVE_ZMQ)
 LDFLAGS += 
-LDLIBS += -lm -lsqlite3 -lzmq
+LDLIBS += -lm -lsqlite3
+
+ifeq ($(HAVE_ZMQ),1)
+LDLIBS += -lzmq
+endif
 
 .PHONY: all clean
 

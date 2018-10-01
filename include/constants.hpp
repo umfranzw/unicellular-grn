@@ -2,7 +2,6 @@
 #define _CONSTANTS_HPP
 
 #include <string>
-#define HAVE_ZMQ 0
 
 using namespace std;
 

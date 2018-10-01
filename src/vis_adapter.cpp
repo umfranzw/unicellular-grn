@@ -1,5 +1,3 @@
-#include "constants.hpp"
-
 #if HAVE_ZMQ
 #include <iostream>
 #include <cstdio>
