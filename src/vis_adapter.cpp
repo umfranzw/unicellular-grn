@@ -1,3 +1,6 @@
+#include "constants.hpp"
+
+#if HAVE_ZMQ
 #include <iostream>
 #include <cstdio>
 #include <unistd.h>
@@ -186,3 +189,4 @@ int VisAdapter::read_stream(int fd, char **buf) {
 
     return count;
 }
+#endif

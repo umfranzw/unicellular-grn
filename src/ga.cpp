@@ -85,11 +85,18 @@ void Ga::run_alg() {
 void Ga::graph_results() {
     if (this->run->graph_results) {
         cout << endl;
+        
+        #if HAVE_ZMQ
         cout << "Generating graphs..." << endl;
         cout.flush();
         VisAdapter adapter = VisAdapter(this->run, this->logger->conn);
         adapter.listen();
         cout << "done." << endl;
+        
+        #else
+        cout << "Cannot generate graphs - no zmq library." << endl;
+        cout.flush();
+        #endif
     }
 }
 

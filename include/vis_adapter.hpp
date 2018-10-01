@@ -1,6 +1,8 @@
 #ifndef _VIS_ADAPTER_HPP
 #define _VIS_ADAPTER_HPP
 
+#include "constants.hpp"
+#if HAVE_ZMQ
 #include "runs.hpp"
 #include <sqlite3.h>
 #include <vector>
@@ -31,5 +33,5 @@ private:
     sqlite3 *db;
     sqlite3_stmt *stmt;
 };
-
+#endif
 #endif
