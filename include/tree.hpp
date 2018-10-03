@@ -34,7 +34,7 @@ private:
 
     string to_code(Node *cur);
     void to_str(Node *cur, stringstream *info, string prefix, int depth);
-    int calc_max_depth(Node *cur, int depth, int max_depth);
+    int calc_max_depth(Node *cur, int depth);
     pair<int, int> get_bf_info(Node *cur, int num_br, int num_splits);
 };
 

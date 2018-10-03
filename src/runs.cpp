@@ -67,6 +67,10 @@ Run::Run(toml::Table& t, int file_index) {
     this->file_index = file_index;
 }
 
+Run::Run() {
+    this->rand = Rand();
+}
+
 Runs::Runs() {
 }
 

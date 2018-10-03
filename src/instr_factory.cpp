@@ -18,6 +18,7 @@ InstrFactory::InstrFactory(Run *run) {
     this->init_T();
 
     this->type_bits = (int) ceil(log2((float) this->active_instr_types.size()));
+    
     int max_vec_size = 0;
     for (pair<int, vector<Instr*>> item : this->T) {
         max_vec_size = max(max_vec_size, (int) item.second.size());
@@ -152,6 +153,8 @@ void InstrFactory::init_T() {
 
     vector<Instr*> ints;
     ints.push_back((Instr *) new IntInstr(0));
+    ints.push_back((Instr *) new IntInstr(1));
+    ints.push_back((Instr *) new IntInstr(2));
     this->T[INT_CONST] = ints;
 
     this->T[VAR_CONST] = this->vars;

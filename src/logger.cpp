@@ -348,12 +348,19 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
             sqlite3_bind_int(fitness_stmt, bind_index++, ga_step);
 
             if (this->run->log_code_with_fitness) {
-            string code = (*phenotypes)[i]->to_code();
-            sqlite3_bind_text(fitness_stmt, bind_index++, code.c_str(), code.size(), SQLITE_STATIC);
+                Phenotype *ptype = (*phenotypes)[i];
+                string code = ptype->to_code();
+                if (code.size() > 0) {
+                    sqlite3_bind_text(fitness_stmt, bind_index++, code.c_str(), code.size(), SQLITE_STATIC);
+                }
+                else {
+                    sqlite3_bind_null(fitness_stmt, bind_index++);
+                }
             }
             else {
                 sqlite3_bind_null(fitness_stmt, bind_index++);
             }
+            
             rc = sqlite3_step(fitness_stmt);
             if (rc != SQLITE_DONE) {
                 cerr << "Error inserting fitness. Error code: " << rc << endl;

@@ -30,9 +30,9 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
 
             grn->run_decay();
 
-            this->grow_step(grn, ptype, i, j);
+            this->grow_step(grn, ptype, i, j, ga_step);
 
-            this->code_step(grn, ptype, i, j);
+            this->code_step(grn, ptype, i, j, ga_step);
             
             this->logger->log_reg_step(ga_step, j, grn, i, ptype);
         }
@@ -42,7 +42,7 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
     }
 }
 
-void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step) {
+void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
     bool growing = reg_step >= this->run->growth_start && reg_step <= this->run->growth_end;
     bool sampling = (reg_step - this->run->growth_start) % this->run->growth_sample_interval == 0;
     
@@ -68,7 +68,7 @@ void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg
     }
 }
 
-void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step) {
+void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
     bool coding = reg_step >= this->run->code_start && reg_step <= this->run->code_end;
     bool sampling = (reg_step - this->run->code_start) % this->run->code_sample_interval == 0;
 
@@ -89,8 +89,8 @@ void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg
                 int num_args = ptype->get_num_children(i);
                 for (int j = 0; j < (int) pids.size(); j++) {
                     Protein *p = grn->proteins->get(pids[j]);
-                    pair<int, int> arg_range = this->instr_factory->seq_to_arg_range(p->seq);
                     //filter down to only those instructions with a reasonable number of args
+                    pair<int, int> arg_range = this->instr_factory->seq_to_arg_range(p->seq);
                     if (num_args >= arg_range.first && (num_args <= arg_range.second || arg_range.second == UNLIMITED_ARGS)) {
                         //check if we already have a protein with that seq
                         if (buckets.find(p->seq) != buckets.end()) {
@@ -105,7 +105,9 @@ void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg
                 if (buckets.size() > 0) {
                     InstrDist dist(this->run, this->instr_factory, &buckets);
                     Instr *instr = dist.sample(); //note: instr may be nullptr
-                    ptype->set_instr(i, instr);
+                    if (instr != nullptr) {
+                        ptype->set_instr(i, instr);
+                    }
                 }
                 //else if no proteins or no instructions with correct number of args,
                 //do nothing. We'll recalc the number of instructions per sample on the

@@ -247,22 +247,19 @@ void Tree::to_str(Node *cur, stringstream *info, string prefix, int depth) {
 }
 
 int Tree::height() {
-    int max_depth = -1;
+    int depth = 0;
     if (this->root != nullptr) {
-        max_depth = this->calc_max_depth(this->root, 0, max_depth);
+        depth = this->calc_max_depth(this->root, 1);
     }
 
-    return max_depth + 1;
+    return depth;
 }
 
-int Tree::calc_max_depth(Node *cur, int depth, int max_depth) {
-    if (depth > max_depth) {
-        max_depth = depth;
-    }
-    
+int Tree::calc_max_depth(Node *cur, int depth) {
+    int max_depth = depth;
     for (int child_id : cur->children) {
         Node *child = this->id_to_node[child_id];
-        max_depth = this->calc_max_depth(child, depth + 1, max_depth);
+        max_depth = max(max_depth, this->calc_max_depth(child, depth + 1));
     }
 
     return max_depth;

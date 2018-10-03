@@ -14,6 +14,7 @@ typedef enum BINDING_METHOD {
 class Run {
 public:
     Run(toml::Table& t, int file_index);
+    Run();
     
     Rand rand;
     int pop_size;
