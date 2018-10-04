@@ -24,9 +24,9 @@ Gene::Gene(Run *run, int pos) {
     this->output_seq = new BitVec(this->run->gene_bits);
     Utils::fill_rand(this->binding_seq, run->gene_bits, run);
     Utils::fill_rand(this->output_seq, run->gene_bits, run);
-    this->threshold = run->rand.next_float();
-    this->output_rate = run->rand.next_float();
-    this->kernel_index = run->rand.in_range(0, KERNELS.size());
+    this->threshold = run->rand->next_float();
+    this->output_rate = run->rand->next_float();
+    this->kernel_index = run->rand->in_range(0, KERNELS.size());
     this->active_output = -1;
     this->bound_protein = -1;
     this->binding_prob = 0.0f;

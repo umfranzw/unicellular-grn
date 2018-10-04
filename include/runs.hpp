@@ -15,8 +15,9 @@ class Run {
 public:
     Run(toml::Table& t, int file_index);
     Run();
+    ~Run();
     
-    Rand rand;
+    Rand *rand;
     int pop_size;
     int ga_steps;
     int reg_steps;
@@ -64,7 +65,16 @@ public:
 class Runs {
 public:
     Runs();
-    void get_runs(vector<Run> *runs);
+    ~Runs();
+    Run* get_next();
+
+    int size;
+
+private:
+    void parse_runs();
+    
+    int index;
+    vector<Run*> runs;
 };
 
 #endif

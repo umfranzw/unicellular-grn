@@ -4,7 +4,7 @@
 #include <iostream>
 
 Run::Run(toml::Table& t, int file_index) {
-    this->rand = Rand();
+    this->rand = new Rand();
     this->pop_size = toml::get<toml::Integer>(t.at("pop_size"));
     this->ga_steps = toml::get<toml::Integer>(t.at("ga_steps"));
     this->reg_steps = toml::get<toml::Integer>(t.at("reg_steps"));
@@ -68,18 +68,44 @@ Run::Run(toml::Table& t, int file_index) {
 }
 
 Run::Run() {
-    this->rand = Rand();
+    this->rand = new Rand();
+}
+
+Run::~Run() {
+    delete this->rand;
 }
 
 Runs::Runs() {
+    this->index = 0;
+    this->size = 0;
+    this->parse_runs();
 }
 
-void Runs::get_runs(vector<Run> *runs) {
+Runs::~Runs() {
+    for (auto item : this->runs) {
+        delete item;
+    }
+}
+
+void Runs::parse_runs() {
     ifstream ifs(RUN_FILE);
     toml::Data data = toml::parse(ifs);
     vector<toml::Table> tables = toml::get<toml::Array<toml::Table>>(data.at("runs"));
 
     for (int i = 0; i < (int) tables.size(); i++) {
-        runs->push_back(Run(tables[i], i));
+        this->runs.push_back(new Run(tables[i], i));
     }
+
+    this->size = (int) tables.size();
+}
+
+Run* Runs::get_next() {
+    Run *run = nullptr;
+
+    if (this->index < (int) this->runs.size()) {
+        run = this->runs[this->index];
+        this->index++;
+    }
+
+    return run;
 }

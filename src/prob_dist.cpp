@@ -42,7 +42,7 @@ int ProbDist::sample() {
         this->update_wheel();
     }
     
-    float spin = this->run->rand.next_float();
+    float spin = this->run->rand->next_float();
     int i = 0;
     while (i < (int) this->wheel->size() && spin > (*this->wheel)[i]) {
         i++;

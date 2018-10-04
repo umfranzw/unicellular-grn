@@ -7,7 +7,7 @@ using namespace std;
 
 const string RUN_FILE = "runs.toml";
 const string FIG_PATH = "fig";
-const bool FIX_RNG = true;
+const bool FIX_RNG = false;
 const uint FIXED_RNG_SEED = 12345678;
 const string LOG_DIR = "data/dbs";
 

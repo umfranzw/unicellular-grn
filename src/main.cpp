@@ -29,11 +29,11 @@ int main(int argc, char *argv[])
 
     else {
         Runs parser;
-        vector<Run> runs;
-        parser.get_runs(&runs);
-        for (int i = 0; i < (int) runs.size(); i++) {
-            cout << "Run " << i + 1 << " (of " << runs.size() << ")" << endl;
-            Ga ga(&runs[i]);
+        Run *run;
+        for (int i = 0; i < parser.size; i++) {
+            run = parser.get_next();
+            cout << "Run " << i + 1 << " (of " << parser.size << ")" << endl;
+            Ga ga(run);
             ga.run_alg();
         }
     }

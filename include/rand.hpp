@@ -12,6 +12,8 @@ public:
     float in_range(float low, float high);
     float next_float();
 
+    unsigned int seed;
+    
 private:
     mt19937 gen;
 };

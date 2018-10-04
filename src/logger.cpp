@@ -109,6 +109,7 @@ void Logger::create_tables() {
     stringstream run_sql;
     run_sql << "CREATE TABLE run (";
     run_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+    run_sql << "seed TEXT NOT NULL,"; //unsigned 64-bit ints are not supported, so store as text
     run_sql << "pop_size INTEGER NOT NULL,";
     run_sql << "ga_steps INTEGER NOT NULL,";
     run_sql << "reg_steps INTEGER NOT NULL,";
@@ -268,11 +269,15 @@ void Logger::create_tables() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (seed, pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
     int bind_index = 1;
+    stringstream seed_buf;
+    seed_buf << this->run->rand->seed;
+    string seed_str = seed_buf.str();
+    sqlite3_bind_text(run_stmt, bind_index++, seed_str.c_str(), seed_str.size(), SQLITE_STATIC);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->pop_size);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->ga_steps);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->reg_steps);

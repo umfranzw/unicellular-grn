@@ -28,7 +28,7 @@ Grn::Grn(Run *run) {
     }
 
     for (int i = 0; i < run->initial_proteins; i++) {
-        this->initial_proteins.push_back(new Protein(run, run->rand.in_range(0, run->num_genes)));
+        this->initial_proteins.push_back(new Protein(run, run->rand->in_range(0, run->num_genes)));
     }
 
     this->push_initial_proteins();
@@ -105,7 +105,7 @@ void Grn::run_binding() {
         //if there are proteins above this position
         if (weighted_probs.size() > 0) {
             //build the probability distribution and sample it (roulette-wheel-selection-style)
-            float r = this->run->rand.next_float();
+            float r = this->run->rand->next_float();
             float running_sum = 0.0f;
 
             int i = -1;

@@ -13,7 +13,6 @@ ProgramEvalor::~ProgramEvalor() {
 
 void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
     //do regulatory simulation
-    //#pragma omp parallel for
     for (int i = 0; i < this->run->pop_size; i++) {
         (*phenotypes)[i]->reset();
         Grn *grn = (*pop)[i];

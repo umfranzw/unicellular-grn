@@ -2,14 +2,14 @@
 
 void Utils::fill_rand(BitVec *set, int len, Run *run) {
     for (int i = 0; i < len; i++) {
-        bool bit = (bool) (run->rand.next_float() < 0.5);
+        bool bit = (bool) (run->rand->next_float() < 0.5);
         (*set)[i] = bit;
     }
 }
 
 void Utils::fill_rand(vector<float> *vec, int len, Run *run) {
     for (int i = 0; i < len; i++) {
-        vec->push_back(run->rand.next_float());
+        vec->push_back(run->rand->next_float());
     }
 }
 

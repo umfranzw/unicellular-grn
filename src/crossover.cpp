@@ -17,8 +17,8 @@ void Crossover::run_op(vector<Grn*> *pop, vector<float> *fitnesses) {
         Grn *parent0 = (*pop)[couple.first];
         Grn *parent1 = (*pop)[couple.second];
 
-        int gene_split_pt = this->run->rand.in_range(1, (int) this->run->num_genes + 1); //in [1, num_genes]
-        int protein_split_pt = this->run->rand.in_range(1, (int) this->run->initial_proteins + 1); //in [1, initial_proteins]
+        int gene_split_pt = this->run->rand->in_range(1, (int) this->run->num_genes + 1); //in [1, num_genes]
+        int protein_split_pt = this->run->rand->in_range(1, (int) this->run->initial_proteins + 1); //in [1, initial_proteins]
 
         //build the children
 
@@ -210,7 +210,7 @@ Protein *Crossover::cross_proteins(Protein *left, Protein *right) {
 }
 
 BitVec *Crossover::cross_bitsets(BitVec *left, BitVec *right) {
-    int left_bits = this->run->rand.in_range(1, this->run->gene_bits);
+    int left_bits = this->run->rand->in_range(1, this->run->gene_bits);
     int right_bits = this->run->gene_bits - left_bits;
 
     //take first part of left and second part of right (if you want first part of right and second of left, just switch the left and right args you pass in)

@@ -31,7 +31,7 @@ InstrDist::~InstrDist() {
 }
 
 Instr *InstrDist::sample() {
-    float spin = this->run->rand.next_float();
+    float spin = this->run->rand->next_float();
     auto it = this->buckets->begin();
     float accum = 0.0f;
     while (it != this->buckets->end() && spin > accum) {

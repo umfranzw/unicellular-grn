@@ -1,16 +1,18 @@
 #include "rand.hpp"
 #include "constants.hpp"
+#include <iostream>
 
 using namespace std;
 
 Rand::Rand() {
     if (FIX_RNG) {
-        this->gen = mt19937(FIXED_RNG_SEED);
+        this->seed = FIXED_RNG_SEED;
     }
     else {
         random_device dev;
-        this->gen = mt19937(dev());
+        this->seed = dev();
     }
+    this->gen = mt19937(this->seed);
 }
 
 //result is in [low, high)

@@ -19,7 +19,7 @@ Protein::Protein(Run *run, int src_pos) {
     this->seq = new BitVec(this->run->gene_bits);
     Utils::fill_rand(this->seq, run->gene_bits, run);
     Utils::fill_rand(&this->concs, run->num_genes, run);
-    this->kernel_index = run->rand.in_range(0, KERNELS.size());
+    this->kernel_index = run->rand->in_range(0, KERNELS.size());
 }
 
 Protein::Protein(Protein *protein) { //copy constructor
