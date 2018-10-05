@@ -86,7 +86,7 @@ unsigned int InstrFactory::seq_to_type(BitVec *seq) {
 unsigned int InstrFactory::seq_to_sel(BitVec *seq) {
     unsigned int type = this->seq_to_type(seq);
     BitVec sel_bits = (*seq) << this->type_bits;
-    sel_bits >>= this->const_sel_bits;
+    sel_bits >>= (this->run->gene_bits - this->type_bits);
     unsigned int sel_val = BitVec::to_uint(&sel_bits);
     unsigned int sel = sel_val % (unsigned int) this->T[type].size();
 

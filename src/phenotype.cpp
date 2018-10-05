@@ -9,22 +9,13 @@ Phenotype::Phenotype(Run *run) {
 Phenotype::Phenotype(Phenotype *ptype) {
     this->run = ptype->run;
     this->tree = new Tree(ptype->tree);
-
-    // for (InstrDist *old : ptype->dists) {
-    //     this->dists.push_back(new InstrDist(old));
-    // }
 }
 
 Phenotype::~Phenotype() {
     delete this->tree;
-    // for (InstrDist *dist : this->dists) {
-    //     delete dist;
-    // }
 }
 
 bool Phenotype::add_child(int parent_index, Instr *instr) {
-    //this->dists.push_back(new InstrDist(this->run));
-
     return this->tree->add_child(parent_index, instr);
 }
 
@@ -67,12 +58,4 @@ void Phenotype::set_instr(int id, Instr *instr) {
 void Phenotype::reset() {
     delete this->tree;
     this->tree = new Tree();
-    // for (InstrDist *dist : this->dists) {
-    //     delete dist;
-    // }
-    // this->dists.clear();
 }
-
-// InstrDist *Phenotype::get_dist(int index) {
-//     return this->dists[index];
-// }

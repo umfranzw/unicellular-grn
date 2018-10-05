@@ -9,12 +9,11 @@ using namespace std;
 
 class Program {
 public:
-    Program(Phenotype *ptype, vector<Instr*> *args);
+    Program(Phenotype *ptype);
     ~Program();
-    string run(vector<Instr*> *args);
+    string run(vector<Instr*> *params, vector<string> *args);
 
     string code;
-    int empty_nodes;
 };
 
 #endif

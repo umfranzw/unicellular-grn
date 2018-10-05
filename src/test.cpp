@@ -1,4 +1,9 @@
 #include "test.hpp"
+#include "phenotype.hpp"
+#include "instr_factory.hpp"
+#include "tree.hpp"
+#include "bitvec.hpp"
+#include "program.hpp"
 
 Test::Test() {
 }
@@ -8,7 +13,8 @@ Test::~Test() {
 
 void Test::run() {
     Run *run = this->create_run();
-    to_code(run);
+    //to_code(run);
+    fitness(run);
     delete run;
 }
 
@@ -86,5 +92,45 @@ void Test::to_code(Run *run) {
     delete one_bits;
     delete two_bits;
     
+    delete factory;
+}
+
+void Test::fitness(Run *run) {
+    Phenotype *ptype = new Phenotype(run);
+    InstrFactory *factory = InstrFactory::create(run);
+
+    BitVec *x0_bits = new BitVec("10010000");
+    Instr *x0_instr = factory->create_instr(x0_bits);
+    BitVec *x1_bits = new BitVec("10010001");
+    Instr *x1_instr = factory->create_instr(x1_bits);
+    BitVec *mult_bits = new BitVec("00100000");
+    Instr *mult_instr = factory->create_instr(mult_bits);
+
+    ptype->add_child(-1, mult_instr);
+    ptype->add_child(0, x0_instr);
+    ptype->add_child(0, x1_instr);
+
+    vector<Instr*> params;
+    params.push_back(x0_instr);
+    params.push_back(x1_instr);
+    Program pgm(ptype);
+
+    vector<string> args;
+    args.push_back("2");
+    args.push_back("2");
+    string output = pgm.run(&params, &args);
+    assert(output == "4\n");
+    args.clear();
+    
+    args.push_back("2");
+    args.push_back("3");
+    output = pgm.run(&params, &args);
+    assert(output == "6\n");
+    args.clear();
+    
+    delete ptype;
+    delete x0_bits;
+    delete x1_bits;
+    delete mult_bits;
     delete factory;
 }

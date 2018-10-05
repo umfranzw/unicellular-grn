@@ -10,9 +10,9 @@ SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 OBJ = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CC = g++
-CPPFLAGS += -O3 -Wall --std=c++11 -I$(INC_DIR) -DHAVE_ZMQ=$(HAVE_ZMQ) -fopenmp
+CPPFLAGS += -g -Wall --std=c++11 -I$(INC_DIR) -DHAVE_ZMQ=$(HAVE_ZMQ)
 LDFLAGS += 
-LDLIBS += -lm -lsqlite3 -fopenmp
+LDLIBS += -lm -lsqlite3
 
 ifeq ($(HAVE_ZMQ),1)
 LDLIBS += -lzmq

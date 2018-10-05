@@ -1,9 +1,6 @@
 #ifndef _TEST_HPP
 #define TEST_HPP
 
-#include "instr_factory.hpp"
-#include "tree.hpp"
-#include "bitvec.hpp"
 #include "runs.hpp"
 
 using namespace std;
@@ -17,6 +14,7 @@ public:
 private:
     Run *create_run();
     void to_code(Run *run);
+    void fitness(Run *run);
 };
 
 #endif

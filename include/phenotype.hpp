@@ -19,7 +19,6 @@ public:
     int height();
     float branching_factor();
     void reset();
-    //InstrDist *get_dist(int index);
     int get_num_children(int id);
     void set_instr(int id, Instr *instr);
     int get_num_unfilled_nodes();
@@ -29,7 +28,6 @@ public:
     
 private:
     Run *run;
-    //vector<InstrDist *> dists;
 };
 
 #endif

@@ -605,7 +605,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
 
             sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
             for (int pid : *store) {
-                int protein_id; //db id
+                int protein_id = -1; //db id
                 protein = store->get(pid);
     
                 //first, check if protein has already been inserted on a previous iteration and, if so, get its database id

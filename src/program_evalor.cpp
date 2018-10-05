@@ -123,7 +123,7 @@ float ProgramEvalor::eval(Grn* grn, Phenotype *ptype) {
     float fitness = -1.0f;
     int empty_nodes = ptype->get_num_unfilled_nodes();
     if (empty_nodes == 0) {
-        Program pgm = Program(ptype, this->instr_factory->get_vars());
+        Program pgm = Program(ptype);
         float test_ratio = this->test_pgm(&pgm);
         fitness = (1.0f - test_ratio) * 100.0f;
     }
@@ -145,33 +145,27 @@ float ProgramEvalor::test_pgm(Program *pgm) {
     int failed = 0;
 
     string output;
-    vector<Instr*> args;
+    vector<string> args;
 
-    args.push_back((Instr *) new IntInstr(2));
-    args.push_back((Instr *) new IntInstr(2));
-    output = pgm->run(&args);
+    args.push_back("2");
+    args.push_back("2");
+    output = pgm->run(this->instr_factory->get_vars(), &args);
     if (output == "4") {
         passed++;
     }
     else {
         failed++;
     }
-    for (Instr *item : args) {
-        delete item;
-    }
     args.clear();
     
-    args.push_back((Instr *) new IntInstr(2));
-    args.push_back((Instr *) new IntInstr(3));
-    output = pgm->run(&args);
+    args.push_back("2");
+    args.push_back("3");
+    output = pgm->run(this->instr_factory->get_vars(), &args);
     if (output == "6") {
         passed++;
     }
     else {
         failed++;
-    }
-    for (Instr *item : args) {
-        delete item;
     }
     args.clear();
     
