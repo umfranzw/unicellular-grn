@@ -4,6 +4,7 @@
 #include "tree.hpp"
 #include "bitvec.hpp"
 #include "program.hpp"
+#include <iostream>
 
 Test::Test() {
 }
@@ -13,7 +14,8 @@ Test::~Test() {
 
 void Test::run() {
     Run *run = this->create_run();
-    //to_code(run);
+    bitvec(run);
+    to_code(run);
     fitness(run);
     delete run;
 }
@@ -60,6 +62,72 @@ Run *Test::create_run() {
     return run;
 }
 
+void Test::bitvec(Run *run) {
+    BitVec a(1);
+    assert(a.size() == 1);
+    assert(a[0] == 0);
+
+    BitVec b(5);
+    b[1] = 1;
+    b[1] = 0;
+    b[2] = 1;
+    assert(b.size() == 5);
+    for (int i = 0; i < b.size(); i++) {
+        assert(b[i] == (i == 2));
+    }
+
+    assert(b == BitVec("00100"));
+    assert(b != BitVec("01000"));
+    assert(b << 2 == BitVec("10000"));
+    assert(b >> 2 == BitVec("00001"));
+    b >>= 3;
+    assert(b == BitVec("00000"));
+    b[0] = 1;
+    b <<= 1;
+    assert(b == BitVec("00000"));
+    assert(~b == BitVec("11111"));
+
+    string test_val = "01010";
+    reset_bitvec(&b, test_val);
+
+    BitVec mask = BitVec("10011");
+    assert((b | mask) == BitVec("11011"));
+    assert((b & mask) == BitVec("00010"));
+    assert((b ^ mask) == BitVec("11001"));
+
+    b |= mask;
+    assert(b == BitVec("11011"));
+    reset_bitvec(&b, test_val);
+
+    b &= mask;
+    assert(b == BitVec("00010"));
+    reset_bitvec(&b, test_val);
+
+    b ^= mask;
+    assert(b == BitVec("11001"));
+    reset_bitvec(&b, test_val);
+
+    assert(b < BitVec("01011"));
+    assert(!(BitVec("01011") < b));
+
+    b[4] = 1;
+    assert(b.count() == 3);
+        
+    unsigned int x = 5;
+    BitVec *c = BitVec::from_uint(x, 7);
+    assert(c->size() == 7);
+    assert(*c == BitVec("0000101"));
+    assert(BitVec::to_uint(c) == x);
+    delete c;
+
+}
+
+void Test::reset_bitvec(BitVec *vec, string val) {
+    for (int i = 0; i < (int) val.size(); i++) {
+        (*vec)[i] = (val[i] - '0');
+    }
+}
+
 void Test::to_code(Run *run) {
     InstrFactory *factory = InstrFactory::create(run);
     Tree tree;
@@ -92,7 +160,7 @@ void Test::to_code(Run *run) {
     delete one_bits;
     delete two_bits;
     
-    delete factory;
+    //delete factory;
 }
 
 void Test::fitness(Run *run) {
