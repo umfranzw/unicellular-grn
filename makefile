@@ -9,7 +9,7 @@ SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 #HDRS = $(wildcard $(INC_DIR)/*.h)
 OBJ = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-CC = g++
+CC = clang++
 CPPFLAGS += -g -Wall --std=c++11 -I$(INC_DIR) -DHAVE_ZMQ=$(HAVE_ZMQ)
 LDFLAGS += 
 LDLIBS += -lm -lsqlite3

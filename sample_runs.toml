@@ -2,7 +2,7 @@
 ######
 # GA #
 ######
-pop_size = 100
+pop_size = 50
 ga_steps = 1
 mut_prob = 0.1
 mut_prob_limit = 0.2
@@ -44,7 +44,7 @@ binding_method = "scaled"
 growth_start = 10
 growth_end = 29
 growth_sample_interval = 2
-growth_seq = "1111"
+growth_seq = "11111111"
 growth_threshold = 0.5
 
 code_start = 30
@@ -61,11 +61,16 @@ fitness_log_interval = 10
 graph_results = false
 
 #causes grns to be save to the db
-log_grns = false
+log_grns = true
 
 #causes reg sim info to be saved to the db
 #in addition, if graph_results is true, generates graphs of reg sim for best individual
 #note: to use this, log_grns must be set to true
-log_reg_steps = false
+log_reg_steps = true
 
-log_code_with_fitness = false
+log_code_with_fitness = true
+
+fix_rng_seed = false
+fixed_rng_seed = 12345678
+
+log_dir = "data/dbs"

@@ -1,5 +1,5 @@
 #ifndef _TEST_HPP
-#define TEST_HPP
+#define _TEST_HPP
 
 #include "runs.hpp"
 #include "bitvec.hpp"
