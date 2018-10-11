@@ -143,7 +143,8 @@ void Logger::create_tables() {
     run_sql << "term_cutoff FLOAT NOT NULL,";
     run_sql << "code_start INTEGER NOT NULL,";
     run_sql << "code_end INTEGER NOT NULL,";
-    run_sql << "code_sample_interval INTEGER NOT NULL";
+    run_sql << "code_sample_interval INTEGER NOT NULL,";
+    run_sql << "fix_rng_seed INTEGER NOT NULL";
     run_sql << ");";
     sqlite3_exec(this->conn, run_sql.str().c_str(), NULL, NULL, NULL);
 
