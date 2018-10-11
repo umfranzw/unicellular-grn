@@ -1,7 +1,6 @@
 #include "logger.hpp"
 
 #include <iostream>
-#include "constants.hpp"
 #include <sstream>
 #include "gene.hpp"
 #include "protein.hpp"
@@ -52,7 +51,7 @@ void Logger::write_db() {
     if (this->run->log_grns) {
         sqlite3 *disk_conn;
         stringstream path;
-        path << LOG_DIR << "/run" << this->run->file_index << ".db";
+        path << this->run->log_dir << "/run" << this->run->file_index << ".db";
         string path_str = path.str();
     
         //check if file already exists
@@ -269,7 +268,7 @@ void Logger::create_tables() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (seed, pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (seed, pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval, fix_rng_seed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -314,6 +313,7 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, this->run->code_start);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->code_end);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->code_sample_interval);
+    sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->fix_rng_seed);
 
     sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
     rc = sqlite3_step(run_stmt);

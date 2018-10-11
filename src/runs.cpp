@@ -1,10 +1,8 @@
 #include "runs.hpp"
-#include "constants.hpp"
 #include <fstream>
 #include <iostream>
 
 Run::Run(toml::Table& t, int file_index) {
-    this->rand = new Rand();
     this->pop_size = toml::get<toml::Integer>(t.at("pop_size"));
     this->ga_steps = toml::get<toml::Integer>(t.at("ga_steps"));
     this->reg_steps = toml::get<toml::Integer>(t.at("reg_steps"));
@@ -62,13 +60,21 @@ Run::Run(toml::Table& t, int file_index) {
     this->code_start = toml::get<toml::Integer>(t.at("code_start"));
     this->code_end = toml::get<toml::Integer>(t.at("code_end"));
     this->code_sample_interval = toml::get<toml::Integer>(t.at("code_sample_interval"));
+
+    this->fix_rng_seed = toml::get<toml::Boolean>(t.at("fix_rng_seed"));
+    this->fixed_rng_seed = toml::get<toml::Integer>(t.at("fixed_rng_seed"));
+
+    this->log_dir = toml::get<toml::String>(t.at("log_dir"));
     
     //this is not in the TOML file - it's used to name the output directories ("run0", "run1", etc.)
     this->file_index = file_index;
+
+    //the random number generator
+    this->rand = new Rand(this->fix_rng_seed, this->fixed_rng_seed);
 }
 
-Run::Run() {
-    this->rand = new Rand();
+Run::Run(bool fix_rng_seed, int fixed_rng_seed) {
+    this->rand = new Rand(fix_rng_seed, fixed_rng_seed);
 }
 
 Run::~Run() {
@@ -88,7 +94,7 @@ Runs::~Runs() {
 }
 
 void Runs::parse_runs() {
-    ifstream ifs(RUN_FILE);
+    ifstream ifs(DEFAULT_RUN_FILE);
     toml::Data data = toml::parse(ifs);
     vector<toml::Table> tables = toml::get<toml::Array<toml::Table>>(data.at("runs"));
 

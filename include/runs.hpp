@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 
+const string DEFAULT_RUN_FILE = "runs.toml";
+
 typedef enum BINDING_METHOD {
     BINDING_SCALED,
     BINDING_THRESHOLDED
@@ -14,7 +16,7 @@ typedef enum BINDING_METHOD {
 class Run {
 public:
     Run(toml::Table& t, int file_index);
-    Run();
+    Run(bool fix_rng_seed, int fixed_rng_seed);
     ~Run();
     
     Rand *rand;
@@ -58,6 +60,11 @@ public:
     int code_start;
     int code_end;
     int code_sample_interval;
+
+    bool fix_rng_seed;
+    int fixed_rng_seed;
+
+    string log_dir;
     
     int file_index; //index of run in file (this is filled in by the Runs() constructor and is not part of toml file)
 };

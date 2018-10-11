@@ -1,12 +1,11 @@
 #include "rand.hpp"
-#include "constants.hpp"
 #include <iostream>
 
 using namespace std;
 
-Rand::Rand() {
-    if (FIX_RNG) {
-        this->seed = FIXED_RNG_SEED;
+Rand::Rand(bool fix_rng_seed, int fixed_rng_seed) {
+    if (fix_rng_seed) {
+        this->seed = fixed_rng_seed;
     }
     else {
         random_device dev;

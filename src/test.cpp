@@ -21,7 +21,8 @@ void Test::run() {
 }
 
 Run *Test::create_run() {
-    Run *run = new Run();
+    const int seed = 12345678;
+    Run *run = new Run(true, seed);
     run->pop_size = 50;
     run->ga_steps = 1;
     run->reg_steps = 50;

@@ -7,7 +7,7 @@ using namespace std;
 
 class Rand {
 public:
-    Rand();
+    Rand(bool fix_rng_seed, int fixed_rng_seed);
     int in_range(int low, int high);
     float in_range(float low, float high);
     float next_float();
