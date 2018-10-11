@@ -6,8 +6,6 @@
 #include <vector>
 #include <string>
 
-const string DEFAULT_RUN_FILE = "runs.toml";
-
 typedef enum BINDING_METHOD {
     BINDING_SCALED,
     BINDING_THRESHOLDED
@@ -71,14 +69,14 @@ public:
 
 class Runs {
 public:
-    Runs();
+    Runs(string run_file);
     ~Runs();
     Run* get_next();
 
     int size;
 
 private:
-    void parse_runs();
+    void parse_runs(string run_file);
     
     int index;
     vector<Run*> runs;

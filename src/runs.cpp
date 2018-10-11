@@ -81,10 +81,10 @@ Run::~Run() {
     delete this->rand;
 }
 
-Runs::Runs() {
+Runs::Runs(string run_file) {
     this->index = 0;
     this->size = 0;
-    this->parse_runs();
+    this->parse_runs(run_file);
 }
 
 Runs::~Runs() {
@@ -93,8 +93,8 @@ Runs::~Runs() {
     }
 }
 
-void Runs::parse_runs() {
-    ifstream ifs(DEFAULT_RUN_FILE);
+void Runs::parse_runs(string run_file) {
+    ifstream ifs(run_file);
     toml::Data data = toml::parse(ifs);
     vector<toml::Table> tables = toml::get<toml::Array<toml::Table>>(data.at("runs"));
 
