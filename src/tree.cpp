@@ -298,3 +298,13 @@ pair<int, int> Tree::get_bf_info(Node *cur, int num_br, int num_splits) {
 
     return pair<int, int>(num_br, num_splits);
 }
+
+Node *Tree::get_node(int id) {
+    Node *node = nullptr;
+    map<int, Node*>::iterator it = this->id_to_node.find(id);
+    if (it != this->id_to_node.end()) {
+        node = it->second;
+    }
+
+    return node;
+}

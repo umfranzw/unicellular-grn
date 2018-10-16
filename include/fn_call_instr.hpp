@@ -25,6 +25,13 @@ public:
 
         return code.str();
     }
+
+    string to_str() {
+        stringstream ss;
+        ss << val;
+
+        return ss.str();
+    }
     
     FnCallInstr (FnCallInstr *other) : SymInstr(other->min_args, other->max_args, other->val, other->type) {
     }

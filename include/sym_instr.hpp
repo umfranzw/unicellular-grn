@@ -20,6 +20,10 @@ public:
         return code.str();
     }
 
+    string to_str() {
+        return this->val;
+    }
+
     SymInstr(SymInstr *other) : TypedInstr<string>(0, 0, other->val, other->type) {
     }
 

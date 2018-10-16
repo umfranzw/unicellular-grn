@@ -23,6 +23,13 @@ public:
         return code.str();
     }
 
+    string to_str() {
+        stringstream ss;
+        ss << this->val;
+
+        return ss.str();
+    }
+
     IntInstr(IntInstr *other) : TypedInstr<int>(0, 0, other->val, other->type) {
     }
 

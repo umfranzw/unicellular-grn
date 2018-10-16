@@ -23,6 +23,13 @@ public:
         return code.str();
     }
 
+    string to_str() {
+        stringstream ss;
+        ss << showpoint << this->val;
+        
+        return ss.str();
+    }
+
     FloatInstr(FloatInstr *other) : TypedInstr<float>(0, 0, other->val, other->type) {
     }
 

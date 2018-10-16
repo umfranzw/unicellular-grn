@@ -5,6 +5,7 @@
 #include "gene.hpp"
 #include "protein.hpp"
 #include "protein_store.hpp"
+#include "node.hpp"
 #include <cstdio>
 #include <fstream>
 #include <cmath>
@@ -251,13 +252,34 @@ void Logger::create_tables() {
         ps_sql << ");";
         sqlite3_exec(this->conn, ps_sql.str().c_str(), NULL, NULL, NULL);
 
+        //tree
+        stringstream tree_sql;
+        tree_sql << "CREATE TABLE tree (";
+        tree_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+        tree_sql << "ptype_state_id INTEGER NOT NULL,";
+        tree_sql << "FOREIGN KEY(ptype_state_id) REFERENCES ptype_state(id)";
+        tree_sql << ");";
+        sqlite3_exec(this->conn, tree_sql.str().c_str(), NULL, NULL, NULL);
+
+        //node
+        stringstream node_sql;
+        node_sql << "CREATE TABLE node (";
+        node_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
+        node_sql << "tree_id INTEGER NOT NULL,";
+        node_sql << "parent_id INTEGER NULL,";
+        node_sql << "desc TEXT NULL,";
+        node_sql << "FOREIGN KEY(tree_id) REFERENCES tree(id),";
+        node_sql << "FOREIGN KEY(parent_id) REFERENCES node(id)";
+        node_sql << ");";
+        sqlite3_exec(this->conn, node_sql.str().c_str(), NULL, NULL, NULL);
+        
         //ptype_state (phenotype)
         stringstream ptype_sql;
         ptype_sql << "CREATE TABLE ptype_state (";
         ptype_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
         ptype_sql << "grn_id INTEGER NOT NULL,";
         ptype_sql << "reg_step INTEGER NOT NULL,";
-        ptype_sql << "tree TEXT NULL,";
+        ptype_sql << "tree_str TEXT NULL,";
         ptype_sql << "size INTEGER NOT NULL,";
         ptype_sql << "height INTEGER NOT NULL,";
         ptype_sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
@@ -765,7 +787,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
 
             //insert phenotype state
             sqlite3_stmt *ptype_stmt;
-            string ptype_sql = "INSERT INTO ptype_state (grn_id, reg_step, tree, size, height) VALUES (?, ?, ?, ?, ?);";
+            string ptype_sql = "INSERT INTO ptype_state (grn_id, reg_step, tree_str, size, height) VALUES (?, ?, ?, ?, ?);";
             sqlite3_prepare_v2(this->conn, ptype_sql.c_str(), ptype_sql.size() + 1, &ptype_stmt, NULL);
             
             bind_index = 1;
@@ -787,6 +809,30 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
                 cerr << sqlite3_errmsg(this->conn) << endl;
                 exit(1);
             }
+
+            //insert tree
+            if (ptype->size() > 0) {
+                int ptype_id = sqlite3_last_insert_rowid(this->conn);
+                sqlite3_stmt *tree_stmt;
+                string tree_sql = "INSERT INTO tree (ptype_state_id) VALUES (?);";
+                sqlite3_prepare_v2(this->conn, tree_sql.c_str(), tree_sql.size() + 1, &tree_stmt, NULL);
+                bind_index = 1;
+                sqlite3_bind_int(tree_stmt, bind_index++, ptype_id);
+                if ((rc = sqlite3_step(tree_stmt)) != SQLITE_DONE) {
+                    cerr << "Error inserting tree: " << rc << endl;
+                    cerr << sqlite3_errmsg(this->conn) << endl;
+                    exit(1);
+                }
+                int tree_id = sqlite3_last_insert_rowid(this->conn);
+
+                //insert nodes
+                Node *root = ptype->tree->get_node(0);
+                if (root != nullptr) {
+                    this->insert_node(ptype->tree, tree_id, root, -1);
+                }
+                sqlite3_finalize(tree_stmt);
+            }
+
             
             sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
     
@@ -798,5 +844,43 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
             sqlite3_finalize(gstate_selg_stmt);
             sqlite3_finalize(ptype_stmt);
         }
+    }
+}
+
+void Logger::insert_node(Tree *tree, int tree_id, Node *cur, int parent_id) {
+    sqlite3_stmt *stmt;
+    string sql = "INSERT INTO node (tree_id, parent_id, desc) VALUES (?, ?, ?);";
+    sqlite3_prepare_v2(this->conn, sql.c_str(), sql.size() + 1, &stmt, NULL);
+    int bind_index = 1;
+    sqlite3_bind_int(stmt, bind_index++, tree_id);
+    if (parent_id == -1) {
+        sqlite3_bind_null(stmt, bind_index++);
+    }
+    else {
+        sqlite3_bind_int(stmt, bind_index++, parent_id);
+    }
+
+    if (cur->instr == nullptr) {
+        sqlite3_bind_null(stmt, bind_index++);
+    }
+    else {
+        string desc = cur->instr->to_str();
+        sqlite3_bind_text(stmt, bind_index++, desc.c_str(), desc.size() + 1, SQLITE_STATIC);
+    }
+
+    int rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) {
+        cerr << "Error inserting node: " << rc << endl;
+        cerr << sqlite3_errmsg(this->conn) << endl;
+        exit(1);
+    }
+
+    sqlite3_finalize(stmt);
+
+    int new_parent_id = sqlite3_last_insert_rowid(this->conn);
+    Node *child;
+    for (int child_id : cur->children) {
+        child = tree->get_node(child_id);
+        this->insert_node(tree, tree_id, child, new_parent_id);
     }
 }

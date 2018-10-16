@@ -35,6 +35,7 @@ private:
 
     void create_tables();
     float get_fitness_val(int ga_step, string *sql_fcn);
+    void insert_node(Tree *tree, int tree_id, Node *cur, int parent_id);
 };
 
 #endif

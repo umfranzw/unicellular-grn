@@ -7,7 +7,6 @@
 #include "genetic_op.hpp"
 #include "vis_adapter.hpp"
 #include <cmath>
-#include <omp.h>
 #include <cstdio>
 #include <iostream>
 #include <memory>

@@ -24,6 +24,13 @@ public:
         return code.str();
     }
 
+    string to_str() {
+        stringstream ss;
+        ss << this->val.first << "/" << this->val.second;
+        
+        return ss.str();
+    }
+
     FracInstr (FracInstr *other) : TypedInstr<pair<int, int>>(0, 0, other->val, other->type) {
     }
 

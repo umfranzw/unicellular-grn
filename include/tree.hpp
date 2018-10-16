@@ -25,6 +25,7 @@ public:
     int get_num_unfilled_nodes();
     void set_instr(int id, Instr *instr);
     bool invariant();
+    Node *get_node(int id);
     
 private:
     Node *root;

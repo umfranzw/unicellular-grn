@@ -18,6 +18,7 @@ public:
     }
 
     virtual string to_code(vector<string> *args) = 0;
+    virtual string to_str() = 0; //give a short description of the instruction
     
     //because copy constructors don't support polymorphism
     virtual Instr *clone() = 0;
