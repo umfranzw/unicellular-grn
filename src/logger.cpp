@@ -267,7 +267,7 @@ void Logger::create_tables() {
         node_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
         node_sql << "tree_id INTEGER NOT NULL,";
         node_sql << "parent_id INTEGER NULL,";
-        node_sql << "desc TEXT NULL,";
+        node_sql << "descr TEXT NULL,";
         node_sql << "FOREIGN KEY(tree_id) REFERENCES tree(id),";
         node_sql << "FOREIGN KEY(parent_id) REFERENCES node(id)";
         node_sql << ");";
@@ -798,7 +798,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
                 sqlite3_bind_null(ptype_stmt, bind_index++);
             }
             else {
-                sqlite3_bind_text(ptype_stmt, bind_index++, tree_str.c_str(), tree_str.size() + 1, SQLITE_STATIC);
+                sqlite3_bind_text(ptype_stmt, bind_index++, tree_str.c_str(), tree_str.size(), SQLITE_STATIC);
             }
             sqlite3_bind_int(ptype_stmt, bind_index++, ptype->size());
             sqlite3_bind_int(ptype_stmt, bind_index++, ptype->height());
@@ -849,7 +849,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
 
 void Logger::insert_node(Tree *tree, int tree_id, Node *cur, int parent_id) {
     sqlite3_stmt *stmt;
-    string sql = "INSERT INTO node (tree_id, parent_id, desc) VALUES (?, ?, ?);";
+    string sql = "INSERT INTO node (tree_id, parent_id, descr) VALUES (?, ?, ?);";
     sqlite3_prepare_v2(this->conn, sql.c_str(), sql.size() + 1, &stmt, NULL);
     int bind_index = 1;
     sqlite3_bind_int(stmt, bind_index++, tree_id);
@@ -865,7 +865,7 @@ void Logger::insert_node(Tree *tree, int tree_id, Node *cur, int parent_id) {
     }
     else {
         string desc = cur->instr->to_str();
-        sqlite3_bind_text(stmt, bind_index++, desc.c_str(), desc.size() + 1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, bind_index++, desc.c_str(), desc.size(), SQLITE_STATIC);
     }
 
     int rc = sqlite3_step(stmt);

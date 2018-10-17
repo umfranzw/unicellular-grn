@@ -33,6 +33,7 @@ class StepButton(Gtk.Grid):
         entry.set_width_chars(entry_width)
         entry.set_text(str(self.min_step))
         entry.connect('activate', self._set_text)
+        entry.connect('focus-out-event', lambda entry, event: self._set_text(entry))
         
         down = Gtk.Button(label='-')
         down.connect('clicked', self._spin, -1)
@@ -58,9 +59,10 @@ class StepButton(Gtk.Grid):
         try:
             #note: both lines below throw ValueError exceptions if something goes awry
             val = int(raw_val)
-            self.index = self.steps.index(val)
-            
-            self.emit('change-value', self.steps[self.index])
+            new_index = self.steps.index(val)
+            if new_index != self.index:
+                self.index = new_index
+                self.emit('change-value', self.steps[self.index])
             
         except ValueError:
             val = self.steps[self.index] if self.steps else self.min_step

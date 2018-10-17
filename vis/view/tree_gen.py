@@ -9,14 +9,14 @@ class TreeGen():
         self.db = db
 
     def build_tree(self, ga_step, reg_step, pop_index):
-        graph = Digraph(format='png')
+        graph = Digraph(format='png', edge_attr={'dir': 'none'})
         sql = 'SELECT t.id FROM grn g JOIN ptype_state p ON g.id = p.grn_id JOIN tree t on p.id = t.ptype_state_id WHERE g.ga_step = ? AND g.pop_index = ? AND p.reg_step = ?;'
         self.db.cur.execute(sql, (ga_step, pop_index, reg_step))
         row = self.db.cur.fetchone()
         if row:
             #find root
             tree_id = row[0]
-            sql = 'SELECT id, [desc] FROM node WHERE tree_id = ? AND parent_id IS NULL;' #'desc' is a reserved keyword in sqlite, escape with square brackets
+            sql = 'SELECT id, descr FROM node WHERE tree_id = ? AND parent_id IS NULL;'
             self.db.cur.execute(sql, (tree_id,))
             row = self.db.cur.fetchone()
             if row:
@@ -26,6 +26,7 @@ class TreeGen():
                 self._create_node(graph, tree_id, node_id, desc)
 
         #render in memory
+        #print(graph)
         dot_data = BytesIO(graph.pipe())
         img = PIL.Image.open(dot_data)
         #img = img.resize((100, 100))
@@ -39,7 +40,7 @@ class TreeGen():
         graph.node(str(node_id), desc)
 
         #find any children and create nodes for them
-        sql = 'SELECT id, [desc] FROM node WHERE tree_id = ? AND parent_id = ?;'
+        sql = 'SELECT id, descr FROM node WHERE tree_id = ? AND parent_id = ?;'
         self.db.cur.execute(sql, (tree_id, node_id))
         rows = list(self.db.cur)
         for row in rows:
@@ -47,4 +48,4 @@ class TreeGen():
             if child_desc is None:
                 child_desc = ''
             self._create_node(graph, tree_id, child_id, child_desc)
-            graph.edge(str(node_id), str(child_id), dir='none')
+            graph.edge(str(node_id), str(child_id))

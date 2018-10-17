@@ -82,7 +82,7 @@ class GrnGen():
         fig.savefig(buf, format='png')
         buf.seek(0)
         img = PIL.Image.open(buf)
-
+        #img = img.resize((400, 300))
         width, height = img.size
         glib_data = GLib.Bytes.new(img.tobytes())
         pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(glib_data, GdkPixbuf.Colorspace.RGB, True, 8, width, height, width * 4)
