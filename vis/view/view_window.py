@@ -21,6 +21,8 @@ class ViewWindow(Gtk.Window):
         self.tree_gen = TreeGen(self.db)
         self.grn_gen = GrnGen(self.db)
         self.run = Run(self.db)
+        self.tree_cache = {}
+        self.grn_cache = {}
         
         vbox = Gtk.VBox()
         paned = Gtk.Paned()
@@ -83,12 +85,29 @@ class ViewWindow(Gtk.Window):
         
         return vbox
 
+    def _get_img(self, cache, draw_fcn, ga_step, reg_step, pop_index):
+        key = (ga_step, reg_step, pop_index)
+        if key in cache:
+            pixbuf = cache[key]
+        else:
+            pixbuf = draw_fcn()
+            if pixbuf is not None:
+                cache[key] = pixbuf
+
+        return pixbuf
+
     def update_views(self, widget=None, val=None):
         ga_step = self.ga_spin.get_value()
         reg_step = self.reg_spin.get_value()
         pop_index = self.index_spin.get_value()
 
-        tree_pixbuf = self.tree_gen.build_tree(ga_step, reg_step, pop_index)
+        tree_pixbuf = self._get_img(self.tree_cache,
+                                    lambda: self.tree_gen.build_tree(ga_step, reg_step, pop_index),
+                                    ga_step,
+                                    reg_step,
+                                    pop_index
+        )
+        
         if tree_pixbuf is None:
             self.tree_img.set_visible(False)
             self.save_tree_button.set_sensitive(False)
@@ -97,7 +116,12 @@ class ViewWindow(Gtk.Window):
             self.tree_img.set_visible(True)
             self.save_tree_button.set_sensitive(True)
 
-        grn_pixbuf = self.grn_gen.draw_grn(ga_step, reg_step, pop_index, self.run)
+        grn_pixbuf = self._get_img(self.grn_cache,
+                                   lambda: self.grn_gen.draw_grn(ga_step, reg_step, pop_index, self.run),
+                                   ga_step,
+                                   reg_step,
+                                   pop_index
+        )
         self.grn_img.set_from_pixbuf(grn_pixbuf)
 
     def _save_img(self, widget, img):
