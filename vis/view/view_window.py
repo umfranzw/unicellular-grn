@@ -2,7 +2,6 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import PIL.Image
-from io import BytesIO
 
 from step_button import StepButton
 from db import Db
