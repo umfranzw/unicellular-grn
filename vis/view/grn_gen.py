@@ -43,40 +43,6 @@ class GrnGen():
     def __init__(self, db):
         self.db = db
 
-    def plot_avg_fitness(self):
-        self._plot_fitness('avg', 'Avg Fitness')
-
-    def plot_best_fitness(self):
-        self._plot_fitness('min', 'Best Fitness')
-
-    def plot_cumulative_best_fitness(self):
-        sql = ('SELECT f1.ga_step, (' +
-               'SELECT min(f2.fitness) ' +
-               'FROM fitness f2 ' +
-               'WHERE f2.ga_step <= f1.ga_step' +
-               ') AS min_fitness FROM fitness f1 ' +
-               'GROUP BY f1.ga_step;')
-
-        self.db.cur.execute(sql)
-        xs = []
-        ys = []
-        for row in self.db.cur:
-            ga_step, fitness = row
-            xs.append(ga_step + 1)
-            ys.append(fitness)
-
-        plt.title('Best Fitness')
-        plt.xlabel('iteration')
-        plt.ylabel('fitness')
-
-        fig, ax = plt.subplots()
-        ax.plot(xs, ys)
-        #fig.savefig('{}/{}.png'.format(run_dir, 'Best Fitness'))
-        pixbuf = self._fig_to_pixbuf(fig)
-        plt.close(fig)
-        
-        return pixbuf
-
     def _fig_to_pixbuf(self, fig):
         buf = BytesIO()
         fig.savefig(buf, format='png')
@@ -88,28 +54,6 @@ class GrnGen():
         pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(glib_data, GdkPixbuf.Colorspace.RGB, True, 8, width, height, width * 4)
         buf.close()
 
-        return pixbuf
-
-    def _plot_fitness(self, sql_fcn, title):
-        sql = 'SELECT ga_step, {}(fitness) FROM fitness GROUP BY ga_step;'.format(sql_fcn)
-        self.db.cur.execute(sql)
-        xs = []
-        ys = []
-        for row in self.db.cur:
-            ga_step, fitness = row
-            xs.append(ga_step + 1)
-            ys.append(fitness)
-
-        plt.title(title)
-        plt.xlabel('iteration')
-        plt.ylabel('fitness')
-
-        fig, ax = plt.subplots()
-        ax.plot(xs, ys)
-        #fig.savefig('{}/{}.png'.format(run_dir, title))
-        pixbuf = self._fig_to_pixbuf(fig)
-        plt.close(fig)
-        
         return pixbuf
 
     #note: column names have "ps." prefix (for protein_state)
@@ -235,16 +179,7 @@ class GrnGen():
 
         #plt.tight_layout()
 
-        #fig.savefig('{}/{}.png'.format(run_dir, reg_step))
         pixbuf = self._fig_to_pixbuf(fig)
         plt.close(fig)
         
         return pixbuf
-        #plt.show()
-
-    def get_best(self):
-        sql = 'SELECT g.ga_step, g.pop_index, min(f.fitness) FROM grn g JOIN fitness f ON f.ga_step = g.ga_step AND f.pop_index = g.pop_index;'
-        self.db.cur.execute(sql)
-        row = self.db.cur.fetchone()
-
-        return row
