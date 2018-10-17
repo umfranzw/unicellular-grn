@@ -1,6 +1,8 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
+import PIL.Image
+from io import BytesIO
 
 from step_button import StepButton
 from db import Db
@@ -44,6 +46,15 @@ class ViewWindow(Gtk.Window):
         self.update_views()
 
     def _build_bottom_panel(self):
+        bbox = Gtk.ButtonBox(Gtk.ButtonBoxStyle.EDGE)
+        self.save_tree_button = Gtk.Button(label='Save')
+        self.save_tree_button.connect('clicked', self._save_img, self.tree_img)
+        self.save_grn_button = Gtk.Button(label='Save')
+        self.save_grn_button.connect('clicked', self._save_img, self.grn_img)
+        
+        bbox.add(self.save_tree_button)
+        bbox.add(self.save_grn_button)
+        
         grid = Gtk.Grid()
         
         ga_label = Gtk.Label('GA Step:')
@@ -67,6 +78,7 @@ class ViewWindow(Gtk.Window):
 
         vbox = Gtk.VBox()
         sep = Gtk.Separator()
+        vbox.add(bbox)
         vbox.add(sep)
         vbox.add(grid)
         
@@ -78,7 +90,30 @@ class ViewWindow(Gtk.Window):
         pop_index = self.index_spin.get_value()
 
         tree_pixbuf = self.tree_gen.build_tree(ga_step, reg_step, pop_index)
-        self.tree_img.set_from_pixbuf(tree_pixbuf)
+        if tree_pixbuf is None:
+            self.tree_img.set_visible(False)
+            self.save_tree_button.set_sensitive(False)
+        else:
+            self.tree_img.set_from_pixbuf(tree_pixbuf)
+            self.tree_img.set_visible(True)
+            self.save_tree_button.set_sensitive(True)
 
         grn_pixbuf = self.grn_gen.draw_grn(ga_step, reg_step, pop_index, self.run)
         self.grn_img.set_from_pixbuf(grn_pixbuf)
+
+    def _save_img(self, widget, img):
+        pixbuf = img.get_pixbuf()
+        height = pixbuf.get_height()
+        width = pixbuf.get_width()
+        data = pixbuf.get_pixels()
+        pil_img = PIL.Image.frombytes('RGBA', (width, height), data)
+
+        chooser = Gtk.FileChooserDialog(title='Save', action=Gtk.FileChooserAction.SAVE, buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_SAVE, Gtk.ResponseType.OK))
+        chooser.set_do_overwrite_confirmation(True)
+        response = chooser.run()
+
+        filename = None
+        if response == Gtk.ResponseType.OK:
+            filename = chooser.get_file()
+            pil_img.save(filename.get_path())
+        chooser.destroy()
