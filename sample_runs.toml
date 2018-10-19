@@ -2,7 +2,7 @@
 ######
 # GA #
 ######
-pop_size = 50
+pop_size = 100
 ga_steps = 1
 mut_prob = 0.1
 mut_prob_limit = 0.2
@@ -23,10 +23,10 @@ min_protein_conc = 0.05
 max_protein_conc = 1.0
 
 #concentration weight (for binding)
-alpha = 0.4
+alpha = 0.3
 
 #sequence weight (for binding)
-beta = 0.6
+beta = 0.7
 
 decay_rate = 0.05
 initial_proteins = 5
