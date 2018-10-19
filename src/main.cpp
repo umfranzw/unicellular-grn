@@ -1,35 +1,25 @@
 #include <iostream>
+#include "tclap/CmdLine.h"
 #include "runs.hpp"
 #include "ga.hpp"
-#include "cxxopts/include/cxxopts.hpp"
 #include "test.hpp"
 
 const string DEFAULT_RUN_FILE = "runs.toml";
 
 using namespace std;
 
-cxxopts::Options create_options() {
-    cxxopts::Options options("GRN", "Simulation");
-    options.add_options()
-        ("t,test", "Run tests")
-        ("f,file", "Run file (TOML)", cxxopts::value<string>())
-        ;
-    options.parse_positional("file");
-
-    return options;
-}
-
 int main(int argc, char *argv[])
 {
-    cxxopts::Options cmd_opts = create_options();
-    auto result = cmd_opts.parse(argc, argv);
-    string run_file = DEFAULT_RUN_FILE;
+    TCLAP::CmdLine cmd("Unicellular GRN Simulation", ' ', "0.1");
+    TCLAP::SwitchArg test_switch("t", "test", "Run tests", cmd, false);
+    TCLAP::UnlabeledValueArg<string> runfile_arg("runfile", "filename", false, DEFAULT_RUN_FILE, "path");
+    cmd.add(runfile_arg);
 
-    if (result.count("file") > 0) {
-        run_file = result["file"].as<string>();
-    }
+    cmd.parse(argc, argv);
+    string run_file = runfile_arg.getValue();
+    bool testing = test_switch.getValue();
     
-    if (result.count("test") > 0) {
+    if (testing) {
         Test test;
         test.run();
     }
