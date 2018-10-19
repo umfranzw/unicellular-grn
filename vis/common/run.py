@@ -1,18 +1,45 @@
 class Run():
-    def __init__(self, db):
+    def __init__(self, db=None, ipc=None):
+        if db is not None:
+            self.db = db
+            
+        elif ipc is not None:
+            self.ipc = ipc
+
+        else:
+            print('No database connection provided')
+            
+        self._set_id()
+        self._set_attrs()
+
+    def _select(self, sql, args, result_types=None):
+        rs = None
+        if self.db:
+            self.db.cur.execute(sql, args)
+            rs = self.db.cur
+
+        else:
+            rs = self.ipc.select(sql, args, result_types)
+
+        return rs
+
+    def _set_id(self):
         #get the run id (db row id)
         sql = "SELECT max(id) FROM run;"
-        db.cur.execute(sql)
-        rs = db.cur.fetchone()
-        self.run_id = rs[0]
+        rs = self._select(sql, (), (int,))
+        row = rs.fetchone()
+        self.run_id = row[0]
 
+    def _set_attrs(self):
         #get all other stuff
         sql = "SELECT pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, alpha, beta, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_method, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval, fix_rng_seed FROM run;"
 
-        db.cur.execute(sql)
-        rs = db.cur.fetchone()
+        types = [int, int, int, float, float, float, float, float, float, int, int, float, float, float, float, float, int, int, float, int, int, int, int, int, int, int, int, int, int, str, float, float, int, int, int, int]
+
+        rs = self._select(sql, (), types)
+        row = rs.fetchone()
         
-        self.pop_size, self.ga_steps, self.reg_steps, self.mut_prob, self.mut_prob_limit, self.mut_step, self.cross_frac, self.cross_frac_limit, self.cross_step, self.num_genes, self.gene_bits, self.min_protein_conc, self.max_protein_conc, self.alpha, self.beta, self.decay_rate, self.initial_proteins, self.max_proteins, self.max_mut_float, self.max_mut_bits, self.fitness_log_interval, self.binding_method, self.graph_results, self.log_grns, self.log_reg_steps, self.log_code_with_fitness, self.growth_start, self.growth_end, self.growth_sample_interval, self.growth_seq, self.growth_threshold, self.term_cutoff, self.code_start, self.code_end, self.code_sample_interval, self.fix_rng_seed = rs
+        self.pop_size, self.ga_steps, self.reg_steps, self.mut_prob, self.mut_prob_limit, self.mut_step, self.cross_frac, self.cross_frac_limit, self.cross_step, self.num_genes, self.gene_bits, self.min_protein_conc, self.max_protein_conc, self.alpha, self.beta, self.decay_rate, self.initial_proteins, self.max_proteins, self.max_mut_float, self.max_mut_bits, self.fitness_log_interval, self.binding_method, self.graph_results, self.log_grns, self.log_reg_steps, self.log_code_with_fitness, self.growth_start, self.growth_end, self.growth_sample_interval, self.growth_seq, self.growth_threshold, self.term_cutoff, self.code_start, self.code_end, self.code_sample_interval, self.fix_rng_seed = row
 
     def __str__(self):
         info += "run_id: {}\n".format(self.run_id)

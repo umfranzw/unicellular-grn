@@ -9,7 +9,7 @@ class TreeGen():
         self.db = db
 
     def build_tree(self, ga_step, reg_step, pop_index):
-        pixbuf = None
+        pngbuf = None
         
         graph = Digraph(format='png', edge_attr={'dir': 'none'})
         sql = 'SELECT t.id FROM grn g JOIN ptype_state p ON g.id = p.grn_id JOIN tree t on p.id = t.ptype_state_id WHERE g.ga_step = ? AND g.pop_index = ? AND p.reg_step = ?;'
@@ -28,14 +28,15 @@ class TreeGen():
                 self._create_node(graph, tree_id, node_id, desc)
 
                 #render in memory
-                dot_data = BytesIO(graph.pipe())
-                img = PIL.Image.open(dot_data)
+                pngbuf = BytesIO(graph.pipe())
+                pngbuf.seek(0)
+                
                 #img = img.resize((100, 100))
-                width, height = img.size
-                glib_data = GLib.Bytes.new(img.tobytes())
-                pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(glib_data, GdkPixbuf.Colorspace.RGB, True, 8, width, height, width * 4)
+                # width, height = img.size
+                # glib_data = GLib.Bytes.new(img.tobytes())
+                # pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(glib_data, GdkPixbuf.Colorspace.RGB, True, 8, width, height, width * 4)
 
-        return pixbuf
+        return pngbuf
 
     def _create_node(self, graph, tree_id, node_id, desc):
         graph.node(str(node_id), desc)

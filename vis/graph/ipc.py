@@ -1,6 +1,7 @@
 import zmq
 import sys
 import struct
+from result_set import ResultSet
 
 SOCKET_URI = 'ipc:///tmp/pipe'
 
@@ -11,7 +12,7 @@ class Ipc():
         self.socket.connect(SOCKET_URI)
 
     def select(self, sql, params, result_col_types):
-        results = []
+        results = ResultSet()
 
         self.socket.send(b'stmt')
         self.socket.send(bytes(sql, 'utf-8'))

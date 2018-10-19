@@ -1,28 +1,34 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GdkPixbuf, GLib
 import PIL.Image
+from collections import OrderedDict
 
-from step_button import StepButton
-from db import Db
-from tree_gen import TreeGen
-from grn_gen import GrnGen
-from run import Run
+from .step_button import StepButton
+from common.db import Db
+from .tree_gen import TreeGen
+from common.graph_gen import GraphGen
+from common.run import Run
 
 class ViewWindow(Gtk.Window):
     WIDTH = 800
     HEIGHT = 600
+
+    CACHE_SIZE = 100 #max number of images that can be stored in the cache
     
-    def __init__(self):
+    def __init__(self, db_path):
         Gtk.Window.__init__(self, title='Viewer')
         self.set_default_size(ViewWindow.WIDTH, ViewWindow.HEIGHT)
 
-        self.db = Db()
-        self.tree_gen = TreeGen(self.db)
-        self.grn_gen = GrnGen(self.db)
+        self.db = Db(db_path)
         self.run = Run(self.db)
-        self.tree_cache = {}
-        self.grn_cache = {}
+        self.tree_gen = TreeGen(self.db)
+        self.graph_gen = GraphGen(self.run, db=self.db)
+
+        #we'll simulate an MRU (most recently used) cache using an OrderedDict
+        #it's not the most efficient, but it's good enough for this application
+        self.tree_cache = OrderedDict()
+        self.grn_cache = OrderedDict()
         
         vbox = Gtk.VBox()
         paned = Gtk.Paned()
@@ -85,14 +91,30 @@ class ViewWindow(Gtk.Window):
         
         return vbox
 
+    #cache images in png format to reduce size (pixbufs are big)
+    #this means we have to convert pngbuf to pixbuf on cache fetch, but the conversion overhead is still significantly less than re-rendering the whole thing
+    #this way we get a good balance of memory and time savings
     def _get_img(self, cache, draw_fcn, ga_step, reg_step, pop_index):
         key = (ga_step, reg_step, pop_index)
+        pixbuf = None
         if key in cache:
-            pixbuf = cache[key]
+            pixbuf = self._pngbuf_to_pixbuf(cache[key])
+            cache.move_to_end(key) #record that this is now the most recently used
+            
         else:
-            pixbuf = draw_fcn()
-            if pixbuf is not None:
-                cache[key] = pixbuf
+            pngbuf = draw_fcn()
+            if pngbuf is not None:
+                if len(cache) < ViewWindow.CACHE_SIZE:
+                    cache[key] = pngbuf
+                else:
+                    #cache is full.
+                    #Remove oldest element, which is at the beginning of the OrderedDict
+                    start_key = cache.__iter__().__next__()
+                    cache.pop(start_key)
+                    #and add the new one at the end
+                    cache[key] = pngbuf
+                    
+                pixbuf = self._pngbuf_to_pixbuf(pngbuf)
 
         return pixbuf
 
@@ -117,12 +139,26 @@ class ViewWindow(Gtk.Window):
             self.save_tree_button.set_sensitive(True)
 
         grn_pixbuf = self._get_img(self.grn_cache,
-                                   lambda: self.grn_gen.draw_grn(ga_step, reg_step, pop_index, self.run),
+                                   lambda: self.graph_gen.draw_grn(ga_step, reg_step, pop_index, self.run),
                                    ga_step,
                                    reg_step,
                                    pop_index
         )
         self.grn_img.set_from_pixbuf(grn_pixbuf)
+
+    def _pixbuf_to_pngbuf(self, pixbuf):
+        pil_img = PIL.Image.frombytes('RGBA', (pixbuf.get_width(), pixbuf.get_height()), pixbuf.get_pixels())
+        pngbuf = BytesIO()
+        pil_img.save(pngbuf, format='png')
+        pngbuf.seek(0)
+        
+        return pngbuf
+
+    def _pngbuf_to_pixbuf(self, pngbuf):
+        pil_img = PIL.Image.open(pngbuf)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(GLib.Bytes.new(pil_img.tobytes()), GdkPixbuf.Colorspace.RGB, True, 8, pil_img.width, pil_img.height, pil_img.width * 4)
+        
+        return pixbuf
 
     def _save_img(self, widget, img):
         pixbuf = img.get_pixbuf()
