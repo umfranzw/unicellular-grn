@@ -5,13 +5,11 @@
 Tree::Tree() {
     this->root = nullptr;
     this->next_id = 0;
-    this->filled_nodes = 0;
 }
 
 Tree::Tree(Tree *tree) {
     this->root = nullptr;
     this->next_id = 0;
-    this->filled_nodes = tree->filled_nodes;
 
     for (auto it = tree->id_to_node.begin(); it != tree->id_to_node.end(); it++) {
         int node_id = it->first;
@@ -42,15 +40,24 @@ bool Tree::invariant() {
 }
 
 int Tree::get_num_children(int id) {
-    return id_to_node[id]->children.size();
+    return this->id_to_node[id]->children.size();
 }
 
 int Tree::get_num_filled_nodes() {
-    return this->filled_nodes;
+    Node *cur;
+    int count = 0;
+    for (pair<int, Node*> item : this->id_to_node) {
+        cur = item.second;
+        if (cur->instr != nullptr) {
+            count++;
+        }
+    }
+    
+    return count;
 }
 
 int Tree::get_num_unfilled_nodes() {
-    return this->size() - this->filled_nodes;
+    return this->size() - this->get_num_filled_nodes();
 }
 
 int Tree::size() {
@@ -84,10 +91,6 @@ bool Tree::add_child(int parent_id, Instr *instr) {
         }
     }
 
-    if (success && instr != nullptr) {
-        this->filled_nodes++;
-    }
-
     return success;
 }
 
@@ -96,9 +99,6 @@ bool Tree::remove_child(int child_id) {
     if (this->root != nullptr && child_id == 0) {
         int num_removed = this->id_to_node.erase(this->root->id);
         if (num_removed > 0) {
-            if (this->root->instr != nullptr) {
-                this->filled_nodes--;
-            }
             delete this->root;
             this->root = nullptr;
             success = true;
@@ -126,10 +126,6 @@ bool Tree::remove_child(int child_id) {
             //remove child
             int num_removed = this->id_to_node.erase(child_id);
             if (num_removed > 0) {
-                if (child->instr != nullptr) {
-                    this->filled_nodes--;
-                }
-                
                 success = true;
                 delete child;
             }

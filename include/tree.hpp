@@ -31,7 +31,6 @@ private:
     Node *root;
     map<int, Node*> id_to_node;
     int next_id;
-    int filled_nodes;
 
     string to_code(Node *cur);
     void to_str(Node *cur, stringstream *info, string prefix, int depth);
