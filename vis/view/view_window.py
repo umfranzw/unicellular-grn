@@ -78,12 +78,16 @@ class ViewWindow(Gtk.Window):
         self.index_spin = StepButton(self.db, 'fitness', 'pop_index', entry_width=3)
         self.index_spin.connect('change-value', self.update_views)
 
+        precomp_button = Gtk.Button(label='Precompute')
+        precomp_button.connect('clicked', self._precomp_reg_steps)
+
         button_grid.attach(ga_label, 0, 0, 1, 1)
         button_grid.attach(self.ga_spin, 1, 0, 1, 1)
         button_grid.attach(reg_label, 0, 1, 1, 1)
         button_grid.attach(self.reg_spin, 1, 1, 1, 1)
         button_grid.attach(index_label, 0, 2, 1, 1)
         button_grid.attach(self.index_spin, 1, 2, 1, 1)
+        button_grid.attach(precomp_button, 2, 1, 1, 1)
 
         #fittest grid
         info = BestInfo(db=self.db)
@@ -113,6 +117,25 @@ class ViewWindow(Gtk.Window):
         vbox.add(hbox)
         
         return vbox
+
+    def _precomp_reg_steps(self, widget):
+        ga_step = self.ga_spin.get_value()
+        pop_index = self.index_spin.get_value()
+
+        for i in range(self.run.reg_steps):
+            self._get_img(self.tree_cache,
+                          lambda: self.tree_gen.build_tree(ga_step, i, pop_index),
+                          ga_step,
+                          i,
+                          pop_index
+            )
+
+            self._get_img(self.grn_cache,
+                          lambda: self.graph_gen.draw_grn(ga_step, i, pop_index, self.run),
+                          ga_step,
+                          i,
+                          pop_index
+            )
 
     def _build_info_grid(self, grid_title, titles, vals):
         grid = Gtk.Grid()
