@@ -9,6 +9,7 @@ from common.db import Db
 from .tree_gen import TreeGen
 from common.graph_gen import GraphGen
 from common.run import Run
+from .best_info import BestInfo
 
 class ViewWindow(Gtk.Window):
     WIDTH = 800
@@ -61,8 +62,9 @@ class ViewWindow(Gtk.Window):
         
         bbox.add(self.save_tree_button)
         bbox.add(self.save_grn_button)
-        
-        grid = Gtk.Grid()
+
+        #button grid
+        button_grid = Gtk.Grid()
         
         ga_label = Gtk.Label('GA Step:')
         self.ga_spin = StepButton(self.db, 'grn', 'ga_step', entry_width=3)
@@ -76,20 +78,58 @@ class ViewWindow(Gtk.Window):
         self.index_spin = StepButton(self.db, 'fitness', 'pop_index', entry_width=3)
         self.index_spin.connect('change-value', self.update_views)
 
-        grid.attach(ga_label, 0, 0, 1, 1)
-        grid.attach(self.ga_spin, 1, 0, 1, 1)
-        grid.attach(reg_label, 0, 1, 1, 1)
-        grid.attach(self.reg_spin, 1, 1, 1, 1)
-        grid.attach(index_label, 0, 2, 1, 1)
-        grid.attach(self.index_spin, 1, 2, 1, 1)
+        button_grid.attach(ga_label, 0, 0, 1, 1)
+        button_grid.attach(self.ga_spin, 1, 0, 1, 1)
+        button_grid.attach(reg_label, 0, 1, 1, 1)
+        button_grid.attach(self.reg_spin, 1, 1, 1, 1)
+        button_grid.attach(index_label, 0, 2, 1, 1)
+        button_grid.attach(self.index_spin, 1, 2, 1, 1)
 
+        #fittest grid
+        info = BestInfo(db=self.db)
+
+        grid_title = 'Fittest GRN'
+        titles = ['ga_step:', 'pop_index', 'fitness:']
+        vals = info.get_fittest_grn()
+        fittest_grid = self._build_info_grid(grid_title, titles, vals)
+        
+        #biggest grid
+        grid_title = 'Biggest Tree'
+        titles = ['ga_step:', 'reg_step:', 'pop_index:', 'size:', 'filled_nodes:']
+        vals = info.get_biggest_tree()
+        biggest_grid = self._build_info_grid(grid_title, titles, vals)
+
+        #arrange grids
         vbox = Gtk.VBox()
         sep = Gtk.Separator()
-        vbox.add(bbox)
         vbox.add(sep)
-        vbox.add(grid)
+        vbox.add(bbox)
+
+        hbox = Gtk.HBox()
+        hbox.add(button_grid)
+        hbox.add(fittest_grid)
+        hbox.add(biggest_grid)
+
+        vbox.add(hbox)
         
         return vbox
+
+    def _build_info_grid(self, grid_title, titles, vals):
+        grid = Gtk.Grid()
+        grid.set_column_spacing(5)
+        grid_title_label = Gtk.Label(grid_title)
+        grid_title_label.set_halign(Gtk.Align.CENTER)
+
+        grid.attach(grid_title_label, 0, 0, 2, 1)
+        for i in range(len(titles)):
+            title = Gtk.Label(titles[i])
+            title.set_halign(Gtk.Align.END)
+            val = Gtk.Label(str(vals[i]))
+            val.set_halign(Gtk.Align.START)
+            grid.attach(title, 0, i + 1, 1, 1)
+            grid.attach(val, 1, i + 1, 1, 1)
+
+        return grid
 
     #cache images in png format to reduce size (pixbufs are big)
     #this means we have to convert pngbuf to pixbuf on cache fetch, but the conversion overhead is still significantly less than re-rendering the whole thing

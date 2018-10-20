@@ -282,6 +282,7 @@ void Logger::create_tables() {
         ptype_sql << "tree_str TEXT NULL,";
         ptype_sql << "size INTEGER NOT NULL,";
         ptype_sql << "height INTEGER NOT NULL,";
+        ptype_sql << "filled_nodes NOT NULL,";
         ptype_sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
         ptype_sql << ");";
         sqlite3_exec(this->conn, ptype_sql.str().c_str(), NULL, NULL, NULL);
@@ -787,7 +788,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
 
             //insert phenotype state
             sqlite3_stmt *ptype_stmt;
-            string ptype_sql = "INSERT INTO ptype_state (grn_id, reg_step, tree_str, size, height) VALUES (?, ?, ?, ?, ?);";
+            string ptype_sql = "INSERT INTO ptype_state (grn_id, reg_step, tree_str, size, height, filled_nodes) VALUES (?, ?, ?, ?, ?, ?);";
             sqlite3_prepare_v2(this->conn, ptype_sql.c_str(), ptype_sql.size() + 1, &ptype_stmt, NULL);
             
             bind_index = 1;
@@ -802,6 +803,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
             }
             sqlite3_bind_int(ptype_stmt, bind_index++, ptype->size());
             sqlite3_bind_int(ptype_stmt, bind_index++, ptype->height());
+            sqlite3_bind_int(ptype_stmt, bind_index++, ptype->get_num_filled_nodes());
 
             rc = sqlite3_step(ptype_stmt);
             if (rc != SQLITE_DONE) {
