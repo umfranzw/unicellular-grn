@@ -11,7 +11,6 @@ DB_PATH = '/home/wayne/Documents/school/thesis/unicellular-grn/data/dbs/run0.db'
 def main():
     win = ViewWindow(DB_PATH)
     win.connect("destroy", Gtk.main_quit)
-    win.show_all()
     Gtk.main()
 
 main()
