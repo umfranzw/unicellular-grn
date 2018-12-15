@@ -18,7 +18,7 @@ class ViewWindow(Gtk.Window):
     HEIGHT = 600
 
     CACHE_SIZE = 100 #max number of images that can be stored in the cache
-    GIF_SCALE = 0.75
+    GIF_SCALE = 1
     
     def __init__(self, db_path):
         Gtk.Window.__init__(self, title='Viewer')
@@ -63,13 +63,13 @@ class ViewWindow(Gtk.Window):
         self.save_tree_button.connect('clicked', self._save_img, self.tree_img)
         # self.save_both_button = Gtk.Button(label='Save Both')
         # self.save_both_button.connect('clicked', self._save_both, self.tree_img, self.grn_img)
-        # self.save_gif_button = Gtk.Button(label='Save GIF')
-        # self.save_gif_button.connect('clicked', self._save_gif)
+        self.save_gif_button = Gtk.Button(label='Save GIF')
+        self.save_gif_button.connect('clicked', self._save_gif)
         self.save_grn_button = Gtk.Button(label='Save')
         self.save_grn_button.connect('clicked', self._save_img, self.grn_img)
         
         bbox.add(self.save_tree_button)
-        #bbox.add(self.save_gif_button)
+        bbox.add(self.save_gif_button)
         bbox.add(self.save_grn_button)
 
         #button grid
@@ -329,7 +329,7 @@ class ViewWindow(Gtk.Window):
         print('Generating...')
         for reg_step in range(-1, self.run.reg_steps):
             print(reg_step)
-            grn_pngbuf = self.graph_gen.draw_grn(ga_step, reg_step, pop_index, self.run)
+            grn_pngbuf = self.graph_gen.draw_grn(ga_step, reg_step, pop_index, self.run, draw_outputs=False, draw_legend=True)
             grn_img = PIL.Image.open(grn_pngbuf)
             grn_size[0] = max(grn_size[0], grn_img.width)
             grn_size[1] = max(grn_size[1], grn_img.height)
@@ -346,15 +346,16 @@ class ViewWindow(Gtk.Window):
 
         #combine images
         frames = []
-        big_size = (tree_size[0] + grn_size[0], max(tree_size[1], grn_size[1]))
+        big_size = (max(tree_size[0], grn_size[0]), grn_size[1] + tree_size[1])
         print('Combining...')
         for i in range(len(trees)):
             print(i - 1)
-            big_img = PIL.Image.new('RGBA', big_size, color=(255, 255, 255, 0))
+            big_img = PIL.Image.new('RGBA', big_size, color=(255, 255, 255, 1))
+            
+            big_img.paste(grns[i], (0, 0))
             if trees[i] is not None:
-                big_img.paste(trees[i], (0, 0))
+                big_img.paste(trees[i], (0, grn_size[1]))
 
-            big_img.paste(grns[i], (tree_size[0], 0))
             if ViewWindow.GIF_SCALE != 1:
                 big_img = big_img.resize((int(big_img.width * ViewWindow.GIF_SCALE), int(big_img.height * ViewWindow.GIF_SCALE)))
             big_img.save('/tmp/.gif.png', format='png')

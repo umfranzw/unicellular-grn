@@ -27,11 +27,14 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
 
             grn->run_diffusion();
 
-            grn->run_decay();
-
             this->grow_step(grn, ptype, i, j, ga_step);
 
             this->code_step(grn, ptype, i, j, ga_step);
+
+            //if we're not in the coding phase, do the decay
+            if (j < this->run->code_start || j > this->run->code_end) {
+                grn->run_decay();
+            }
             
             this->logger->log_reg_step(ga_step, j, grn, i, ptype);
         }

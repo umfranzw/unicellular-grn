@@ -15,8 +15,8 @@ class GraphGen():
     FIG_HEIGHT = 10
     BAR_WIDTH = 0.8
     
-    DRAW_OUTPUTS = True
-    DRAW_LEGEND = True
+    #DRAW_OUTPUTS = True
+    #DRAW_LEGEND = True
     
     #Kelly's 22 colours of max contrast
     KELLY_COLOURS = ['#F2F3F4',
@@ -188,14 +188,20 @@ class GraphGen():
 
         return colour_index
 
-    def _plot_concs(self, ga_step, reg_step, pop_index, run, ax, pids):
+    def _plot_concs(self, ga_step, reg_step, pop_index, run, ax, pids=None):
         plt.sca(ax) #note: sca=set current axis
 
         conc_cols = self._get_conc_sql(run)
-        sql = 'SELECT p.pid, p.seq, {} FROM grn JOIN protein_state ps ON grn.id = ps.grn_id JOIN protein p ON ps.protein_id = p.id WHERE grn.ga_step = ? AND ps.reg_step = ? AND grn.pop_index = ? AND p.pid NOT IN ({});'.format(conc_cols, self._get_placeholder_list(len(pids)))
+        sql = 'SELECT p.pid, p.seq, {} FROM grn JOIN protein_state ps ON grn.id = ps.grn_id JOIN protein p ON ps.protein_id = p.id WHERE grn.ga_step = ? AND ps.reg_step = ? AND grn.pop_index = ?'.format(conc_cols)
         types = [int, str] + [float] * self.run.num_genes
-        types += [int] * len(pids)
-        self._select(sql, (ga_step, reg_step, pop_index) + tuple(pids), types)
+        args = (ga_step, reg_step, pop_index)
+        
+        if pids:
+            sql += 'AND p.pid NOT IN ({})'.format(self._get_placeholder_list(len(pids)))
+            args += tuple(pids)
+        sql += ';'
+        
+        self._select(sql, args, types)
 
         xs = [0] + [(i + 0.5) * GraphGen.GENE_WIDTH for i in range(self.run.num_genes)] + [self.run.num_genes * GraphGen.GENE_WIDTH]
         concs_plotted = 0
@@ -282,13 +288,13 @@ class GraphGen():
             if bar_texts[i]:
                 ax.text(xs[i] - 0.1, ys[i] / 2 - 0.005, bar_texts[i])
 
-    def draw_grn(self, ga_step, reg_step, pop_index, run, pids):
+    def draw_grn(self, ga_step, reg_step, pop_index, run, pids=None, draw_legend=True, draw_outputs=True):
         key = (ga_step, pop_index)
         if key != self.last_key:
             self.colour_cache.clear()
             self.last_key = key
 
-        if GraphGen.DRAW_OUTPUTS:
+        if draw_outputs:
             fig, ax = plt.subplots(2, 1, figsize=(GraphGen.FIG_WIDTH, GraphGen.FIG_HEIGHT))
         else:
             fig, ax = plt.subplots(1, 1, figsize=(GraphGen.FIG_WIDTH, GraphGen.FIG_HEIGHT / 2))
@@ -308,10 +314,10 @@ class GraphGen():
         concs_plotted = self._plot_concs(ga_step, reg_step, pop_index, run,  ax[0], pids)
         self._draw_bindings(ga_step, reg_step, pop_index, run, ax[0])
 
-        if GraphGen.DRAW_OUTPUTS:
+        if draw_outputs:
             self._draw_outputs(ga_step, reg_step, pop_index, run, ax[1])
 
-        if GraphGen.DRAW_LEGEND and concs_plotted > 0:
+        if draw_legend and concs_plotted > 0:
             lgd = ax[0].legend(loc='center left', bbox_to_anchor=(1, 0.5))
         else:
             lgd = None

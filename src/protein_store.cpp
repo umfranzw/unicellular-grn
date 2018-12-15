@@ -76,6 +76,20 @@ vector<Protein *>ProteinStore::get_all(const BitVec *bv) {
     return proteins;
 }
 
+pair<int, Protein *> ProteinStore::get_by_seq(BitVec *seq) {
+    pair<int, Protein*> result;
+    result.first = -1;
+    result.second = nullptr;
+    for (auto it = this->id_map.begin(); result.first == -1 && it != this->id_map.end(); it++) {
+        if (*(it->second->seq) == *seq) {
+            result.first = it->first;
+            result.second = it->second;
+        }
+    }
+
+    return result;
+}
+
 size_t ProteinStore::size() {
     return this->id_map.size();
 }

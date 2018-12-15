@@ -5,6 +5,7 @@
 #include "utils.hpp"
 #include "kernels.hpp"
 #include "gene.hpp"
+#include "diffusion.hpp"
 #include <sstream>
 #include <vector>
 
@@ -149,6 +150,44 @@ void Grn::run_binding() {
 }
 
 void Grn::run_diffusion() {
+    this->run_diffusion_fcn();
+}
+
+void Grn::run_diffusion_fcn() {
+    for (int i = 0; i < this->run->num_genes; i++) {
+        Gene *g = this->genes[i];
+        vector<pair<int, int>> rm_pairs; //(index in gene.outputs, protein id)
+        for (int j = 0; j < (int) g->outputs.size(); j++) {
+            int p_id = g->outputs[j];
+            Protein *p = this->proteins->get(p_id);
+            bool above_threshold = Diffusion::diffuse(p);
+            if (!above_threshold) {
+                rm_pairs.push_back(pair<int, int>(j, p_id));
+            }
+        }
+
+        for (int j = 0; j < (int) rm_pairs.size(); j++) {
+            int index = rm_pairs[j].first;
+            int id = rm_pairs[j].second;
+
+            g->outputs.erase(g->outputs.begin() + index - j); //subtract j to compensate for shift due to removals on previous iterations
+
+            if (g->active_output >= 0) {
+                g->active_output = -1;
+            }
+            this->proteins->remove(id);
+
+            //remove any bindings to the protein we just deleted
+            for (int k = 0; k < this->run->num_genes; k++) {
+                if (this->genes[k]->bound_protein == id) {
+                    this->genes[k]->update_binding(nullptr, this->proteins);
+                }
+            }
+        }
+    }
+}
+
+void Grn::run_diffusion_kernel() {
     for (int i = 0; i < this->run->num_genes; i++) {
         Gene *g = this->genes[i];
         vector<float> new_concs(this->run->num_genes, 0.0f);

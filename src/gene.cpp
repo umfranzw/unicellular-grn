@@ -77,36 +77,40 @@ void Gene::update_binding(pair<int, float> *protein_info, ProteinStore *store) {
         int id = protein_info->first;
         this->bound_protein = id;
         
-        bool cond;
+        bool bind;
         if (this->run->binding_method == BINDING_THRESHOLDED) {
             float conc = protein_info->second;
-            cond = (conc >= this->threshold);
+            bind = (conc >= this->threshold);
         }
         else {
-            cond = true;
-            float binding_prob = protein_info->second;
-            this->binding_prob = binding_prob;
+            bind = true;
+            this->binding_prob = protein_info->second;
         }
         
-        if (cond) {
-            if (Utils::contains_id(&this->outputs, id)) {
-                this->active_output = id;
-            }
-            else {
-                //add a new protein (if we haven't already reached the max allowable number)
-                if ((int) store->size() < this->run->max_proteins) {
+        if (bind) {
+            if (this->active_output == -1) {
+                //see if this gene has output its output protein in the past, and that protein is still around...
+                pair<int, Protein*> result = store->get_by_seq(this->output_seq);
+                //if so, reactivate the existing protein
+                if (result.first != -1) {
+                    this->active_output = result.first;
+                }
+
+                else {
+                    //otherwise, create a new protein and activate it
                     Protein *protein = new Protein(this->run, this->output_seq, Utils::zeros(this->run->num_genes), this->kernel_index, this->pos);
-                    int id = store->add(protein);
-                    this->active_output = id;
-                    this->outputs.push_back(id);
+                    int pid = store->add(protein);
+                    this->active_output = pid;
+                    this->outputs.push_back(pid);
                 }
             }
         }
         //note: this path is never taken when binding_method == "scaled"
-        else {
-            this->active_output = -1;
-        }
+        // else {
+        //     this->active_output = -1;
+        // }
     }
+    //if we got passed a null protein pointer, unbind and stop output protein production
     else {
         this->active_output = -1;
         this->bound_protein = -1;

@@ -156,7 +156,8 @@ void Logger::create_tables() {
     fit_sql << "fitness REAL NOT NULL,";
     fit_sql << "pop_index INTEGER NOT NULL,";
     fit_sql << "ga_step INTEGER NOT NULL,";
-    fit_sql << "code TEXT NULL";
+    fit_sql << "code TEXT NULL,";
+    fit_sql << "str TEXT NULL";
     fit_sql << ");";
     sqlite3_exec(this->conn, fit_sql.str().c_str(), NULL, NULL, NULL);
 
@@ -300,7 +301,7 @@ void Logger::log_run() {
     stringstream seed_buf;
     seed_buf << this->run->rand->seed;
     string seed_str = seed_buf.str();
-    sqlite3_bind_text(run_stmt, bind_index++, seed_str.c_str(), seed_str.size(), SQLITE_STATIC);
+    sqlite3_bind_text(run_stmt, bind_index++, seed_str.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->pop_size);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->ga_steps);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->reg_steps);
@@ -323,7 +324,7 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, this->run->max_mut_bits);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->fitness_log_interval);
     string bmeth = this->run->binding_method == BINDING_THRESHOLDED ? "thresholded" : "scaled";
-    sqlite3_bind_text(run_stmt, bind_index++, bmeth.c_str(), bmeth.size(), SQLITE_STATIC);
+    sqlite3_bind_text(run_stmt, bind_index++, bmeth.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->graph_results);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_grns);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->log_reg_steps);
@@ -331,7 +332,7 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_start);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_end);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_sample_interval);
-    sqlite3_bind_text(run_stmt, bind_index++, this->run->growth_seq.c_str(), this->run->growth_seq.size(), SQLITE_STATIC);
+    sqlite3_bind_text(run_stmt, bind_index++, this->run->growth_seq.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->growth_threshold);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->term_cutoff);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->code_start);
@@ -354,7 +355,7 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
     //note: ga_step may be < 0 when logging initial fitnesses
     if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {
         int rc;
-        string fitness_sql = "INSERT INTO fitness (fitness, pop_index, ga_step, code) VALUES (?, ?, ?, ?);";
+        string fitness_sql = "INSERT INTO fitness (fitness, pop_index, ga_step, code, str) VALUES (?, ?, ?, ?, ?);";
         sqlite3_stmt *fitness_stmt;
         sqlite3_prepare_v2(this->conn, fitness_sql.c_str(), fitness_sql.size() + 1, &fitness_stmt, NULL);
 
@@ -380,13 +381,21 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
                 Phenotype *ptype = (*phenotypes)[i];
                 string code = ptype->to_code();
                 if (code.size() > 0) {
-                    sqlite3_bind_text(fitness_stmt, bind_index++, code.c_str(), code.size(), SQLITE_STATIC);
+                    sqlite3_bind_text(fitness_stmt, bind_index++, code.c_str(), -1, SQLITE_TRANSIENT);
+                }
+                else {
+                    sqlite3_bind_null(fitness_stmt, bind_index++);
+                }
+                string str = ptype->to_str();
+                if (str.size() > 0) {
+                    sqlite3_bind_text(fitness_stmt, bind_index++, str.c_str(), -1, SQLITE_TRANSIENT);
                 }
                 else {
                     sqlite3_bind_null(fitness_stmt, bind_index++);
                 }
             }
             else {
+                sqlite3_bind_null(fitness_stmt, bind_index++);
                 sqlite3_bind_null(fitness_stmt, bind_index++);
             }
             
@@ -545,10 +554,10 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
 
                     bind_index = 1;
                     string binding_str = gene->binding_seq->to_str();
-                    sqlite3_bind_text(gene_stmt, bind_index++, binding_str.c_str(), binding_str.size(), SQLITE_STATIC);
+                    sqlite3_bind_text(gene_stmt, bind_index++, binding_str.c_str(), -1, SQLITE_TRANSIENT);
 
                     string output_str = gene->output_seq->to_str();
-                    sqlite3_bind_text(gene_stmt, bind_index++, output_str.c_str(), output_str.size(), SQLITE_STATIC);
+                    sqlite3_bind_text(gene_stmt, bind_index++, output_str.c_str(), -1, SQLITE_TRANSIENT);
 
                     sqlite3_bind_double(gene_stmt, bind_index++, (double) gene->threshold);
                     sqlite3_bind_double(gene_stmt, bind_index++, (double) gene->output_rate);
@@ -656,7 +665,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
                     sqlite3_bind_int(protein_ins_stmt, bind_index++, pid);
 
                     string seq_str = protein->seq->to_str();
-                    sqlite3_bind_text(protein_ins_stmt, bind_index++, seq_str.c_str(), seq_str.size(), SQLITE_STATIC);
+                    sqlite3_bind_text(protein_ins_stmt, bind_index++, seq_str.c_str(), -1, SQLITE_TRANSIENT);
 
                     sqlite3_bind_int(protein_ins_stmt, bind_index++, protein->kernel_index);
                     sqlite3_bind_int(protein_ins_stmt, bind_index++, protein->src_pos);
@@ -799,7 +808,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
                 sqlite3_bind_null(ptype_stmt, bind_index++);
             }
             else {
-                sqlite3_bind_text(ptype_stmt, bind_index++, tree_str.c_str(), tree_str.size(), SQLITE_STATIC);
+                sqlite3_bind_text(ptype_stmt, bind_index++, tree_str.c_str(), -1, SQLITE_TRANSIENT);
             }
             sqlite3_bind_int(ptype_stmt, bind_index++, ptype->size());
             sqlite3_bind_int(ptype_stmt, bind_index++, ptype->height());
@@ -867,7 +876,7 @@ void Logger::insert_node(Tree *tree, int tree_id, Node *cur, int parent_id) {
     }
     else {
         string desc = cur->instr->to_str();
-        sqlite3_bind_text(stmt, bind_index++, desc.c_str(), desc.size(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, bind_index++, desc.c_str(), -1, SQLITE_TRANSIENT);
     }
 
     int rc = sqlite3_step(stmt);
