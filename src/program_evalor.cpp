@@ -123,15 +123,18 @@ void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg
 }
 
 float ProgramEvalor::eval(Grn* grn, Phenotype *ptype) {
-    float fitness = -1.0f;
+    float fitness = 100.0f;
+
+    fitness += abs(ptype->size() - 3) * 10.0f;
+    
     int empty_nodes = ptype->get_num_unfilled_nodes();
     if (empty_nodes == 0) {
         Program pgm = Program(ptype);
         float test_ratio = this->test_pgm(&pgm);
-        fitness = (1.0f - test_ratio) * 100.0f;
+        fitness -= test_ratio * 100.0f;
     }
     else {
-        fitness = 100.0f + empty_nodes * 10.0f;
+        fitness += empty_nodes * 10.0f;
     }
 
     return fitness;

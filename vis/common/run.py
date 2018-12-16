@@ -1,10 +1,14 @@
 class Run():
+    DB_MODE = 0
+    IPC_MODE = 1
     def __init__(self, db=None, ipc=None):
         if db is not None:
             self.db = db
+            self.mode = Run.DB_MODE
             
         elif ipc is not None:
             self.ipc = ipc
+            self.mode = Run.IPC_MODE
 
         else:
             print('No database connection provided')
@@ -14,7 +18,7 @@ class Run():
 
     def _select(self, sql, args, result_types=None):
         rs = None
-        if self.db:
+        if self.mode == Run.DB_MODE:
             self.db.cur.execute(sql, args)
             rs = self.db.cur
 
@@ -28,7 +32,7 @@ class Run():
         sql = "SELECT max(id) FROM run;"
         rs = self._select(sql, (), (int,))
         row = rs.fetchone()
-        self.run_id = row[0]
+        self.run_id = row[0] - 1 #sqlite starts ids at 1. Subtract 1 to make this the same as the db file name
 
     def _set_attrs(self):
         #get all other stuff

@@ -116,7 +116,7 @@ float Ga::clamp_param(float cur_val, float step, float limit) {
     if (step > 0) { //treat limit as an upper bound
         cur_val = min(cur_val + step, limit);
     }
-    else { //treat limit as a lower bound
+    else if (step < 0) { //treat limit as a lower bound
         cur_val = max(cur_val + step, limit);
     }
 

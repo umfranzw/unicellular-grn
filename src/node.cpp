@@ -10,7 +10,9 @@ Node::Node(int id, Instr *instr, int parent) {
 
 Node::Node(Node *node) {
     this->id = node->id;
-    this->instr = node->instr;
+    if (node->instr != nullptr) {
+        this->instr = node->instr->clone();
+    }
     for (int child_id : node->children) {
         this->children.push_back(child_id);
     }

@@ -1,4 +1,5 @@
 import gi
+gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import GdkPixbuf, GLib
 import PIL.Image
 from io import BytesIO
@@ -14,9 +15,6 @@ class GraphGen():
     FIG_WIDTH = 8
     FIG_HEIGHT = 10
     BAR_WIDTH = 0.8
-    
-    #DRAW_OUTPUTS = True
-    #DRAW_LEGEND = True
     
     #Kelly's 22 colours of max contrast
     KELLY_COLOURS = ['#F2F3F4',
@@ -61,13 +59,13 @@ class GraphGen():
         else:
             print('No database connection provided.')
 
-    def plot_avg_fitness():
+    def plot_avg_fitness(self):
         return self._plot_fitness('avg', 'Avg Fitness')
 
-    def plot_best_fitness():
+    def plot_best_fitness(self):
         return self._plot_fitness('min', 'Best Fitness')
 
-    def plot_cumulative_best_fitness():
+    def plot_cumulative_best_fitness(self):
         sql = ('SELECT f1.ga_step, (' +
                'SELECT min(f2.fitness) ' +
                'FROM fitness f2 ' +
@@ -93,9 +91,9 @@ class GraphGen():
 
         return self._process_fig(fig, path)
 
-    def _plot_fitness(sql_fcn, title):
+    def _plot_fitness(self, sql_fcn, title):
         sql = 'SELECT ga_step, {}(fitness) FROM fitness GROUP BY ga_step;'.format(sql_fcn)
-        rs = conn.select(sql, (), (int, float))
+        rs = self._select(sql, (), (int, float))
         xs = []
         ys = []
         for row in rs:
@@ -129,7 +127,7 @@ class GraphGen():
 
         return buf
 
-    def _process_fig(self, path, lgd=None):
+    def _process_fig(self, fig, path, lgd=None):
         result = None
         if self.run_dir:
             if lgd:

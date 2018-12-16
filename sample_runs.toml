@@ -60,7 +60,7 @@ fitness_log_interval = 10
 #causes best fitness and avg fitness graphs to be generated
 graph_results = false
 
-#causes grns to be save to the db
+#causes grns to be saved to the db
 log_grns = true
 
 #causes reg sim info to be saved to the db

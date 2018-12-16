@@ -8,7 +8,7 @@
 #include <string>
 #include <zmq.hpp>
 
-#define SCRIPT_PATH "vis/vis.py"
+#define SCRIPT_PATH "vis/graph.py"
 #define CHUNK_SIZE 20
 #define SOCKET_URI "ipc:///tmp/pipe"
 

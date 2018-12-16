@@ -1,7 +1,7 @@
 import zmq
 import sys
 import struct
-from result_set import ResultSet
+from common.result_set import ResultSet
 
 SOCKET_URI = 'ipc:///tmp/pipe'
 

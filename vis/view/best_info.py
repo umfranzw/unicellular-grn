@@ -18,7 +18,7 @@ class BestInfo():
 
     #returns None or (ga_step, pop_index, fitness)
     def get_fittest_grn(self):
-        sql = 'SELECT f.ga_step, g.pop_index, max(f.fitness) FROM fitness f JOIN grn g ON f.pop_index = g.pop_index AND f.ga_step = g.ga_step;'
+        sql = 'SELECT f.ga_step, g.pop_index, min(f.fitness) FROM fitness f JOIN grn g ON f.pop_index = g.pop_index AND f.ga_step = g.ga_step;'
         rs = self._select(sql, (), (int, int, float))
         
         return rs.fetchone()

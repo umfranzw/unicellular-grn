@@ -86,10 +86,10 @@ void Logger::print_results(int total_iters) {
     cout << "********" << endl;
     cout << "Results:" << endl;
     cout << "********" << endl;
-    cout << "Total iterations: " << total_iters << endl;
-    cout << "Run-best fitness: " << this->run_best_fitness << endl;
-    cout << "Run-best GRN:" << endl;
-    cout << this->run_best_ptype->to_str();
+    cout << "total iterations: " << total_iters << endl;
+    cout << "run-best fitness: " << this->run_best_fitness << endl;
+    cout << "run-best phenotype:" << endl;
+    cout << this->run_best_ptype->to_code() << endl;
 }
 
 Logger::~Logger() {
@@ -443,17 +443,22 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
             cout << msg << ga_step + 1 << ":" << endl;
             cout << div.str() << endl;
         }
-        cout << "best fitness: " << best_fitness << endl;
-        cout << "avg fitness: " << avg_fitness << endl;
         cout << "mut_prob: " << this->run->mut_prob << endl;
         cout << "cross_frac: " << this->run->cross_frac << endl;
+        cout << "gen best fitness: " << best_fitness << endl;
+        cout << "gen avg fitness: " << avg_fitness << endl;
 
-        Grn *best_grn = (*pop)[best_index];
-        Phenotype *best_ptype = (*phenotypes)[best_index];
-        cout << "best index: " << best_index << endl;
-        cout << "best phenotype: " << endl;
-        cout << best_ptype->to_str() << endl;
-        cout << "final protein count in best individual: " << best_grn->proteins->size() << endl;
+        cout << "run-best fitness: " << this->run_best_fitness << endl;
+        cout << "run-best phenotype:" << endl;
+        cout << this->run_best_ptype->to_code() << endl;
+        
+        // Grn *best_grn = (*pop)[best_index];
+        // Phenotype *best_ptype = (*phenotypes)[best_index];
+        // cout << "best index: " << best_index << endl;
+        // cout << "best phenotype: " << endl;
+        // cout << best_ptype->to_code() << endl;
+        // cout << "final protein count in best individual: " << best_grn->proteins->size() << endl;
+        
         cout << endl;
         cout.flush();
     }
