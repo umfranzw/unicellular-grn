@@ -81,12 +81,13 @@ class GraphGen():
             xs.append(ga_step + 1)
             ys.append(fitness)
 
-        plt.title('Best Fitness')
-        plt.xlabel('iteration')
-        plt.ylabel('fitness')
-
         fig, ax = plt.subplots()
         ax.plot(xs, ys)
+        
+        ax.set_title('Best Fitness')
+        ax.set_xlabel('iteration')
+        ax.set_ylabel('fitness')
+
         path = '{}/{}.png'.format(self.run_dir, 'Best Fitness')
 
         return self._process_fig(fig, path)
@@ -101,12 +102,13 @@ class GraphGen():
             xs.append(ga_step + 1)
             ys.append(fitness)
 
-        plt.title(title)
-        plt.xlabel('iteration')
-        plt.ylabel('fitness')
-
         fig, ax = plt.subplots()
         ax.plot(xs, ys)
+
+        ax.set_title(title)
+        ax.set_xlabel('iteration')
+        ax.set_ylabel('fitness')
+
         path = '{}/{}.png'.format(self.run_dir, title)
 
         return self._process_fig(fig, path)
