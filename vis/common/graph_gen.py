@@ -15,6 +15,7 @@ class GraphGen():
     FIG_WIDTH = 8
     FIG_HEIGHT = 10
     BAR_WIDTH = 0.8
+    Y_TICKS = list(map(lambda t: t / 10.0, range(0, 12, 2)))
     
     #Kelly's 22 colours of max contrast
     KELLY_COLOURS = ['#F2F3F4',
@@ -216,6 +217,7 @@ class GraphGen():
 
         plt.xlabel('gene')
         plt.ylabel('concentration')
+        plt.yticks(GraphGen.Y_TICKS)
 
         return concs_plotted
 
@@ -283,6 +285,7 @@ class GraphGen():
         ax.bar(xs, ys, GraphGen.BAR_WIDTH, color=bar_colours)
         plt.xlabel('gene')
         plt.ylabel('output rate')
+        plt.yticks(GraphGen.Y_TICKS)
 
         for i in range(self.run.num_genes):
             if bar_texts[i]:
