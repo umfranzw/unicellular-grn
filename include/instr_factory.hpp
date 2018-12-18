@@ -15,6 +15,12 @@
 
 using namespace std;
 
+typedef struct InstrInfo {
+    int min_args;
+    int max_args;
+    bool is_term;
+} InstrInfo;
+
 class InstrFactory {
 public:
     static InstrFactory *create(Run *run);
@@ -23,7 +29,7 @@ public:
     //vector<int> filter_by_args(int num);
     unsigned int seq_to_type(BitVec *seq);
     unsigned int seq_to_sel(BitVec *seq);
-    pair<int, int> seq_to_arg_range(BitVec *seq);
+    InstrInfo seq_to_instr_info(BitVec *seq);
     vector<Instr*> *get_vars();
 
     vector<int> active_instr_types;

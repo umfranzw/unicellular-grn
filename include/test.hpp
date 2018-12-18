@@ -11,6 +11,7 @@ public:
     Test();
     ~Test();
     void run();
+    void temp();
 
 private:
     Run *create_run();

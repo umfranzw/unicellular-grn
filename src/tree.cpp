@@ -304,3 +304,9 @@ Node *Tree::get_node(int id) {
 
     return node;
 }
+
+bool Tree::is_leaf(int id) {
+    Node *node = this->id_to_node[id];
+    
+    return node->children.empty();
+}

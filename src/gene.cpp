@@ -13,7 +13,6 @@ Gene::Gene(Run *run, BitVec *binding_seq, BitVec *output_seq, float threshold, f
     this->pos = pos;
     this->active_output = -1;
     this->bound_protein = -1;
-    this->binding_prob = 0.0f;
 }
 
 //randomly initializes components that are not passed
@@ -29,7 +28,6 @@ Gene::Gene(Run *run, int pos) {
     this->kernel_index = run->rand->in_range(0, KERNELS.size());
     this->active_output = -1;
     this->bound_protein = -1;
-    this->binding_prob = 0.0f;
 }
 
 //copy constructor
@@ -45,7 +43,6 @@ Gene::Gene(Gene *gene) {
     //don't copy these, or outputs
     this->active_output = -1;
     this->bound_protein = -1;
-    this->binding_prob = 0.0f;
 }
 
 Gene::~Gene() {
@@ -63,58 +60,32 @@ void Gene::reset() {
 void Gene::update_output_protein(ProteinStore *store) {
     if (this->active_output != -1) {
         Protein *protein = store->get(this->active_output);
-        if (this->run->binding_method == BINDING_THRESHOLDED) {
-            protein->concs[this->pos] = Utils::clamp<float>(protein->concs[this->pos] + this->output_rate, 0.0, this->run->max_protein_conc);
-        }
-        else {
-            protein->concs[this->pos] = Utils::clamp<float>(protein->concs[this->pos] + this->binding_prob * this->run->max_protein_conc, 0.0, this->run->max_protein_conc);
-        }
+        protein->concs[this->pos] = Utils::clamp<float>(protein->concs[this->pos] + this->output_rate, 0.0, this->run->max_protein_conc);
     }
 }
 
-void Gene::update_binding(pair<int, float> *protein_info, ProteinStore *store) {
-    if (protein_info != nullptr) {
-        int id = protein_info->first;
-        this->bound_protein = id;
-        
-        bool bind;
-        if (this->run->binding_method == BINDING_THRESHOLDED) {
-            float conc = protein_info->second;
-            bind = (conc >= this->threshold);
+void Gene::update_binding(int *bind_pid, ProteinStore *store) {
+    if (bind_pid != nullptr) {
+        this->bound_protein = *bind_pid;
+        //check if this gene has output its output protein in the past, and that protein is still around...
+        pair<int, Protein*> result = store->get_by_seq(this->output_seq);
+        //if so, reactivate the existing protein
+        if (result.first != -1) {
+            this->active_output = result.first;
         }
-        else {
-            bind = true;
-            this->binding_prob = protein_info->second;
-        }
-        
-        if (bind) {
-            if (this->active_output == -1) {
-                //see if this gene has output its output protein in the past, and that protein is still around...
-                pair<int, Protein*> result = store->get_by_seq(this->output_seq);
-                //if so, reactivate the existing protein
-                if (result.first != -1) {
-                    this->active_output = result.first;
-                }
 
-                else {
-                    //otherwise, create a new protein and activate it
-                    Protein *protein = new Protein(this->run, this->output_seq, Utils::zeros(this->run->num_genes), this->kernel_index, this->pos);
-                    int pid = store->add(protein);
-                    this->active_output = pid;
-                    this->outputs.push_back(pid);
-                }
-            }
+        else {
+            //otherwise, create a new protein and activate it
+            Protein *protein = new Protein(this->run, this->output_seq, Utils::zeros(this->run->num_genes), this->kernel_index, this->pos);
+            int pid = store->add(protein);
+            this->active_output = pid;
+            this->outputs.push_back(pid);
         }
-        //note: this path is never taken when binding_method == "scaled"
-        // else {
-        //     this->active_output = -1;
-        // }
     }
     //if we got passed a null protein pointer, unbind and stop output protein production
     else {
         this->active_output = -1;
         this->bound_protein = -1;
-        this->binding_prob = 0.0f;
     }
 }
 
@@ -130,9 +101,6 @@ string Gene::to_str() {
     info << "  pos: " << this->pos << endl;
     info << "  bound_protein: " << this->bound_protein << endl;
     info << "  active_output: " << this->active_output << endl;
-    if (this->run->binding_method == BINDING_SCALED) {
-        info << "  binding_prob: " << this->binding_prob << endl;
-    }
     info << "  outputs: [";
 
     for (size_t i = 0; i < this->outputs.size(); i++) {

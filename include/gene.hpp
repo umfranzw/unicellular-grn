@@ -17,7 +17,7 @@ public:
     ~Gene();
 
     void update_output_protein(ProteinStore *store);
-    void update_binding(pair<int, float> *protein_info, ProteinStore *store);
+    void update_binding(int *bind_pid, ProteinStore *store);
     string to_str();
     void reset();
     
@@ -31,7 +31,6 @@ public:
     int bound_protein;
     int pos;
     Run *run;
-    float binding_prob;
 };
 
 #endif

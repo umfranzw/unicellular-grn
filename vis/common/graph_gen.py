@@ -248,6 +248,18 @@ class GraphGen():
             if text:
                 ax.text(i * GraphGen.GENE_WIDTH + GraphGen.GENE_WIDTH / 2.2, -GraphGen.GENE_HEIGHT + GraphGen.GENE_HEIGHT / 2.9, text)
 
+    #note: threshold is modified at the ga level, so it remains the same for all reg_steps in a single ga_step
+    def _draw_binding_thresholds(self, ga_step, pop_index, run, ax):
+        plt.sca(ax)
+        
+        sql = ('SELECT g.threshold FROM grn JOIN gene g on grn.id = g.grn_id WHERE grn.ga_step = ? AND grn.pop_index = ? ORDER BY g.pos ASC;')
+
+        self._select(sql, (ga_step, pop_index))
+        for i in range(self.run.num_genes):
+            row = self.db.cur.fetchone()
+            threshold = row[0]
+            ax.plot((i * GraphGen.GENE_WIDTH, (i + 1) * GraphGen.GENE_WIDTH), (threshold, threshold), color='black', linestyle='--', linewidth=1)
+                
     def _draw_outputs(self, ga_step, reg_step, pop_index, run, ax):
         plt.sca(ax)
 
@@ -316,6 +328,7 @@ class GraphGen():
 
         concs_plotted = self._plot_concs(ga_step, reg_step, pop_index, run,  ax[0], pids)
         self._draw_bindings(ga_step, reg_step, pop_index, run, ax[0])
+        self._draw_binding_thresholds(ga_step, pop_index, run, ax[0])
 
         if draw_outputs:
             self._draw_outputs(ga_step, reg_step, pop_index, run, ax[1])
@@ -331,3 +344,10 @@ class GraphGen():
         plt.close(fig)
 
         return pixbuf
+
+    def _get_best(self):
+        sql = 'SELECT ga_step, pop_index, min(fitness) FROM fitness;'
+        rs = self._select(sql, (), (int, int, float))
+        ga_step, pop_index, fitness = rs.fetchone()
+
+        return ga_step, pop_index, fitness

@@ -19,7 +19,7 @@ void Evaluator::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vect
         this->logger->log_reg_step(ga_step, -1, grn, i, ptype);
 
         for (int j = 0; j < this->run->reg_steps; j++) {
-            grn->run_binding();
+            grn->run_binding(i, j, ga_step);
 
             grn->update_output_proteins();
 

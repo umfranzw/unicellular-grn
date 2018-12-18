@@ -16,7 +16,7 @@ public:
     
     void push_initial_proteins();
     void run_decay();
-    void run_binding();
+    void run_binding(int pop_index, int reg_step, int ga_step);
     void run_diffusion();
     void run_diffusion_kernel();
     void run_diffusion_fcn();

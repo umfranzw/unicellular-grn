@@ -55,6 +55,10 @@ void Phenotype::set_instr(int id, Instr *instr) {
     this->tree->set_instr(id, instr);
 }
 
+bool Phenotype::is_leaf(int id) {
+    return this->tree->is_leaf(id);
+}
+
 void Phenotype::reset() {
     delete this->tree;
     this->tree = new Tree();

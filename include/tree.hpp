@@ -26,6 +26,7 @@ public:
     void set_instr(int id, Instr *instr);
     bool invariant();
     Node *get_node(int id);
+    bool is_leaf(int id);
     
 private:
     Node *root;

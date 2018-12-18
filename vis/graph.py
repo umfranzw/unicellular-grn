@@ -46,7 +46,7 @@ def main():
     graph_gen.plot_avg_fitness()
 
     if plot_reg_steps:
-        ga_step, pop_index, best_fitness = get_best()
+        ga_step, pop_index, best_fitness = graph_gen._get_best()
         for j in range(run.reg_steps):
             graph_gen.draw_grn(run_dir, ga_step, j, pop_index, run)
 

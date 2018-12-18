@@ -90,21 +90,24 @@ void Grn::run_decay() {
     }
 }
 
-void Grn::run_binding() {
+void Grn::run_binding(int pop_index, int reg_step, int ga_step) {
     for (int pos = 0; pos < this->run->num_genes; pos++) {
-        vector<pair<int, float>> weighted_probs;
-        float pos_sum = 0.0f; //sum of all concentrations in current position
+        vector<pair<int, float>> binding_probs;
+        float pos_sum = 0.0f;
         vector<int> protein_ids = this->proteins->get_ids();
         for (const int& id: protein_ids) {
-            Protein* protein = this->proteins->get(id);
+            Protein *protein = this->proteins->get(id);
             int hamming_dist = Utils::hamming_dist(protein->seq, this->genes[pos]->binding_seq);
-            float w = this->run->alpha * protein->concs[pos] + this->run->beta * hamming_dist;
-            weighted_probs.push_back(pair<int, float>(id, w));
-            pos_sum += w;
+            if (hamming_dist <= this->run->binding_seq_play) {
+                if (protein->concs[pos] >= this->genes[pos]->threshold) {
+                    binding_probs.push_back(pair<int, float>(id, protein->concs[pos]));
+                    pos_sum += protein->concs[pos];
+                }
+            }
         }
 
         //if there are proteins above this position
-        if (weighted_probs.size() > 0) {
+        if (binding_probs.size() > 0) {
             //build the probability distribution and sample it (roulette-wheel-selection-style)
             float r = this->run->rand->next_float();
             float running_sum = 0.0f;
@@ -112,35 +115,22 @@ void Grn::run_binding() {
             int i = -1;
             do {
                 i += 1;
-                float normal_prob = weighted_probs[i].second / pos_sum; //normalize the probability value
+                float normal_prob = binding_probs[i].second / pos_sum; //normalize the probability value
                 running_sum += normal_prob;
                 
-            } while (r > running_sum && i < (int) weighted_probs.size());
+            } while (r > running_sum && i < (int) binding_probs.size());
             //note: r should always be < 1.0, so this loop should always stop based on the first part of the condition (r > running_sum),
             //but we include the second condition just in case floating point error bites us
 
             //deal with potential floating point error
-            if (i == (int) weighted_probs.size()) {
-                i = (int) weighted_probs.size() - 1;
+            if (i == (int) binding_probs.size()) {
+                i = (int) binding_probs.size() - 1;
             }
 
-            pair<int, float> protein_info;
-            int pid = weighted_probs[i].first;
-            protein_info.first = pid;
-            //if we're using thresholded binding, the second item is the concentration
-            //(so that gene->update_binding() can check if it meets the gene's activation threshold)
-            if (this->run->binding_method == BINDING_THRESHOLDED) {
-                float conc = this->proteins->get(pid)->concs[i];
-                protein_info.second = conc;
-            }
-            //otherwise, with scaled binding, the second item will be the probability
-            //(so that gene can store it in gene->binding_prob so it'll be available when update_output_protein() is called to increment the concs of the active protein)
-            else {
-                protein_info.second = weighted_probs[i].second;
-            }
-            
-            this->genes[pos]->update_binding(&protein_info, this->proteins);
+            int sel_pid = binding_probs[i].first;
+            this->genes[pos]->update_binding(&sel_pid, this->proteins);
         }
+
         //no proteins above this position => unbind
         else {
             //can unbind by passing null

@@ -4,6 +4,7 @@
 #include "tree.hpp"
 #include "bitvec.hpp"
 #include "program.hpp"
+#include "utils.hpp"
 #include <iostream>
 
 Test::Test() {
@@ -36,15 +37,13 @@ Run *Test::create_run() {
     run->gene_bits = 8;
     run->min_protein_conc = 0.05;
     run->max_protein_conc = 1.0;
-    run->alpha = 0.4;
-    run->beta = 0.6;
     run->decay_rate = 0.05;
     run->initial_proteins = 5;
     run->max_proteins = 20;
     run->max_mut_float = 0.5;
     run->max_mut_bits = 8;
     run->fitness_log_interval = 10;
-    run->binding_method = BINDING_SCALED;
+    run->binding_seq_play = 1;
     run->graph_results = false;
     run->log_grns = false;
     run->log_reg_steps = false;

@@ -16,26 +16,13 @@ Run::Run(toml::Table& t, int file_index) {
     this->gene_bits = toml::get<toml::Integer>(t.at("gene_bits"));
     this->min_protein_conc = (float) toml::get<toml::Float>(t.at("min_protein_conc"));
     this->max_protein_conc = (float) toml::get<toml::Float>(t.at("max_protein_conc"));
-    this->alpha = (float) toml::get<toml::Float>(t.at("alpha"));
-    this->beta = (float) toml::get<toml::Float>(t.at("beta"));
     this->decay_rate = (float) toml::get<toml::Float>(t.at("decay_rate"));
     this->initial_proteins = toml::get<toml::Integer>(t.at("initial_proteins"));
     this->max_proteins = toml::get<toml::Integer>(t.at("max_proteins"));
     this->max_mut_float = (float) toml::get<toml::Float>(t.at("max_mut_float"));
     this->max_mut_bits = toml::get<toml::Integer>(t.at("max_mut_bits"));
     this->fitness_log_interval = toml::get<toml::Integer>(t.at("fitness_log_interval"));
-    string bmeth = toml::get<toml::String>(t.at("binding_method"));
-    if (bmeth == "scaled") {
-        this->binding_method = BINDING_SCALED;
-    }
-    else if (bmeth == "thresholded") {
-        this->binding_method = BINDING_THRESHOLDED;
-    }
-    else {
-        cerr << "Unrecognized binding method: '" << bmeth << "'" << endl;
-        cerr << "Defaulting to 'thresholded'." << endl;
-        this->binding_method = BINDING_THRESHOLDED;
-    }
+    this->binding_seq_play = toml::get<toml::Integer>(t.at("binding_seq_play"));
 
     if (this->initial_proteins > this->max_proteins) {
         cerr << "Error: initial_proteins > max_proteins." << endl;

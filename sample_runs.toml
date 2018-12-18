@@ -2,9 +2,9 @@
 ######
 # GA #
 ######
-pop_size = 100
-ga_steps = 1
-mut_prob = 0.1
+pop_size = 50
+ga_steps = 10
+mut_prob = 0.05
 mut_prob_limit = 0.2
 mut_step = 0.0
 cross_frac = 0.4
@@ -19,14 +19,8 @@ term_cutoff = 0.0
 # Regulatory Simulation #
 ######################
 reg_steps = 50
-min_protein_conc = 0.05
+min_protein_conc = 0.04
 max_protein_conc = 1.0
-
-#concentration weight (for binding)
-alpha = 0.3
-
-#sequence weight (for binding)
-beta = 0.7
 
 decay_rate = 0.05
 initial_proteins = 5
@@ -34,20 +28,19 @@ max_proteins = 20
 max_mut_float = 0.5
 max_mut_bits = 8
 
-#options are "thresholded" or "scaled"
-binding_method = "scaled"
+binding_seq_play = 2
 
 ###############################
 # Genotype -> Phenotype Mapping #
 ###############################
 # note: bounds are inclusive
 growth_start = 10
-growth_end = 29
+growth_end = 19
 growth_sample_interval = 2
 growth_seq = "11111111"
-growth_threshold = 0.5
+growth_threshold = 0.25
 
-code_start = 30
+code_start = 20
 code_end = 49
 code_sample_interval = 2
 
@@ -58,7 +51,7 @@ code_sample_interval = 2
 fitness_log_interval = 10
 
 #causes best fitness and avg fitness graphs to be generated
-graph_results = false
+graph_results = true
 
 #causes grns to be saved to the db
 log_grns = true
@@ -70,7 +63,7 @@ log_reg_steps = true
 
 log_code_with_fitness = true
 
-fix_rng_seed = false
-fixed_rng_seed = 12345678
+fix_rng_seed = true
+fixed_rng_seed = 1207586232
 
 log_dir = "data/dbs"

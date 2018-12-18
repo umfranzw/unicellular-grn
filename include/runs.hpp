@@ -6,11 +6,6 @@
 #include <vector>
 #include <string>
 
-typedef enum BINDING_METHOD {
-    BINDING_SCALED,
-    BINDING_THRESHOLDED
-} BINDING_METHOD;
-
 class Run {
 public:
     Run(toml::Table& t, int file_index);
@@ -31,15 +26,13 @@ public:
     int gene_bits;
     float min_protein_conc; //proteins in which all conc values dip below this are deleted
     float max_protein_conc;
-    float alpha; //concentration weight (for binding)
-    float beta; //sequence weight (for binding)
     float decay_rate;
     int initial_proteins;
     int max_proteins;
     float max_mut_float;
     int max_mut_bits;
     int fitness_log_interval;
-    int binding_method;
+    int binding_seq_play;
 
     bool graph_results;
     bool log_grns;

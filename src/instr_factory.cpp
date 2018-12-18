@@ -93,9 +93,10 @@ unsigned int InstrFactory::seq_to_sel(BitVec *seq) {
     return sel;
 }
 
-pair<int, int> InstrFactory::seq_to_arg_range(BitVec *seq) {
+InstrInfo InstrFactory::seq_to_instr_info(BitVec *seq) {
     unsigned int type = this->seq_to_type(seq);
     Instr *instr = nullptr;
+    bool is_term = false;
 
     auto fcn_it = this->F.find(type);
     if (fcn_it != this->F.end()) {
@@ -108,10 +109,11 @@ pair<int, int> InstrFactory::seq_to_arg_range(BitVec *seq) {
             //we need to select an constant/variable from the vector
             int sel = this->seq_to_sel(seq);
             instr = this->T[type][sel];
+            is_term = true;
         }
     }
-    
-    return pair<int, int>(instr->min_args, instr->max_args);
+
+    return InstrInfo{instr->min_args, instr->max_args, is_term};
 }
 
 vector<Instr*> *InstrFactory::get_vars() {

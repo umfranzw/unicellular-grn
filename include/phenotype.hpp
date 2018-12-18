@@ -22,6 +22,7 @@ public:
     void set_instr(int id, Instr *instr);
     int get_num_unfilled_nodes();
     int get_num_filled_nodes();
+    bool is_leaf(int id);
     
     Tree *tree;
     

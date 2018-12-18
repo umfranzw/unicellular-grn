@@ -21,7 +21,7 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
         this->logger->log_reg_step(ga_step, -1, grn, i, ptype);
 
         for (int j = 0; j < this->run->reg_steps; j++) {
-            grn->run_binding();
+            grn->run_binding(i, j, ga_step);
 
             grn->update_output_proteins();
 
@@ -92,8 +92,8 @@ void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg
                 for (int j = 0; j < (int) pids.size(); j++) {
                     Protein *p = grn->proteins->get(pids[j]);
                     //filter down to only those instructions with a reasonable number of args
-                    pair<int, int> arg_range = this->instr_factory->seq_to_arg_range(p->seq);
-                    if (num_args >= arg_range.first && (num_args <= arg_range.second || arg_range.second == UNLIMITED_ARGS)) {
+                    InstrInfo info = this->instr_factory->seq_to_instr_info(p->seq);
+                    if (num_args >= info.min_args && (num_args <= info.max_args || info.max_args == UNLIMITED_ARGS)) {
                         //check if we already have a protein with that seq
                         if (buckets.find(p->seq) != buckets.end()) {
                             buckets[p->seq] = max(buckets[p->seq], p->concs[gene_index]); //take the one with the higher conc
