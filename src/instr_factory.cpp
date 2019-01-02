@@ -125,11 +125,11 @@ void InstrFactory::init_active_instr_types() {
     this->active_instr_types.push_back(SUB);
     this->active_instr_types.push_back(MULT);
     this->active_instr_types.push_back(DIV);
-    this->active_instr_types.push_back(EQ);
-    this->active_instr_types.push_back(IF);
-    this->active_instr_types.push_back(LIST);
-    this->active_instr_types.push_back(FLOAT_CONST);
-    this->active_instr_types.push_back(INT_CONST);
+    //this->active_instr_types.push_back(EQ);
+    //this->active_instr_types.push_back(IF);
+    //this->active_instr_types.push_back(LIST);
+    //this->active_instr_types.push_back(FLOAT_CONST);
+    //this->active_instr_types.push_back(INT_CONST);
     this->active_instr_types.push_back(VAR_CONST);
 }
 

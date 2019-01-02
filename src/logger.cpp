@@ -14,6 +14,7 @@ Logger::Logger(Run *run) {
     this->run = run;
     this->run_best_grn = nullptr;
     this->run_best_ptype = nullptr;
+    this->run_best_pop_index = -1;
     
     //ensure statements are serialized so that using multiple openMP threads in the simulation (which may call logger member functions) won't mess up the order of transactions
     int rc = sqlite3_config(SQLITE_CONFIG_SERIALIZED);
@@ -88,6 +89,7 @@ void Logger::print_results(int total_iters) {
     cout << "********" << endl;
     cout << "total iterations: " << total_iters << endl;
     cout << "run-best fitness: " << this->run_best_fitness << endl;
+    cout << "run-best pop_index: " << this->run_best_pop_index << endl;
     cout << "run-best phenotype:" << endl;
     cout << this->run_best_ptype->to_code() << endl;
 }
@@ -414,6 +416,7 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
             }
             this->run_best_grn = new Grn((*pop)[best_index]); //create a copy
             this->run_best_ptype = new Phenotype((*phenotypes)[best_index]); //create a copy
+            this->run_best_pop_index = best_index;
         }
         
         sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
@@ -445,6 +448,7 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
         cout << "gen avg fitness: " << avg_fitness << endl;
 
         cout << "run-best fitness: " << this->run_best_fitness << endl;
+        cout << "run-best pop_index: " << this->run_best_pop_index << endl;
         cout << "run-best phenotype:" << endl;
         cout << this->run_best_ptype->to_code() << endl;
         

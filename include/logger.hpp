@@ -32,6 +32,7 @@ private:
     Grn *run_best_grn;
     Phenotype *run_best_ptype;
     float run_best_fitness;
+    int run_best_pop_index;
 
     void create_tables();
     float get_fitness_val(int ga_step, string *sql_fcn);

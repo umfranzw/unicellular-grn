@@ -326,7 +326,7 @@ class GraphGen():
         ax[0].set_ylim([-GraphGen.GENE_HEIGHT - 0.01, self.run.max_protein_conc])
         ax[0].set_xlim([0, self.run.num_genes * GraphGen.GENE_WIDTH + 0.01])
 
-        concs_plotted = self._plot_concs(ga_step, reg_step, pop_index, run,  ax[0], pids)
+        concs_plotted = self._plot_concs(ga_step, reg_step, pop_index, self.run, ax[0], pids=pids)
         self._draw_bindings(ga_step, reg_step, pop_index, run, ax[0])
         self._draw_binding_thresholds(ga_step, pop_index, run, ax[0])
 
