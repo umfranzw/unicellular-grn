@@ -6,16 +6,17 @@
 #include "logger.hpp"
 #include "protein.hpp"
 #include "grn.hpp"
-#include "evaluator.hpp"
 #include "phenotype.hpp"
 
-class SineEvalor : public Evaluator {
+class SineEvalor {
 public:
     SineEvalor(Run *run, Logger *logger);
     ~SineEvalor();
     float eval(Grn *grn, Phenotype *ptype);
     
 private:
+    Run *run;
+    Logger *logger;
     float calc_protein_error(Protein *protein);
 };
 

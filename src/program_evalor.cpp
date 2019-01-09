@@ -1,10 +1,18 @@
 #include "program_evalor.hpp"
 #include "instr_dist.hpp"
 
-ProgramEvalor::ProgramEvalor(Run* run, Logger* logger) : Evaluator(run, logger) {
+ProgramEvalor::ProgramEvalor(Run* run, Logger* logger) {
+    this->run = run;
+    this->logger = logger;
+    
     this->num_grow_samples = (this->run->growth_end - this->run->growth_start + 1) / this->run->growth_sample_interval;
     this->num_code_samples = (this->run->code_end - this->run->code_start + 1) / this->run->code_sample_interval;
     this->instr_factory = InstrFactory::create(this->run);
+
+    this->bests.gen_best = nullptr;
+    this->bests.run_best = nullptr;
+    this->bests.run_best_updated = false;
+    this->bests.run_best_index = -1;
 }
 
 ProgramEvalor::~ProgramEvalor() {
@@ -13,12 +21,17 @@ ProgramEvalor::~ProgramEvalor() {
 
 void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
     //do regulatory simulation
+    this->bests.run_best_updated = false;
+    
     for (int i = 0; i < this->run->pop_size; i++) {
         (*phenotypes)[i]->reset();
         Grn *grn = (*pop)[i];
         Phenotype *ptype = (*phenotypes)[i];
 
-        this->logger->log_reg_step(ga_step, -1, grn, i, ptype);
+        RegSnapshot *snappy = new RegSnapshot(grn, ga_step, i);
+        snappy->add_reg_step(-1, ptype);
+        
+        //this->logger->log_reg_step(ga_step, -1, grn, i, ptype);
 
         for (int j = 0; j < this->run->reg_steps; j++) {
             grn->run_binding(i, j, ga_step);
@@ -36,11 +49,25 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
                 grn->run_decay();
             }
             
-            this->logger->log_reg_step(ga_step, j, grn, i, ptype);
+            //this->logger->log_reg_step(ga_step, j, grn, i, ptype);
+            snappy->add_reg_step(j, ptype);
         }
-
         //update fitness value
-        (*fitnesses)[i] = this->eval(grn, (*phenotypes)[i]);
+        float fitness = this->eval(grn, (*phenotypes)[i]);
+        snappy->fitness = fitness;
+        (*fitnesses)[i] = fitness;
+
+        if (this->bests.gen_best == nullptr || snappy->fitness < this->bests.gen_best->fitness) {
+            this->bests.gen_best = snappy;
+
+            if (this->bests.run_best == nullptr || snappy->fitness < this->bests.run_best->fitness) {
+                this->bests.run_best = snappy;
+                this->bests.run_best_updated = true;
+                this->bests.run_best_index = i;
+            }
+        }
+        
+        this->logger->log_reg_snapshot(snappy);
     }
 }
 

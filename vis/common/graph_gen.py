@@ -202,11 +202,11 @@ class GraphGen():
             args += tuple(pids)
         sql += ';'
         
-        self._select(sql, args, types)
+        rs = self._select(sql, args, types)
 
         xs = [0] + [(i + 0.5) * GraphGen.GENE_WIDTH for i in range(self.run.num_genes)] + [self.run.num_genes * GraphGen.GENE_WIDTH]
         concs_plotted = 0
-        for (i, row) in enumerate(self.db.cur):
+        for (i, row) in enumerate(rs):
             pid = row[0]
             seq = row[1]
             concs = [0] + list(row[2:]) + [0]
@@ -230,10 +230,10 @@ class GraphGen():
                'WHERE grn.ga_step = ? AND grn.pop_index = ? AND g.pos = ? AND gs.reg_step = ?;')
 
         for i in range(self.run.num_genes):
-            self._select(sql, (ga_step, pop_index, i, reg_step), (int,))
+            rs = self._select(sql, (ga_step, pop_index, i, reg_step), (int,))
             colour = 'white'
             text = ''
-            row = self.db.cur.fetchone()
+            row = rs.fetchone()
             if row:
                 pid = row[0]
                 text = "{}".format(pid)
@@ -254,9 +254,9 @@ class GraphGen():
         
         sql = ('SELECT g.threshold FROM grn JOIN gene g on grn.id = g.grn_id WHERE grn.ga_step = ? AND grn.pop_index = ? ORDER BY g.pos ASC;')
 
-        self._select(sql, (ga_step, pop_index))
+        rs = self._select(sql, (ga_step, pop_index), (float,))
         for i in range(self.run.num_genes):
-            row = self.db.cur.fetchone()
+            row = rs[i]
             threshold = row[0]
             ax.plot((i * GraphGen.GENE_WIDTH, (i + 1) * GraphGen.GENE_WIDTH), (threshold, threshold), color='black', linestyle='--', linewidth=1)
                 
@@ -272,10 +272,10 @@ class GraphGen():
         bar_colours = []
         bar_texts = []
         for i in range(self.run.num_genes):
-            self._select(sql, (ga_step, pop_index, i, reg_step), (int, float))
+            rs = self._select(sql, (ga_step, pop_index, i, reg_step), (int, float))
             colour = 'white'
             text = ''
-            row = self.db.cur.fetchone()
+            row = rs.fetchone()
             if row:
                 pid, output_rate = row
                 ys.append(output_rate)

@@ -145,7 +145,8 @@ void Logger::create_tables() {
     run_sql << "code_start INTEGER NOT NULL,";
     run_sql << "code_end INTEGER NOT NULL,";
     run_sql << "code_sample_interval INTEGER NOT NULL,";
-    run_sql << "fix_rng_seed INTEGER NOT NULL";
+    run_sql << "fix_rng_seed INTEGER NOT NULL,";
+    run_sql << "log_mode TEXT NOT NULL";
     run_sql << ");";
     sqlite3_exec(this->conn, run_sql.str().c_str(), NULL, NULL, NULL);
 
@@ -293,7 +294,7 @@ void Logger::create_tables() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (seed, pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_seq_play, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval, fix_rng_seed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (seed, pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, decay_rate, initial_proteins, max_proteins, max_mut_float, max_mut_bits, fitness_log_interval, binding_seq_play, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval, fix_rng_seed, log_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -337,6 +338,7 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, this->run->code_end);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->code_sample_interval);
     sqlite3_bind_int(run_stmt, bind_index++, (int) this->run->fix_rng_seed);
+    sqlite3_bind_text(run_stmt, bind_index++, this->run->log_mode.c_str(), -1, SQLITE_TRANSIENT);
 
     sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
     rc = sqlite3_step(run_stmt);
@@ -351,7 +353,7 @@ void Logger::log_run() {
 
 void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *phenotypes, vector<float> *fitnesses) {
     //note: ga_step may be < 0 when logging initial fitnesses
-    if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {
+    if (this->should_sample(ga_step)) {
         int rc;
         string fitness_sql = "INSERT INTO fitness (fitness, pop_index, ga_step, code, str) VALUES (?, ?, ?, ?, ?);";
         sqlite3_stmt *fitness_stmt;
@@ -523,76 +525,101 @@ float Logger::get_run_best_fitness() {
     return this->run_best_fitness;
 }
 
-void Logger::log_ga_step(int ga_step, vector<Grn*> *grns) {
+bool Logger::should_sample(int ga_step) {
+    return ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0;
+}
+
+void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, BestInfo *bests) {
     if (this->run->log_grns) {
-        if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {
-            int rc;
-            int bind_index;
-            string grn_sql = "INSERT INTO grn (ga_step, pop_index) VALUES (?, ?);";
-            sqlite3_stmt *grn_stmt;
-            sqlite3_prepare_v2(this->conn, grn_sql.c_str(), grn_sql.size() + 1, &grn_stmt, NULL);
-
-            string gene_sql = "INSERT INTO gene (binding_seq, output_seq, threshold, output_rate, kernel_index, pos, grn_id) VALUES (?, ?, ?, ?, ?, ?, ?);";
-            sqlite3_stmt *gene_stmt;
-            sqlite3_prepare_v2(this->conn, gene_sql.c_str(), gene_sql.size() + 1, &gene_stmt, NULL);
-
-            //insert grns
-            sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
-            Grn *grn;
-            for (int i = 0; i < (int) grns->size(); i++) {
-                grn = (*grns)[i];
-                bind_index = 1;
-                sqlite3_bind_int(grn_stmt, bind_index++, ga_step);
-                sqlite3_bind_int(grn_stmt, bind_index++, i);
-
-                rc = sqlite3_step(grn_stmt);
-                if (rc != SQLITE_DONE) {
-                    cerr << "Error inserting grn: " << rc << endl;
-                    exit(1);
-                }
-                int grn_id = sqlite3_last_insert_rowid(this->conn);
-
-                //insert genes
-                Gene *gene;
-                for (int j = 0; j < this->run->num_genes; j++) {
-                    gene = grn->genes[j];
-
-                    bind_index = 1;
-                    string binding_str = gene->binding_seq->to_str();
-                    sqlite3_bind_text(gene_stmt, bind_index++, binding_str.c_str(), -1, SQLITE_TRANSIENT);
-
-                    string output_str = gene->output_seq->to_str();
-                    sqlite3_bind_text(gene_stmt, bind_index++, output_str.c_str(), -1, SQLITE_TRANSIENT);
-
-                    sqlite3_bind_double(gene_stmt, bind_index++, (double) gene->threshold);
-                    sqlite3_bind_double(gene_stmt, bind_index++, (double) gene->output_rate);
-                    sqlite3_bind_int(gene_stmt, bind_index++, gene->kernel_index);
-                    sqlite3_bind_int(gene_stmt, bind_index++, gene->pos);
-                    sqlite3_bind_int(gene_stmt, bind_index++, grn_id);
-                    rc = sqlite3_step(gene_stmt);
-                    if (rc != SQLITE_DONE) {
-                        cerr << "Error inserting gene." << endl;
-                        exit(1);
-                    }
-                    sqlite3_reset(gene_stmt);
-                    sqlite3_clear_bindings(gene_stmt);
-                }
-
-                sqlite3_reset(grn_stmt);
-                sqlite3_clear_bindings(grn_stmt);
-            }
-            sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
-
-            sqlite3_finalize(grn_stmt);
-            sqlite3_finalize(gene_stmt);
+        if (this->run->log_mode == "all" &&
+            this->should_sample(ga_step)) {
+            this->log_ga_step(ga_step, grns, 0);
         }
+    
+        else if (this->run->log_mode == "best") {
+            if (bests->run_best_updated) {
+                vector<Grn*> best;
+                best.push_back((*grns)[bests->run_best_index]);
+                this->log_ga_step(ga_step, &best, bests->run_best_index);
+            }
+        }
+    }
+}
+
+void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, int pop_index_offset=0) {
+    int rc;
+    int bind_index;
+    string grn_sql = "INSERT INTO grn (ga_step, pop_index) VALUES (?, ?);";
+    sqlite3_stmt *grn_stmt;
+    sqlite3_prepare_v2(this->conn, grn_sql.c_str(), grn_sql.size() + 1, &grn_stmt, NULL);
+
+    string gene_sql = "INSERT INTO gene (binding_seq, output_seq, threshold, output_rate, kernel_index, pos, grn_id) VALUES (?, ?, ?, ?, ?, ?, ?);";
+    sqlite3_stmt *gene_stmt;
+    sqlite3_prepare_v2(this->conn, gene_sql.c_str(), gene_sql.size() + 1, &gene_stmt, NULL);
+
+    //insert grns
+    sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
+    Grn *grn;
+    for (int i = 0; i < (int) grns->size(); i++) {
+        grn = (*grns)[i];
+        bind_index = 1;
+        sqlite3_bind_int(grn_stmt, bind_index++, ga_step);
+        sqlite3_bind_int(grn_stmt, bind_index++, pop_index_offset + i);
+
+        rc = sqlite3_step(grn_stmt);
+        if (rc != SQLITE_DONE) {
+            cerr << "Error inserting grn: " << rc << endl;
+            exit(1);
+        }
+        int grn_id = sqlite3_last_insert_rowid(this->conn);
+
+        //insert genes
+        Gene *gene;
+        for (int j = 0; j < this->run->num_genes; j++) {
+            gene = grn->genes[j];
+
+            bind_index = 1;
+            string binding_str = gene->binding_seq->to_str();
+            sqlite3_bind_text(gene_stmt, bind_index++, binding_str.c_str(), -1, SQLITE_TRANSIENT);
+
+            string output_str = gene->output_seq->to_str();
+            sqlite3_bind_text(gene_stmt, bind_index++, output_str.c_str(), -1, SQLITE_TRANSIENT);
+
+            sqlite3_bind_double(gene_stmt, bind_index++, (double) gene->threshold);
+            sqlite3_bind_double(gene_stmt, bind_index++, (double) gene->output_rate);
+            sqlite3_bind_int(gene_stmt, bind_index++, gene->kernel_index);
+            sqlite3_bind_int(gene_stmt, bind_index++, gene->pos);
+            sqlite3_bind_int(gene_stmt, bind_index++, grn_id);
+            rc = sqlite3_step(gene_stmt);
+            if (rc != SQLITE_DONE) {
+                cerr << "Error inserting gene." << endl;
+                exit(1);
+            }
+            sqlite3_reset(gene_stmt);
+            sqlite3_clear_bindings(gene_stmt);
+        }
+
+        sqlite3_reset(grn_stmt);
+        sqlite3_clear_bindings(grn_stmt);
+    }
+    sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
+
+    sqlite3_finalize(grn_stmt);
+    sqlite3_finalize(gene_stmt);
+}
+
+void Logger::log_reg_snapshot(RegSnapshot *snappy) {
+    for (int i = -1; i < this->run->reg_steps; i++) {
+        Grn *grn = snappy->grns[i];
+        Phenotype *ptype = snappy->ptypes[i];
+        this->log_reg_step(snappy->ga_step, i, grn, snappy->pop_index, ptype);
     }
 }
 
 void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Phenotype *ptype) {
     //note: must log_grns in order to log_reg_steps
     if (this->run->log_grns && this->run->log_reg_steps) {
-        if (ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0) {
+        if (this->should_sample(ga_step)) {
             int rc;
     
             //the grn should already be in the database. Get it's id.

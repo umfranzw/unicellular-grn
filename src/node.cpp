@@ -13,6 +13,10 @@ Node::Node(Node *node) {
     if (node->instr != nullptr) {
         this->instr = node->instr->clone();
     }
+    else {
+    	this->instr = nullptr;
+    }
+    
     for (int child_id : node->children) {
         this->children.push_back(child_id);
     }

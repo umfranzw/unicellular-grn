@@ -3,12 +3,12 @@
 # GA #
 ######
 pop_size = 50
-ga_steps = 10
+ga_steps = 100
 mut_prob = 0.05
 mut_prob_limit = 0.2
 mut_step = 0.0
-cross_frac = 0.4
-cross_frac_limit = 0.4
+cross_frac = 0.0
+cross_frac_limit = 0.0
 cross_step = 0.0
 num_genes = 8
 gene_bits = 8
@@ -47,6 +47,11 @@ code_sample_interval = 2
 #####################
 #Graphing and Logging #
 #####################
+#this should be one of:
+# "all" - logs all grns and reg steps at a given ga_step interval
+# "best" - logs only the best individual  with its reg steps, but does so on every iteration
+log_mode = "all"
+
 #note: this is in ga steps
 fitness_log_interval = 10
 

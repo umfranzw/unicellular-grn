@@ -56,6 +56,7 @@ public:
     int fixed_rng_seed;
 
     string log_dir;
+    string log_mode;
     
     int file_index; //index of run in file (this is filled in by the Runs() constructor and is not part of toml file)
 };

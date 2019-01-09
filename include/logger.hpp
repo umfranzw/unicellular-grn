@@ -6,6 +6,8 @@
 #include "runs.hpp"
 #include "grn.hpp"
 #include "phenotype.hpp"
+#include "reg_snapshot.hpp"
+#include "best_info.hpp"
 
 using namespace std;
 
@@ -16,7 +18,8 @@ public:
 
     void log_run();
     void log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *phenotypes, vector<float> *fitnesses);
-    void log_ga_step(int ga_step, vector<Grn*> *grns);
+    void log_ga_step(int ga_step, vector<Grn*> *grns, BestInfo *bests);
+    void log_reg_snapshot(RegSnapshot *snappy);
     void log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Phenotype *ptype);
     void write_db();
 
@@ -28,6 +31,8 @@ public:
     sqlite3 *conn;
 
 private:
+    bool should_sample(int ga_step);
+    void log_ga_step(int ga_step, vector<Grn*> *grns, int pop_index_offset);
     Run *run;
     Grn *run_best_grn;
     Phenotype *run_best_ptype;

@@ -152,9 +152,7 @@ void VisAdapter::run_script() {
     
     else if (child_pid == 0) {
         stringstream args;
-        //note: must log grns to log reg_steps
-        args << "--plot_reg_steps=" << (run->log_grns && run->log_reg_steps ? "true" : "false");
-        execlp(SCRIPT_PATH, "", args.str().c_str(), NULL); //note: first arg is empty string since execlp seems to ignore it for some reason
+        execlp(SCRIPT_PATH, "", NULL, NULL); //note: first arg is empty string since execlp seems to ignore it for some reason
         perror("execlp");
         exit(1);
     }

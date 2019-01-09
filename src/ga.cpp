@@ -50,7 +50,7 @@ void Ga::print_pop() {
 
 void Ga::run_alg() {
     this->logger->log_run(); //log the parameters used in this run
-    this->logger->log_ga_step(-1, &this->pop); //log initial grns using ga_step = -1
+    this->logger->log_ga_step(-1, &this->pop, &this->evalor->bests); //log initial grns using ga_step = -1
     
     this->evalor->update_fitness(&this->pop, &this->fitnesses, &this->phenotypes, -1); //this will log initial reg sim using ga_step = -1
     this->logger->log_fitnesses(-1, &this->pop, &this->phenotypes, &this->fitnesses); //and finally the fitnesses
@@ -62,7 +62,7 @@ void Ga::run_alg() {
             op->run_op(&this->pop, &this->fitnesses);
         }
 
-        this->logger->log_ga_step(i, &this->pop);
+        this->logger->log_ga_step(i, &this->pop, &this->evalor->bests);
 
         this->evalor->update_fitness(&this->pop, &this->fitnesses, &this->phenotypes, i); //this will log the reg sim
 

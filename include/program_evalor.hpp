@@ -4,13 +4,13 @@
 #include "grn.hpp"
 #include "runs.hpp"
 #include "logger.hpp"
-#include "evaluator.hpp"
 #include "phenotype.hpp"
 #include "bitvec.hpp"
 #include "instr_factory.hpp"
 #include "program.hpp"
+#include "best_info.hpp"
 
-class ProgramEvalor : public Evaluator {
+class ProgramEvalor {
 public:
     ProgramEvalor(Run *run, Logger *logger);
     ~ProgramEvalor();
@@ -20,7 +20,11 @@ public:
     float eval(Grn *grn, Phenotype *ptype);
     float test_pgm(Program *pgm);
 
+    BestInfo bests;
+    
 private:
+    Run *run;
+    Logger *logger;
     int num_grow_samples;
     int num_code_samples;
     InstrFactory *instr_factory;

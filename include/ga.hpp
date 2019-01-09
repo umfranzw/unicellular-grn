@@ -5,7 +5,7 @@
 #include "grn.hpp"
 #include "logger.hpp"
 #include "utils.hpp"
-#include "evaluator.hpp"
+#include "program_evalor.hpp"
 #include "genetic_op.hpp"
 #include "phenotype.hpp"
 #include <vector>
@@ -28,7 +28,7 @@ private:
     Run *run;
     Logger *logger;
     vector<GeneticOp*> gen_ops;
-    Evaluator *evalor;
+    ProgramEvalor *evalor;
 
     void adjust_params(Run *run, int ga_step);
     float clamp_param(float cur_val, float step, float limit);

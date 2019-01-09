@@ -28,8 +28,8 @@ public:
     Node *get_node(int id);
     bool is_leaf(int id);
     
-private:
     Node *root;
+private:
     map<int, Node*> id_to_node;
     int next_id;
 

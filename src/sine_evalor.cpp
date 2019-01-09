@@ -1,6 +1,8 @@
 #include "sine_evalor.hpp"
 
-SineEvalor::SineEvalor(Run *run, Logger *logger) : Evaluator(run, logger) {
+SineEvalor::SineEvalor(Run *run, Logger *logger) {
+    this->run = run;
+    this->logger = logger;
 }
 
 SineEvalor::~SineEvalor() {

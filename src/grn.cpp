@@ -35,7 +35,8 @@ Grn::Grn(Run *run) {
     this->push_initial_proteins();
 }
 
-Grn::Grn(Grn *grn) { //copy constructor
+//note: set copy_store = false when you want the regulatory simulation to begin again from the initial conditions
+Grn::Grn(Grn *grn, bool copy_store) { //copy constructor
     this->run = grn->run;
     //copy genes (note: the Gene copy constructor will remove all outputs and reset active_output and bound_protein.)
     for (int i = 0; i < this->run->num_genes; i++) {
@@ -47,9 +48,14 @@ Grn::Grn(Grn *grn) { //copy constructor
         this->initial_proteins.push_back(new Protein(grn->initial_proteins[i]));
     }
 
-    //note that we do not copy the proteinstore. We want the regulatory simulation to begin again from the initial conditions
-    this->proteins = new ProteinStore();
-    this->push_initial_proteins();
+    if (copy_store) {
+        this->proteins = new ProteinStore(grn->proteins);
+    }
+
+    else {
+        this->proteins = new ProteinStore();
+        this->push_initial_proteins();
+    }
 }
 
 void Grn::reset() {
