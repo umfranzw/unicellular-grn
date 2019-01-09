@@ -535,14 +535,15 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, BestInfo *bests) {
             this->should_sample(ga_step)) {
             this->log_ga_step(ga_step, grns, 0);
         }
-    
-        else if (this->run->log_mode == "best") {
-            if (bests->run_best_updated) {
-                vector<Grn*> best;
-                best.push_back((*grns)[bests->run_best_index]);
-                this->log_ga_step(ga_step, &best, bests->run_best_index);
-            }
-        }
+
+        //for mode == "best": log ga when logging the reg snapshot (in log_reg_step())
+        // else if (this->run->log_mode == "best") {
+        //     if (bests->run_best_updated) {
+        //         vector<Grn*> best;
+        //         best.push_back((*grns)[bests->run_best_index]);
+        //         this->log_ga_step(ga_step, &best, bests->run_best_index);
+        //     }
+        // }
     }
 }
 
@@ -629,12 +630,25 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
     
             sqlite3_bind_int(grn_stmt, 1, ga_step);
             sqlite3_bind_int(grn_stmt, 2, pop_index);
-            rc = sqlite3_step(grn_stmt); 
-            if (rc != SQLITE_ROW) {
+            rc = sqlite3_step(grn_stmt);
+            int grn_id = -1;
+            if (rc == SQLITE_ERROR || rc == SQLITE_MISUSE) {
                 cerr << "Error selecting grn. ga_step: " << ga_step << ", pop_index: " << pop_index << endl;
+                cerr << sqlite3_errmsg(this->conn) << endl;
                 exit(1);
             }
-            int grn_id = sqlite3_column_int(grn_stmt, 0);
+            else if (rc == SQLITE_DONE) {
+                //The logging mode is "best" and the grn has not been inserted yet, so insert it
+                vector<Grn*> temp;
+                temp.push_back(grn);
+                this->log_ga_step(ga_step, &temp, pop_index);
+                sqlite3_reset(grn_stmt);
+                rc = sqlite3_step(grn_stmt);
+            }
+            
+            if (rc == SQLITE_ROW) {
+                grn_id = sqlite3_column_int(grn_stmt, 0);
+            }
             sqlite3_finalize(grn_stmt);
 
             //insert proteins

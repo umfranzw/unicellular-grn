@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use('svg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from common.result_set import ResultSet
 
 class GraphGen():
     GENE_WIDTH = 0.2
@@ -172,7 +173,7 @@ class GraphGen():
         rs = None
         if self.db:
             self.db.cur.execute(sql, args)
-            rs = self.db.cur
+            rs = ResultSet(list(self.db.cur))
 
         else:
             rs = self.ipc.select(sql, args, result_types)

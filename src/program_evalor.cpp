@@ -66,8 +66,10 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
                 this->bests.run_best_index = i;
             }
         }
-        
-        this->logger->log_reg_snapshot(snappy);
+    }
+    
+    if (this->bests.run_best_updated) {
+        this->logger->log_reg_snapshot(this->bests.run_best);
     }
 }
 
@@ -76,7 +78,6 @@ void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg
     bool sampling = (reg_step - this->run->growth_start) % this->run->growth_sample_interval == 0;
     
     if (growing && sampling) {
-        
         const static BitVec growth_seq(this->run->growth_seq);
         vector<Protein*> proteins = grn->proteins->get_all((const BitVec*) &growth_seq);
 
