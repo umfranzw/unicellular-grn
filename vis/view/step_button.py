@@ -23,6 +23,14 @@ class StepButton(Gtk.Grid):
         self.index = 0
         self.entry = self._build(entry_width)
 
+    def set_steps(self, steps):
+        self.steps = steps
+        self.min_step = steps[0]
+        self.max_step = steps[-1]
+        self.index = 0
+        
+        self.entry.set_text(str(self.steps[self.index]))
+
     def _build(self, entry_width):
         if entry_width is None:
             entry_width = 2

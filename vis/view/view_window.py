@@ -98,6 +98,9 @@ class ViewWindow(Gtk.Window):
         button_grid.attach(self.index_spin, 1, 2, 1, 1)
         button_grid.attach(precomp_button, 2, 1, 1, 1)
 
+        if (self.run.log_mode == 'best'):
+            self.index_spin.set_sensitive(False)
+
         #fittest grid
         info = BestInfo(db=self.db)
 
@@ -212,7 +215,16 @@ class ViewWindow(Gtk.Window):
     def update_views(self, widget=None, val=None):
         ga_step = self.ga_spin.get_value()
         reg_step = self.reg_spin.get_value()
-        pop_index = self.index_spin.get_value()
+
+        if self.run.log_mode == 'best':
+            sql = 'SELECT pop_index FROM grn WHERE ga_step = ?;'
+            self.db.cur.execute(sql, (ga_step,))
+            pop_index = self.db.cur.fetchone()[0]
+            self.index_spin.set_steps([pop_index, pop_index])
+        else:
+            pop_index = self.index_spin.get_value()
+
+        print("ga_step: {}\nreg_step: {}\npop_index: {}".format(ga_step, reg_step, pop_index))
         self.protein_frame.update_list(ga_step, reg_step, pop_index)
 
         self._update_tree_view()
