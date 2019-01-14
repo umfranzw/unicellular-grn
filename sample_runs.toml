@@ -3,11 +3,11 @@
 # GA #
 ######
 pop_size = 50
-ga_steps = 100
+ga_steps = 2
 mut_prob = 0.05
 mut_prob_limit = 0.2
 mut_step = 0.0
-cross_frac = 0.0
+cross_frac = 0.4
 cross_frac_limit = 0.0
 cross_step = 0.0
 num_genes = 8
@@ -50,13 +50,14 @@ code_sample_interval = 2
 #this should be one of:
 # "all" - logs all grns and reg steps at a given ga_step interval
 # "best" - logs only the best individual  with its reg steps, but does so on every iteration
-log_mode = "all"
+# "none" - no grns are logged. Fittness values are still logged.
+log_mode = "best"
 
 #note: this is in ga steps
-fitness_log_interval = 10
+fitness_log_interval = 1
 
 #causes best fitness and avg fitness graphs to be generated
-graph_results = true
+graph_results = false
 
 #causes grns to be saved to the db
 log_grns = true
