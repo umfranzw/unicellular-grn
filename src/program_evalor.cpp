@@ -8,11 +8,6 @@ ProgramEvalor::ProgramEvalor(Run* run, Logger* logger) {
     this->num_grow_samples = (this->run->growth_end - this->run->growth_start + 1) / this->run->growth_sample_interval;
     this->num_code_samples = (this->run->code_end - this->run->code_start + 1) / this->run->code_sample_interval;
     this->instr_factory = InstrFactory::create(this->run);
-
-    this->bests.gen_best = nullptr;
-    this->bests.run_best = nullptr;
-    this->bests.run_best_updated = false;
-    this->bests.run_best_index = -1;
 }
 
 ProgramEvalor::~ProgramEvalor() {
@@ -21,7 +16,7 @@ ProgramEvalor::~ProgramEvalor() {
 
 void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
     //do regulatory simulation
-    this->bests.run_best_updated = false;
+    this->bests.reset_updated_flags();
     
     for (int i = 0; i < this->run->pop_size; i++) {
         (*phenotypes)[i]->reset();
@@ -57,23 +52,25 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
         (*fitnesses)[i] = fitness;
         snappy->fitness = fitness;
 
-        if (this->bests.gen_best == nullptr || snappy->fitness < this->bests.gen_best->fitness) {
-            this->bests.gen_best = snappy;
-
-            if (this->bests.run_best == nullptr || snappy->fitness < this->bests.run_best->fitness) {
-                this->bests.run_best = snappy;
-                this->bests.run_best_updated = true;
-                this->bests.run_best_index = i;
-            }
-        }
-
         if (this->run->log_mode == "all") {
             this->logger->log_reg_snapshot(snappy);
         }
+
+        if (this->bests.get_gen_best() == nullptr || snappy->fitness < this->bests.get_gen_best()->fitness) {
+            this->bests.set_gen_best(snappy, i);
+
+            if (this->bests.get_run_best() == nullptr || snappy->fitness < this->bests.get_run_best()->fitness) {
+                this->bests.set_run_best(snappy, i);
+            }
+        }
+
+        else {
+            delete snappy;
+        }
     }
 
-    if (this->run->log_mode == "best" && this->bests.run_best_updated) {
-        this->logger->log_reg_snapshot(this->bests.run_best);
+    if (this->run->log_mode == "best" && this->bests.is_run_best_updated()) {
+        this->logger->log_reg_snapshot(this->bests.get_run_best());
     }
 }
 
