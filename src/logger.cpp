@@ -649,6 +649,11 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
             if (rc == SQLITE_ROW) {
                 grn_id = sqlite3_column_int(grn_stmt, 0);
             }
+            else {
+                cerr << "Error selecting grn. ga_step: " << ga_step << ", pop_index: " << pop_index << endl;
+                cerr << sqlite3_errmsg(this->conn) << endl;
+                exit(1);
+            }
             sqlite3_finalize(grn_stmt);
 
             //insert proteins

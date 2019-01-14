@@ -31,7 +31,7 @@ Gene::Gene(Run *run, int pos) {
 }
 
 //copy constructor
-Gene::Gene(Gene *gene) {
+Gene::Gene(Gene *gene, bool copy_state) {
     this->run = gene->run;
     this->binding_seq = new BitVec(*gene->binding_seq);
     this->output_seq = new BitVec(*gene->output_seq);
@@ -39,10 +39,17 @@ Gene::Gene(Gene *gene) {
     this->output_rate = gene->output_rate;
     this->kernel_index = gene->kernel_index;
     this->pos = gene->pos;
-    
-    //don't copy these, or outputs
-    this->active_output = -1;
-    this->bound_protein = -1;
+
+    if (copy_state) {
+        this->active_output = gene->active_output;
+        this->bound_protein = gene->bound_protein;
+        this->outputs = vector<int>(gene->outputs);
+    }
+    else {
+        //don't copy these, or outputs
+        this->active_output = -1;
+        this->bound_protein = -1;
+    }
 }
 
 Gene::~Gene() {

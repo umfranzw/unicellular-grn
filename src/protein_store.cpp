@@ -7,13 +7,13 @@ ProteinStore::ProteinStore() {
 }
 
 ProteinStore::ProteinStore(ProteinStore *store) { //copy constructor
-    this->next_id = 0;
-    
     for (const int& id : *store) {
         Protein *protein = store->get(id);
         Protein *copy = new Protein(protein);
-        this->add(copy); //copy protein. Note: we always place proteins on the heap so we can fling pointers around with wild abandon
+        this->add_with_id(copy, id); //copy protein. Note: we always place proteins on the heap so we can fling pointers around with wild abandon
     }
+
+    this->next_id = store->next_id;
 }
 
 ProteinStore::~ProteinStore() {
@@ -37,10 +37,14 @@ void ProteinStore::reset() {
 
 int ProteinStore::add(Protein *protein) {
     int id = this->next_id;
-    this->id_map.insert(make_pair(id, protein));
+    this->add_with_id(protein, id);
     this->next_id++;
 
     return id;
+}
+
+void ProteinStore::add_with_id(Protein *protein, int id) {
+    this->id_map.insert(make_pair(id, protein));
 }
 
 bool ProteinStore::remove(int id) {

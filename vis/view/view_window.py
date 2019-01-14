@@ -224,7 +224,6 @@ class ViewWindow(Gtk.Window):
         else:
             pop_index = self.index_spin.get_value()
 
-        print("ga_step: {}\nreg_step: {}\npop_index: {}".format(ga_step, reg_step, pop_index))
         self.protein_frame.update_list(ga_step, reg_step, pop_index)
 
         self._update_tree_view()

@@ -31,6 +31,8 @@ public:
     void reset();
 
 private:
+    void add_with_id(Protein *protein, int id);
+    
     map<int, Protein*> id_map;
     int next_id;
 };

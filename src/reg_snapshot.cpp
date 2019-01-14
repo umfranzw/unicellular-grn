@@ -17,7 +17,7 @@ RegSnapshot::~RegSnapshot() {
 }
 
 void RegSnapshot::add_reg_step(int reg_step, Phenotype *ptype) {
-    Grn *grn_copy = new Grn(this->grn, true);
+    Grn *grn_copy = new Grn(this->grn, true, true);
     Phenotype *ptype_copy = new Phenotype(ptype);
     this->grns[reg_step] = grn_copy;
     this->ptypes[reg_step] = ptype_copy;

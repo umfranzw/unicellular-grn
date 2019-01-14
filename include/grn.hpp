@@ -11,7 +11,7 @@ class Grn {
 public:
     Grn(Run *run, vector<Gene*> genes, vector<Protein*> initial_proteins);
     Grn(Run *run); //randomly initializes genes
-    Grn(Grn *grn, bool copy_store=false);
+    Grn(Grn *grn, bool copy_store=false, bool copy_gene_state=false);
     ~Grn();
     
     void push_initial_proteins();

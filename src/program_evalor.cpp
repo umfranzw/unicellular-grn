@@ -54,8 +54,8 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
         }
         //update fitness value
         float fitness = this->eval(grn, (*phenotypes)[i]);
-        snappy->fitness = fitness;
         (*fitnesses)[i] = fitness;
+        snappy->fitness = fitness;
 
         if (this->bests.gen_best == nullptr || snappy->fitness < this->bests.gen_best->fitness) {
             this->bests.gen_best = snappy;
@@ -66,9 +66,13 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
                 this->bests.run_best_index = i;
             }
         }
+
+        if (this->run->log_mode == "all") {
+            this->logger->log_reg_snapshot(snappy);
+        }
     }
-    
-    if (this->bests.run_best_updated) {
+
+    if (this->run->log_mode == "best" && this->bests.run_best_updated) {
         this->logger->log_reg_snapshot(this->bests.run_best);
     }
 }

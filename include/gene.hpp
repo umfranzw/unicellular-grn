@@ -13,7 +13,7 @@ public:
     Gene(Run *run, BitVec *binding_seq, BitVec *output_seq, float threshold, float output_rate, int kernel_index, int pos);
     //randomly initializes components that are not passed
     Gene(Run *run, int pos);
-    Gene(Gene *gene);
+    Gene(Gene *gene, bool copy_state=false);
     ~Gene();
 
     void update_output_protein(ProteinStore *store);
