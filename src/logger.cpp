@@ -189,7 +189,6 @@ void Logger::create_tables() {
         gene_sql << "output_seq TEXT NOT NULL,";
         gene_sql << "threshold REAL NOT NULL,";
         gene_sql << "output_rate REAL NOT NULL,";
-        gene_sql << "kernel_index INTEGER NOT NULL,";
         gene_sql << "pos INTEGER NOT NULL,";
         gene_sql << "grn_id INTEGER NOT NULL,";
         gene_sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
@@ -224,7 +223,6 @@ void Logger::create_tables() {
         protein_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,"; //database id
         protein_sql << "pid INTEGER NOT NULL,"; //protein id from simulation
         protein_sql << "seq TEXT NOT NULL,";
-        protein_sql << "kernel_index INTEGER NOT NULL,";
         protein_sql << "src_pos INTEGER NOT NULL,";
         protein_sql << "grn_id INTEGER NOT NULL,";
         protein_sql << "FOREIGN KEY(grn_id) REFERENCES grn(id)";
@@ -554,7 +552,7 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, int pop_index_offset=0
     sqlite3_stmt *grn_stmt;
     sqlite3_prepare_v2(this->conn, grn_sql.c_str(), grn_sql.size() + 1, &grn_stmt, NULL);
 
-    string gene_sql = "INSERT INTO gene (binding_seq, output_seq, threshold, output_rate, kernel_index, pos, grn_id) VALUES (?, ?, ?, ?, ?, ?, ?);";
+    string gene_sql = "INSERT INTO gene (binding_seq, output_seq, threshold, output_rate, pos, grn_id) VALUES (?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *gene_stmt;
     sqlite3_prepare_v2(this->conn, gene_sql.c_str(), gene_sql.size() + 1, &gene_stmt, NULL);
 
@@ -588,7 +586,6 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, int pop_index_offset=0
 
             sqlite3_bind_double(gene_stmt, bind_index++, (double) gene->threshold);
             sqlite3_bind_double(gene_stmt, bind_index++, (double) gene->output_rate);
-            sqlite3_bind_int(gene_stmt, bind_index++, gene->kernel_index);
             sqlite3_bind_int(gene_stmt, bind_index++, gene->pos);
             sqlite3_bind_int(gene_stmt, bind_index++, grn_id);
             rc = sqlite3_step(gene_stmt);
@@ -661,7 +658,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
             sqlite3_stmt *protein_sel_stmt;
             sqlite3_prepare_v2(this->conn, protein_sel_sql.c_str(), protein_sel_sql.size() + 1, &protein_sel_stmt, NULL);
 
-            string protein_ins_sql = "INSERT INTO protein (pid, seq, kernel_index, src_pos, grn_id) VALUES (?, ?, ?, ?, ?)";
+            string protein_ins_sql = "INSERT INTO protein (pid, seq, src_pos, grn_id) VALUES (?, ?, ?, ?)";
             sqlite3_stmt *protein_ins_stmt;
             sqlite3_prepare_v2(this->conn, protein_ins_sql.c_str(), protein_ins_sql.size() + 1, &protein_ins_stmt, NULL);
 
@@ -718,7 +715,6 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
                     string seq_str = protein->seq->to_str();
                     sqlite3_bind_text(protein_ins_stmt, bind_index++, seq_str.c_str(), -1, SQLITE_TRANSIENT);
 
-                    sqlite3_bind_int(protein_ins_stmt, bind_index++, protein->kernel_index);
                     sqlite3_bind_int(protein_ins_stmt, bind_index++, protein->src_pos);
                     sqlite3_bind_int(protein_ins_stmt, bind_index++, grn_id);
 

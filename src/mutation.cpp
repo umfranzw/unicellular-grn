@@ -1,6 +1,5 @@
 #include "mutation.hpp"
 #include "utils.hpp"
-#include "kernels.hpp"
 
 Mutation::Mutation(Run *run) : GeneticOp(run) {
 }
@@ -17,7 +16,6 @@ void Mutation::run_op(vector<Grn*> *pop, vector<float> *fitnesses) {
             this->mutate_bitset(gene->output_seq);
             this->mutate_float(&gene->threshold, 0.0f, this->run->max_protein_conc);
             this->mutate_float(&gene->output_rate, 0.0f, this->run->max_protein_conc);
-            this->mutate_int(&gene->kernel_index, 0, (int) KERNELS.size());
         }
         this->mutate_initial_proteins(&grn->initial_proteins);
     }
@@ -29,7 +27,6 @@ void Mutation::mutate_initial_proteins(vector<Protein*> *proteins) {
         for (int i = 0; i < this->run->num_genes; i++) {
             this->mutate_float(&p->concs[i], 0.0f, this->run->max_protein_conc);
         }
-        this->mutate_int(&p->kernel_index, 0, (int) KERNELS.size());
         this->mutate_int(&p->src_pos, 0, this->run->num_genes);
     }
 }

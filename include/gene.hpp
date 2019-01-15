@@ -10,7 +10,7 @@ using namespace std;
 
 class Gene {
 public:
-    Gene(Run *run, BitVec *binding_seq, BitVec *output_seq, float threshold, float output_rate, int kernel_index, int pos);
+    Gene(Run *run, BitVec *binding_seq, BitVec *output_seq, float threshold, float output_rate, int pos);
     //randomly initializes components that are not passed
     Gene(Run *run, int pos);
     Gene(Gene *gene, bool copy_state=false);
@@ -25,7 +25,6 @@ public:
     BitVec *output_seq;
     float threshold;
     float output_rate;
-    int kernel_index;
     vector<int> outputs;
     int active_output;
     int bound_protein;

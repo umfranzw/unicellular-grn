@@ -1,5 +1,4 @@
 #include "ga.hpp"
-#include "kernels.hpp"
 #include "utils.hpp"
 #include "mutation.hpp"
 #include "crossover.hpp"

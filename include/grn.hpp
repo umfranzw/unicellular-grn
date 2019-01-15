@@ -18,8 +18,6 @@ public:
     void run_decay();
     void run_binding(int pop_index, int reg_step, int ga_step);
     void run_diffusion();
-    void run_diffusion_kernel();
-    void run_diffusion_fcn();
     void update_output_proteins();
     string to_str();
     void reset();

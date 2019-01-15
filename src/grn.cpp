@@ -3,7 +3,6 @@
 #include "runs.hpp"
 #include "protein_store.hpp"
 #include "utils.hpp"
-#include "kernels.hpp"
 #include "gene.hpp"
 #include "diffusion.hpp"
 #include <sstream>
@@ -146,10 +145,6 @@ void Grn::run_binding(int pop_index, int reg_step, int ga_step) {
 }
 
 void Grn::run_diffusion() {
-    this->run_diffusion_fcn();
-}
-
-void Grn::run_diffusion_fcn() {
     for (int i = 0; i < this->run->num_genes; i++) {
         Gene *g = this->genes[i];
         vector<pair<int, int>> rm_pairs; //(index in gene.outputs, protein id)
@@ -158,61 +153,6 @@ void Grn::run_diffusion_fcn() {
             Protein *p = this->proteins->get(p_id);
             bool above_threshold = Diffusion::diffuse(p);
             if (!above_threshold) {
-                rm_pairs.push_back(pair<int, int>(j, p_id));
-            }
-        }
-
-        for (int j = 0; j < (int) rm_pairs.size(); j++) {
-            int index = rm_pairs[j].first;
-            int id = rm_pairs[j].second;
-
-            g->outputs.erase(g->outputs.begin() + index - j); //subtract j to compensate for shift due to removals on previous iterations
-
-            if (g->active_output >= 0) {
-                g->active_output = -1;
-            }
-            this->proteins->remove(id);
-
-            //remove any bindings to the protein we just deleted
-            for (int k = 0; k < this->run->num_genes; k++) {
-                if (this->genes[k]->bound_protein == id) {
-                    this->genes[k]->update_binding(nullptr, this->proteins);
-                }
-            }
-        }
-    }
-}
-
-void Grn::run_diffusion_kernel() {
-    for (int i = 0; i < this->run->num_genes; i++) {
-        Gene *g = this->genes[i];
-        vector<float> new_concs(this->run->num_genes, 0.0f);
-        vector<pair<int, int>> rm_pairs; //(index in gene.outputs, protein id)
-
-        for (int j = 0; j < (int) g->outputs.size(); j++) {
-            int p_id = g->outputs[j];
-            Protein *p = this->proteins->get(p_id);
-            const vector<float> *kernel = &KERNELS[p->kernel_index];
-            int mid = (int) kernel->size() / 2;
-            bool above_threshold = false; //will set to true if any conc in the protein is > run.min_protein_conc
-
-            for (int k = 0; k < this->run->num_genes; k++) {
-                for (int l = 0; l < (int) kernel->size(); l++) {
-                    int col = k - mid + l;
-                    if (col >= 0 && col < (int) this->run->num_genes) {
-                        new_concs[k] = min(new_concs[k] + p->concs[col] * (*kernel)[l], this->run->max_protein_conc); //ensure we don't go over the max. Note: the min threshold is checked below.
-                    }
-                }
-                above_threshold = above_threshold || (new_concs[k] > this->run->min_protein_conc);
-            }
-
-            //replace old concentrations with new ones,
-            //but don't waste time copying if we're just going to throw the protein away because it's concentrations
-            //don't meet the min threshold
-            if (above_threshold) {
-                p->concs = new_concs;
-            }
-            else {
                 rm_pairs.push_back(pair<int, int>(j, p_id));
             }
         }

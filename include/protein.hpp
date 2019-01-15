@@ -8,7 +8,7 @@
 
 class Protein {
 public:
-    Protein(Run *run, BitVec *seq, vector<float> concs, int kernel_index, int src_pos);
+    Protein(Run *run, BitVec *seq, vector<float> concs, int src_pos);
     Protein(Run *run, int src_pos); //randomly initialized
     Protein(Protein *protein);
     ~Protein();
@@ -16,7 +16,6 @@ public:
 
     BitVec *seq;
     vector<float> concs;
-    int kernel_index;
     int src_pos;
     Run *run;
 };

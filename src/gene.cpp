@@ -1,15 +1,13 @@
 #include "gene.hpp"
 #include <sstream>
 #include "utils.hpp"
-#include "kernels.hpp"
 
-Gene::Gene(Run *run, BitVec *binding_seq, BitVec *output_seq, float threshold, float output_rate, int kernel_index, int pos) {
+Gene::Gene(Run *run, BitVec *binding_seq, BitVec *output_seq, float threshold, float output_rate, int pos) {
     this->run = run;
     this->binding_seq = new BitVec(*binding_seq);
     this->output_seq = new BitVec(*output_seq);
     this->threshold = threshold;
     this->output_rate = output_rate;
-    this->kernel_index = kernel_index;
     this->pos = pos;
     this->active_output = -1;
     this->bound_protein = -1;
@@ -25,7 +23,6 @@ Gene::Gene(Run *run, int pos) {
     Utils::fill_rand(this->output_seq, run->gene_bits, run);
     this->threshold = run->rand->next_float();
     this->output_rate = run->rand->next_float();
-    this->kernel_index = run->rand->in_range(0, KERNELS.size());
     this->active_output = -1;
     this->bound_protein = -1;
 }
@@ -37,7 +34,6 @@ Gene::Gene(Gene *gene, bool copy_state) {
     this->output_seq = new BitVec(*gene->output_seq);
     this->threshold = gene->threshold;
     this->output_rate = gene->output_rate;
-    this->kernel_index = gene->kernel_index;
     this->pos = gene->pos;
 
     if (copy_state) {
@@ -83,7 +79,7 @@ void Gene::update_binding(int *bind_pid, ProteinStore *store) {
 
         else {
             //otherwise, create a new protein and activate it
-            Protein *protein = new Protein(this->run, this->output_seq, Utils::zeros(this->run->num_genes), this->kernel_index, this->pos);
+            Protein *protein = new Protein(this->run, this->output_seq, Utils::zeros(this->run->num_genes), this->pos);
             int pid = store->add(protein);
             this->active_output = pid;
             this->outputs.push_back(pid);
@@ -104,7 +100,6 @@ string Gene::to_str() {
     info << "  output_seq: " << this->output_seq->to_str() << endl;
     info << "  threshold: " << this->threshold << endl;
     info << "  output_rate: " << this->output_rate << endl;
-    info << "  kernel_index: " << this->kernel_index << endl;
     info << "  pos: " << this->pos << endl;
     info << "  bound_protein: " << this->bound_protein << endl;
     info << "  active_output: " << this->active_output << endl;

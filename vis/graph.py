@@ -36,7 +36,7 @@ def main():
     os.makedirs(run_dir)
 
     if use_db:
-        graph_gen = GraphGen(run, db=conn)
+        graph_gen = GraphGen(run, db=conn, run_dir=run_dir)
     else:
         graph_gen = GraphGen(run, ipc=conn, run_dir=run_dir)
         

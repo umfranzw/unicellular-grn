@@ -51,7 +51,7 @@ class GraphGen():
         if db is not None:
             self.db = db
             self.ipc = None
-            self.run_dir = None
+            self.run_dir = run_dir
             
         elif ipc is not None:
             self.db = None

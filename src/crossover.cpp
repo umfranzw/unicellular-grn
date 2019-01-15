@@ -184,7 +184,6 @@ Gene *Crossover::cross_genes(Gene *left, Gene *right, int pos) {
         output_seq,
         this->cross_primitives<float>(left->threshold, right->threshold, 0.0f, this->run->max_protein_conc),
         this->cross_primitives<float>(left->output_rate, right->output_rate, 0.0f, this->run->max_protein_conc),
-        left->kernel_index, //stick with the existing kernel index for this gene (doesn't make sense to average them or anything like that...)
         pos
         );
 }
@@ -204,7 +203,6 @@ Protein *Crossover::cross_proteins(Protein *left, Protein *right) {
         this->run,
         seq,
         concs,
-        left->kernel_index, //just choose arbitrarily for this one (I'm assuming averaging won't work great)
         src_pos
         );
 }
