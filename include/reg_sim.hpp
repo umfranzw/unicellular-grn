@@ -7,18 +7,15 @@
 #include "phenotype.hpp"
 #include "bitvec.hpp"
 #include "instr_factory.hpp"
-#include "program.hpp"
 #include "best_info.hpp"
 
-class ProgramEvalor {
+class RegSim {
 public:
-    ProgramEvalor(Run *run, Logger *logger);
-    ~ProgramEvalor();
+    RegSim(Run *run, Logger *logger);
+    ~RegSim();
     void update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step);
     void grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step);
     void code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step);
-    float eval(Grn *grn, Phenotype *ptype);
-    float test_pgm(Program *pgm);
 
     BestInfo bests;
     

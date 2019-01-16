@@ -1,7 +1,8 @@
-#include "program_evalor.hpp"
+#include <reg_sim.hpp>
 #include "instr_dist.hpp"
+#include "fitness_fcn.hpp"
 
-ProgramEvalor::ProgramEvalor(Run* run, Logger* logger) {
+RegSim::RegSim(Run* run, Logger* logger) {
     this->run = run;
     this->logger = logger;
     
@@ -10,11 +11,11 @@ ProgramEvalor::ProgramEvalor(Run* run, Logger* logger) {
     this->instr_factory = InstrFactory::create(this->run);
 }
 
-ProgramEvalor::~ProgramEvalor() {
+RegSim::~RegSim() {
     delete this->instr_factory;
 }
 
-void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
+void RegSim::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
     //do regulatory simulation
     this->bests.reset_updated_flags();
     
@@ -48,7 +49,7 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
             snappy->add_reg_step(j, ptype);
         }
         //update fitness value
-        float fitness = this->eval(grn, (*phenotypes)[i]);
+        float fitness = FitnessFcn::eval((*phenotypes)[i], this->instr_factory->get_vars());
         (*fitnesses)[i] = fitness;
         snappy->fitness = fitness;
 
@@ -74,7 +75,7 @@ void ProgramEvalor::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, 
     }
 }
 
-void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
+void RegSim::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
     bool growing = reg_step >= this->run->growth_start && reg_step <= this->run->growth_end;
     bool sampling = (reg_step - this->run->growth_start) % this->run->growth_sample_interval == 0;
     
@@ -99,7 +100,7 @@ void ProgramEvalor::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg
     }
 }
 
-void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
+void RegSim::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
     bool coding = reg_step >= this->run->code_start && reg_step <= this->run->code_end;
     bool sampling = (reg_step - this->run->code_start) % this->run->code_sample_interval == 0;
 
@@ -149,60 +150,4 @@ void ProgramEvalor::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg
             }
         }
     }
-}
-
-float ProgramEvalor::eval(Grn* grn, Phenotype *ptype) {
-    float fitness = 100.0f;
-
-    fitness += abs(ptype->size() - 3) * 10.0f;
-    
-    int empty_nodes = ptype->get_num_unfilled_nodes();
-    if (empty_nodes == 0) {
-        Program pgm = Program(ptype);
-        float test_ratio = this->test_pgm(&pgm);
-        fitness -= test_ratio * 100.0f;
-    }
-    else {
-        fitness += empty_nodes * 10.0f;
-    }
-
-    return fitness;
-}
-
-// template<typename T>
-// void run_test(int *passed, int *failed, Program *pgm, vector<Instr*> *args, T result) {
-    
-// }
-
-//returns success ratio
-float ProgramEvalor::test_pgm(Program *pgm) {
-    int passed = 0;
-    int failed = 0;
-
-    string output;
-    vector<string> args;
-
-    args.push_back("2");
-    args.push_back("2");
-    output = pgm->run(this->instr_factory->get_vars(), &args);
-    if (output == "4") {
-        passed++;
-    }
-    else {
-        failed++;
-    }
-    args.clear();
-    
-    args.push_back("2");
-    args.push_back("3");
-    output = pgm->run(this->instr_factory->get_vars(), &args);
-    if (output == "6") {
-        passed++;
-    }
-    else {
-        failed++;
-    }
-    args.clear();
-    
-    return passed / (float) (passed + failed);
 }

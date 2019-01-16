@@ -1,8 +1,8 @@
+#include <reg_sim.hpp>
 #include "ga.hpp"
 #include "utils.hpp"
 #include "mutation.hpp"
 #include "crossover.hpp"
-#include "program_evalor.hpp"
 #include "genetic_op.hpp"
 #include "vis_adapter.hpp"
 #include <cmath>
@@ -16,7 +16,7 @@ Ga::Ga(Run *run) {
     this->run = run;
     
     this->logger = new Logger(run);
-    this->evalor = new ProgramEvalor(run, logger);
+    this->evalor = new RegSim(run, logger);
     this->gen_ops.push_back(new Crossover(this->run));
     this->gen_ops.push_back(new Mutation(this->run));
 

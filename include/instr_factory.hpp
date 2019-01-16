@@ -31,6 +31,7 @@ public:
     unsigned int seq_to_sel(BitVec *seq);
     InstrInfo seq_to_instr_info(BitVec *seq);
     vector<Instr*> *get_vars();
+    Instr *get_rand_instr(int num_args);
 
     vector<int> active_instr_types;
 

@@ -5,10 +5,10 @@
 #include "grn.hpp"
 #include "logger.hpp"
 #include "utils.hpp"
-#include "program_evalor.hpp"
 #include "genetic_op.hpp"
 #include "phenotype.hpp"
 #include <vector>
+#include "reg_sim.hpp"
 
 #define SHELL_BUFF_SIZE 128
 
@@ -28,7 +28,7 @@ private:
     Run *run;
     Logger *logger;
     vector<GeneticOp*> gen_ops;
-    ProgramEvalor *evalor;
+    RegSim *evalor;
 
     void adjust_params(Run *run, int ga_step);
     float clamp_param(float cur_val, float step, float limit);

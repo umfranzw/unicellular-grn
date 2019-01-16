@@ -116,6 +116,36 @@ InstrInfo InstrFactory::seq_to_instr_info(BitVec *seq) {
     return InstrInfo{instr->min_args, instr->max_args, is_term};
 }
 
+Instr *InstrFactory::get_rand_instr(int num_args) {
+    Instr *result = nullptr;
+    
+    vector<Instr*> filtered;
+    for (auto it = this->active_instr_types.begin(); it != this->active_instr_types.end(); it++) {
+        int type = *it;
+        auto instr_it = this->F.find(type);
+        if (instr_it != this->F.end()) {
+            Instr *instr = instr_it->second;
+            if (num_args >= instr->min_args &&
+                (num_args <= instr->max_args || instr->max_args == UNLIMITED_ARGS)) {
+                filtered.push_back(instr);
+            }
+        }
+        else if (num_args == 0) { //all terminals take zero args
+            vector<Instr*> instrs = this->T[type];
+            for (auto term_it = instrs.begin(); term_it != instrs.end(); term_it++) {
+                filtered.push_back(*term_it);
+            }
+        }
+    }
+
+    if ((int) filtered.size() > 0) {
+        int index = this->run->rand->in_range(0, filtered.size());
+        result = filtered[index];
+    }
+    
+    return result;
+}
+
 vector<Instr*> *InstrFactory::get_vars() {
     return &this->vars;
 }
