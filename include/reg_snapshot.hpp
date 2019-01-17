@@ -20,8 +20,6 @@ public:
     map<int, Grn*> grns;
     map<int, Phenotype*> ptypes;
 
-    float fitness;
-    
 private:
     Grn *grn;
 };

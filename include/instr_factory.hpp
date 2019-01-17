@@ -35,6 +35,10 @@ public:
 
     vector<int> active_instr_types;
 
+    //for testing
+    Instr *get_F_instr(int type);
+    Instr *get_T_instr(int type, int sel);
+
 private:
     InstrFactory(Run *run);
     void init_active_instr_types();

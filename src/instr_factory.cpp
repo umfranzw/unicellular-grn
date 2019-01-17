@@ -140,7 +140,7 @@ Instr *InstrFactory::get_rand_instr(int num_args) {
 
     if ((int) filtered.size() > 0) {
         int index = this->run->rand->in_range(0, filtered.size());
-        result = filtered[index];
+        result = filtered[index]->clone();
     }
     
     return result;
@@ -190,4 +190,12 @@ void InstrFactory::init_T() {
     this->T[INT_CONST] = ints;
 
     this->T[VAR_CONST] = this->vars;
+}
+
+Instr *InstrFactory::get_F_instr(int type) {
+    return this->F[type]->clone();
+}
+
+Instr *InstrFactory::get_T_instr(int type, int sel) {
+    return this->T[type][sel];
 }

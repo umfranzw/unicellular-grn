@@ -527,7 +527,7 @@ bool Logger::should_sample(int ga_step) {
     return ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0;
 }
 
-void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, BestInfo *bests) {
+void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, BestInfo<RegSnapshot> *bests) {
     if (this->run->log_grns) {
         if (this->run->log_mode == "all" &&
             this->should_sample(ga_step)) {

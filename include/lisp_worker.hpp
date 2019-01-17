@@ -16,7 +16,8 @@ public:
 private:
     string lisp_code;
     string output;
-    
+
+    string trim_newline(char *buf, int len);
     int read_stream(int fd, char **buf);
 };
 

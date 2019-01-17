@@ -55,13 +55,13 @@ bool LispWorker::run() {
     int count = this->read_stream(output_pipe[0], &out_buf);
     if (count > 0) {
         success = true;
-        this->output = string(out_buf);
+        this->output = this->trim_newline(out_buf, count);
     }
 
     char *err_buf;
     count = this->read_stream(error_pipe[0], &err_buf);
     if (count > 0) {
-        this->output = string(err_buf);
+        this->output = this->trim_newline(err_buf, count);
     }
 
     //clean up
@@ -71,6 +71,18 @@ bool LispWorker::run() {
     close(error_pipe[0]);
 
     return success;
+}
+
+string LispWorker::trim_newline(char *buf, int len) {
+    string str;
+    if (buf[len - 1] == '\n') {
+        str = string(buf, len - 1);
+    }
+    else {
+        str = string(buf);
+    }
+
+    return str;
 }
 
 string LispWorker::get_output() {

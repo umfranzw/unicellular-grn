@@ -8,6 +8,7 @@
 #include "bitvec.hpp"
 #include "instr_factory.hpp"
 #include "best_info.hpp"
+#include "reg_snapshot.hpp"
 
 class RegSim {
 public:
@@ -17,7 +18,7 @@ public:
     void grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step);
     void code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step);
 
-    BestInfo bests;
+    BestInfo<RegSnapshot> bests;
     
 private:
     Run *run;

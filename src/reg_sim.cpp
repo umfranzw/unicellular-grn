@@ -17,7 +17,7 @@ RegSim::~RegSim() {
 
 void RegSim::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<Phenotype*> *phenotypes, int ga_step) {
     //do regulatory simulation
-    this->bests.reset_updated_flags();
+    bool run_best_updated = false;
     
     for (int i = 0; i < this->run->pop_size; i++) {
         (*phenotypes)[i]->reset();
@@ -51,26 +51,24 @@ void RegSim::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<
         //update fitness value
         float fitness = FitnessFcn::eval((*phenotypes)[i], this->instr_factory->get_vars());
         (*fitnesses)[i] = fitness;
-        snappy->fitness = fitness;
 
         if (this->run->log_mode == "all") {
             this->logger->log_reg_snapshot(snappy);
         }
 
-        if (this->bests.get_gen_best() == nullptr || snappy->fitness < this->bests.get_gen_best()->fitness) {
-            this->bests.set_gen_best(snappy, i);
-
-            if (this->bests.get_run_best() == nullptr || snappy->fitness < this->bests.get_run_best()->fitness) {
-                this->bests.set_run_best(snappy, i);
-            }
+        bool gen_best_updated = this->bests.update_gen_best(snappy, i, fitness);
+        if (gen_best_updated) {
+            run_best_updated = run_best_updated || this->bests.update_run_best(snappy, i, fitness);
         }
-
+        
         else {
             delete snappy;
         }
+        
+        this->bests.gen_done();
     }
 
-    if (this->run->log_mode == "best" && this->bests.is_run_best_updated()) {
+    if (this->run->log_mode == "best" && run_best_updated) {
         this->logger->log_reg_snapshot(this->bests.get_run_best());
     }
 }

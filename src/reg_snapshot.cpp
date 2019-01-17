@@ -6,7 +6,6 @@ RegSnapshot::RegSnapshot(Grn *grn, int ga_step, int pop_index) {
     this->grn = grn;
     this->ga_step = ga_step;
     this->pop_index = pop_index;
-    this->fitness = -1.0f;
 }
 
 RegSnapshot::~RegSnapshot() {

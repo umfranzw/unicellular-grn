@@ -5,6 +5,7 @@
 #include "bitvec.hpp"
 #include "program.hpp"
 #include "utils.hpp"
+#include "fitness_fcn.hpp"
 #include <iostream>
 
 Test::Test() {
@@ -15,8 +16,9 @@ Test::~Test() {
 
 void Test::run() {
     Run *run = this->create_run();
-    bitvec(run);
-    to_code(run);
+    // bitvec(run);
+    // to_code(run);
+    // program(run);
     fitness(run);
     delete run;
 }
@@ -163,7 +165,7 @@ void Test::to_code(Run *run) {
     //delete factory;
 }
 
-void Test::fitness(Run *run) {
+void Test::program(Run *run) {
     Phenotype *ptype = new Phenotype(run);
     InstrFactory *factory = InstrFactory::create(run);
 
@@ -201,4 +203,22 @@ void Test::fitness(Run *run) {
     delete x1_bits;
     delete mult_bits;
     delete factory;
+}
+
+void Test::fitness(Run *run) {
+    InstrFactory *factory = InstrFactory::create(run);
+    Phenotype ptype(run);
+    Instr *mult = factory->get_F_instr(MULT);
+    Instr *x0 = factory->get_T_instr(VAR_CONST, 0);
+    Instr *x1 = factory->get_T_instr(VAR_CONST, 1);
+    ptype.add_child(0, mult);
+    ptype.add_child(0, x0);
+    ptype.add_child(0, x1);
+
+    vector<Instr*> args;
+    args.push_back(x0);
+    args.push_back(x1);
+
+    float fitness = FitnessFcn::eval(&ptype, &args);
+    assert(fitness == 0.0f);
 }

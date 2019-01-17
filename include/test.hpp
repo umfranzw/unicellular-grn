@@ -17,6 +17,7 @@ private:
     Run *create_run();
     void bitvec(Run *run);
     void to_code(Run *run);
+    void program(Run *run);
     void fitness(Run *run);
 
     void reset_bitvec(BitVec *vec, string val);
