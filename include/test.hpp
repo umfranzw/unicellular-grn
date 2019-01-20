@@ -21,6 +21,7 @@ private:
     void fitness(Run *run);
 
     void reset_bitvec(BitVec *vec, string val);
+    void variability(Run *run);
 };
 
 #endif

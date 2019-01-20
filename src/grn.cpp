@@ -184,6 +184,10 @@ void Grn::update_output_proteins() {
     }
 }
 
+int Grn::get_num_proteins() {
+    return this->proteins->size();
+}
+
 string Grn::to_str() {
     stringstream info;
 

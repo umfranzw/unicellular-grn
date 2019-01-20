@@ -36,6 +36,8 @@ private:
     void update_fitness(int ga_step);
     float calc_fitness(Grn *grn);
     float calc_protein_error(Protein *protein);
+
+    void reset_proteins(vector<Grn*> *pop);
 };
 
 #endif

@@ -21,6 +21,7 @@ public:
     void update_output_proteins();
     string to_str();
     void reset();
+    int get_num_proteins();
 
     vector<Gene*> genes;
     ProteinStore *proteins;

@@ -52,7 +52,7 @@ void RegSim::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<
         float fitness = FitnessFcn::eval((*phenotypes)[i], this->instr_factory->get_vars());
         (*fitnesses)[i] = fitness;
 
-        if (this->run->log_mode == "all") {
+        if (this->run->log_mode == "all" && logger != nullptr) {
             this->logger->log_reg_snapshot(snappy);
         }
 
@@ -68,13 +68,14 @@ void RegSim::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<
         this->bests.gen_done();
     }
 
-    if (this->run->log_mode == "best" && run_best_updated) {
+    if (this->run->log_mode == "best" && run_best_updated && logger != nullptr) {
         this->logger->log_reg_snapshot(this->bests.get_run_best());
     }
 }
 
 void RegSim::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
-    bool growing = reg_step >= this->run->growth_start && reg_step <= this->run->growth_end;
+    int cur_size = ptype->size();
+    bool growing = reg_step >= this->run->growth_start && reg_step <= this->run->growth_end && cur_size < this->run->max_pgm_size;
     bool sampling = (reg_step - this->run->growth_start) % this->run->growth_sample_interval == 0;
     
     if (growing && sampling) {
@@ -84,7 +85,7 @@ void RegSim::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, 
         map<int, bool> grow_indices;
         for (Protein *p : proteins) {
             for (int i = 0; i < this->run->num_genes; i++) {
-                if (p->concs[i] > this->run->growth_threshold) {
+                if (p->concs[i] > this->run->growth_threshold && (cur_size + (int) grow_indices.size()) < this->run->max_pgm_size) {
                     grow_indices.insert(pair<int, bool>(i, true));
                 }
             }

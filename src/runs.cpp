@@ -19,6 +19,7 @@ Run::Run(toml::Table& t, int file_index) {
     this->decay_rate = (float) toml::get<toml::Float>(t.at("decay_rate"));
     this->initial_proteins = toml::get<toml::Integer>(t.at("initial_proteins"));
     this->max_proteins = toml::get<toml::Integer>(t.at("max_proteins"));
+    this->max_pgm_size = toml::get<toml::Integer>(t.at("max_pgm_size"));
     this->max_mut_float = (float) toml::get<toml::Float>(t.at("max_mut_float"));
     this->max_mut_bits = toml::get<toml::Integer>(t.at("max_mut_bits"));
     this->fitness_log_interval = toml::get<toml::Integer>(t.at("fitness_log_interval"));

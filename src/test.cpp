@@ -6,6 +6,9 @@
 #include "program.hpp"
 #include "utils.hpp"
 #include "fitness_fcn.hpp"
+#include "grn.hpp"
+#include "reg_sim.hpp"
+#include "logger.hpp"
 #include <iostream>
 
 Test::Test() {
@@ -19,47 +22,63 @@ void Test::run() {
     // bitvec(run);
     // to_code(run);
     // program(run);
-    fitness(run);
+    //fitness(run);
+    variability(run);
     delete run;
 }
 
 Run *Test::create_run() {
-    const int seed = 12345678;
-    Run *run = new Run(true, seed);
-    run->pop_size = 50;
+    Run *run = new Run(false, -1);
+    run->pop_size = 1;
     run->ga_steps = 1;
-    run->reg_steps = 50;
-    run->mut_prob = 0.1;
+    run->mut_prob = 0.05;
     run->mut_prob_limit = 0.2;
     run->mut_step = 0.0;
     run->cross_frac = 0.4;
-    run->cross_frac_limit = 0.4;
+    run->cross_frac_limit = 0.0;
     run->cross_step = 0.0;
     run->num_genes = 8;
     run->gene_bits = 8;
-    run->min_protein_conc = 0.05;
+    run->term_cutoff = 0.0;
+
+    run->reg_steps = 50;
+    run->min_protein_conc = 0.04;
     run->max_protein_conc = 1.0;
+
     run->decay_rate = 0.05;
     run->initial_proteins = 5;
     run->max_proteins = 20;
     run->max_mut_float = 0.5;
     run->max_mut_bits = 8;
-    run->fitness_log_interval = 10;
-    run->binding_seq_play = 1;
-    run->graph_results = false;
-    run->log_grns = false;
-    run->log_reg_steps = false;
-    run->log_code_with_fitness = false;
+
+    run->binding_seq_play = 2;
+
     run->growth_start = 10;
-    run->growth_end = 29;
+    run->growth_end = 19;
     run->growth_sample_interval = 2;
     run->growth_seq = "11111111";
-    run->growth_threshold = 0.5;
-    run->term_cutoff = 0.0;
-    run->code_start = 30;
+    run->growth_threshold = 0.25;
+
+    run->code_start = 20;
     run->code_end = 49;
     run->code_sample_interval = 2;
-    run->file_index = 0;
+
+    run->log_mode = "all";
+
+    run->fitness_log_interval = 1;
+
+    run->graph_results = false;
+
+    run->log_grns = false;
+
+    run->log_reg_steps = false;
+
+    run->log_code_with_fitness = false;
+
+    run->fix_rng_seed = false;
+    run->fixed_rng_seed = 1207586232;
+
+    run->log_dir = "data/dbs";
 
     return run;
 }
@@ -221,4 +240,37 @@ void Test::fitness(Run *run) {
 
     float fitness = FitnessFcn::eval(&ptype, &args);
     assert(fitness == 0.0f);
+}
+
+void Test::variability(Run *run) {
+    const int num_trials = 100;
+    
+    vector<Grn*> pop;
+    vector<Phenotype*> phenotypes;
+    vector<float> fitnesses;
+    
+    Grn *grn = new Grn(run);
+    pop.push_back(grn);
+    Phenotype *ptype = new Phenotype(run);
+    phenotypes.push_back(ptype);
+    float fitness = 0.0f;
+    fitnesses.push_back(fitness);
+
+    //Logger logger(run);
+    RegSim rs(run, nullptr);
+    for (int i = 0; i < num_trials; i++) {
+        rs.update_fitness(&pop, &fitnesses, &phenotypes, i);
+        cout << "Proteins: " << grn->get_num_proteins() << endl;
+        cout << "Fitness: " << fitnesses[0] << endl;
+        cout << "Phenotype: " << endl;
+
+        cout << ptype->to_str();
+        
+        cout << endl;
+        
+        grn->reset();
+    }
+    
+    delete grn;
+    delete ptype;
 }

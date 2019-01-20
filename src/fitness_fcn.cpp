@@ -1,22 +1,23 @@
 #include "fitness_fcn.hpp"
 
 float FitnessFcn::eval(Phenotype *ptype, vector<Instr*> *input_params) {
-    float fitness = 100.0f;
+    // float fitness = 100.0f;
 
-    fitness += abs(ptype->size() - 3) * 10.0f;
+    // fitness += abs(ptype->size() - 3) * 10.0f;
     
-    int empty_nodes = ptype->get_num_unfilled_nodes();
-    if (empty_nodes == 0) {
-        Program pgm = Program(ptype);
-        float test_ratio = FitnessFcn::test_pgm(&pgm, input_params);
-        //cout << test_ratio << endl;
-        fitness -= test_ratio * 100.0f;
-    }
-    else {
-        fitness += empty_nodes * 10.0f;
-    }
+    // int empty_nodes = ptype->get_num_unfilled_nodes();
+    // if (empty_nodes == 0) {
+    //     Program pgm = Program(ptype);
+    //     float test_ratio = FitnessFcn::test_pgm(&pgm, input_params);
+    //     fitness -= test_ratio * 100.0f;
+    // }
+    // else {
+    //     fitness += empty_nodes * 10.0f;
+    // }
 
-    return fitness;
+    // return fitness;
+
+    return abs(ptype->size() - 3) * 10.0f;
 }
 
 //returns success ratio
@@ -35,14 +36,13 @@ float FitnessFcn::test_pgm(Program *pgm, vector<Instr*> *input_params) {
     }
     else {
         failed++;
-        cout << (int) output[1] << endl;
     }
     args.clear();
     
     args.push_back("2");
-    args.push_back("3");
+    args.push_back("4");
     output = pgm->run(input_params, &args);
-    if (output == "6") {
+    if (output == "8") {
         passed++;
     }
     else {

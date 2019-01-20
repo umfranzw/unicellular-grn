@@ -67,6 +67,8 @@ void Ga::run_alg() {
 
         this->logger->log_fitnesses(i, &this->pop, &this->phenotypes, &this->fitnesses);
 
+        this->reset_proteins(&this->pop);
+
         this->adjust_params(this->run, i);
 
         i++;
@@ -120,4 +122,10 @@ float Ga::clamp_param(float cur_val, float step, float limit) {
     }
 
     return cur_val;
+}
+
+void Ga::reset_proteins(vector<Grn*> *pop) {
+    for (int i = 0; i < this->run->pop_size; i++) {
+        (*pop)[i]->reset();
+    }
 }
