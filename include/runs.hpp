@@ -44,7 +44,6 @@ public:
     int growth_end;
     int growth_sample_interval;
 
-    string growth_seq;
     float growth_threshold;
 
     float term_cutoff;

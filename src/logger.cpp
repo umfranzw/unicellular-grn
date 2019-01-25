@@ -12,9 +12,6 @@
 
 Logger::Logger(Run *run) {
     this->run = run;
-    this->run_best_grn = nullptr;
-    this->run_best_ptype = nullptr;
-    this->run_best_pop_index = -1;
     
     //ensure statements are serialized so that using multiple openMP threads in the simulation (which may call logger member functions) won't mess up the order of transactions
     int rc = sqlite3_config(SQLITE_CONFIG_SERIALIZED);
@@ -44,7 +41,8 @@ Logger::Logger(Run *run) {
     if (rc != SQLITE_OK) {
         cerr << "Error turning off sqlite journaling: " << rc << endl;
     }
-    
+
+    this->gen_avg_fitness = -1.0f;
     this->create_tables();
 }
 
@@ -88,20 +86,21 @@ void Logger::print_results(int total_iters) {
     cout << "Results:" << endl;
     cout << "********" << endl;
     cout << "total iterations: " << total_iters << endl;
-    cout << "run-best fitness: " << this->run_best_fitness << endl;
-    cout << "run-best pop_index: " << this->run_best_pop_index << endl;
-    cout << "run-best phenotype:" << endl;
-    cout << this->run_best_ptype->to_code() << endl;
+    cout << endl;
+    cout << "grn:" << endl;
+    cout << "run-best fitness: " << this->grn_bests.get_run_best_fitness() << endl;
+    cout << "run-best pop_index: " << this->grn_bests.get_run_best_index() << endl;
+    cout << "run-best iter (0-based): " << this->grn_bests.get_run_best_iter() << endl;
+    cout << endl;
+    cout << "phenotype:" << endl;
+    cout << "size: " << this->ptype_bests.get_run_best()->size() << endl;
+    cout << "filled_nodes: " << this->ptype_bests.get_run_best()->get_num_filled_nodes() << endl;
+    cout << "unfilled_nodes: " << this->ptype_bests.get_run_best()->get_num_unfilled_nodes() << endl;
+    cout << this->ptype_bests.get_run_best()->to_code() << endl;
 }
 
 Logger::~Logger() {
     sqlite3_close(this->conn);
-    if (this->run_best_grn != nullptr) {
-        delete this->run_best_grn;
-    }
-    if (this->run_best_ptype != nullptr) {
-        delete this->run_best_ptype;
-    }
 }
 
 void Logger::create_tables() {
@@ -140,7 +139,6 @@ void Logger::create_tables() {
     run_sql << "growth_start INTEGER NOT NULL,";
     run_sql << "growth_end INTEGER NOT NULL,";
     run_sql << "growth_sample_interval INTEGER NOT NULL,";
-    run_sql << "growth_seq TEXT NOT NULL,";
     run_sql << "growth_threshold INT NOT NULL,";
     run_sql << "term_cutoff FLOAT NOT NULL,";
     run_sql << "code_start INTEGER NOT NULL,";
@@ -169,7 +167,8 @@ void Logger::create_tables() {
         grn_sql << "CREATE TABLE grn (";
         grn_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
         grn_sql << "ga_step INTEGER NOT NULL,";
-        grn_sql << "pop_index INTEGER NOT NULL";
+        grn_sql << "pop_index INTEGER NOT NULL,";
+        grn_sql << "growth_seq TEXT NOT NULL";
         grn_sql << ");";
         sqlite3_exec(this->conn, grn_sql.str().c_str(), NULL, NULL, NULL);
 
@@ -240,6 +239,7 @@ void Logger::create_tables() {
         ps_sql << "CREATE TABLE protein_state (";
         ps_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
         ps_sql << "reg_step INTEGER NOT NULL,";
+        ps_sql << "interactions INTEGER NOT NULL,";
 
         //conc columns
         for (int i = 0; i < this->run->num_genes; i++) {
@@ -293,7 +293,7 @@ void Logger::create_tables() {
 
 void Logger::log_run() {
     int rc;
-    string run_sql = "INSERT INTO run (seed, pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, decay_rate, initial_proteins, max_proteins, max_pgm_size, max_mut_float, max_mut_bits, fitness_log_interval, binding_seq_play, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_seq, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval, fix_rng_seed, log_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    string run_sql = "INSERT INTO run (seed, pop_size, ga_steps, reg_steps, mut_prob, mut_prob_limit, mut_step, cross_frac, cross_frac_limit, cross_step, num_genes, gene_bits, min_protein_conc, max_protein_conc, decay_rate, initial_proteins, max_proteins, max_pgm_size, max_mut_float, max_mut_bits, fitness_log_interval, binding_seq_play, graph_results, log_grns, log_reg_steps, log_code_with_fitness, growth_start, growth_end, growth_sample_interval, growth_threshold, term_cutoff, code_start, code_end, code_sample_interval, fix_rng_seed, log_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt *run_stmt;
     sqlite3_prepare_v2(this->conn, run_sql.c_str(), run_sql.size() + 1, &run_stmt, NULL);
 
@@ -331,7 +331,6 @@ void Logger::log_run() {
     sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_start);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_end);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->growth_sample_interval);
-    sqlite3_bind_text(run_stmt, bind_index++, this->run->growth_seq.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->growth_threshold);
     sqlite3_bind_double(run_stmt, bind_index++, (double) this->run->term_cutoff);
     sqlite3_bind_int(run_stmt, bind_index++, this->run->code_start);
@@ -359,17 +358,22 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
         sqlite3_stmt *fitness_stmt;
         sqlite3_prepare_v2(this->conn, fitness_sql.c_str(), fitness_sql.size() + 1, &fitness_stmt, NULL);
 
-        float avg_fitness = 0.0f;
-        float best_fitness = -1.0f;
-        int best_index = -1;
+        this->gen_avg_fitness = 0.0f;
         int bind_index;
 
         sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
         for (int i = 0; i < this->run->pop_size; i++) {
-            avg_fitness += (*fitnesses)[i];
-            if (i == 0 || (*fitnesses)[i] < best_fitness) {
-                best_fitness = (*fitnesses)[i];
-                best_index = i;
+            float fitness = (*fitnesses)[i];
+            this->gen_avg_fitness += fitness;
+
+            if (ga_step == -1 || (fitness < this->grn_bests.get_gen_best_fitness())) {
+                Grn *best_grn = new Grn((*pop)[i]); //create a copy
+                this->grn_bests.update_gen_best(best_grn, i, fitness);
+                Phenotype *best_ptype = new Phenotype((*phenotypes)[i]); //create a copy
+                this->ptype_bests.update_gen_best(best_ptype, i, fitness);
+
+                this->grn_bests.update_run_best(best_grn, i, fitness, ga_step);
+                this->ptype_bests.update_run_best(best_ptype, i, fitness, ga_step);
             }
 
             bind_index = 1;
@@ -408,22 +412,12 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
             sqlite3_reset(fitness_stmt);
             sqlite3_clear_bindings(fitness_stmt);
         }
+        this->grn_bests.gen_done();
+        this->ptype_bests.gen_done();
 
-        //record run-best
-        if (ga_step == -1 || best_fitness < this->run_best_fitness) {
-            this->run_best_fitness = best_fitness;
-            if (this->run_best_grn != nullptr) { //remove old best individual
-                delete this->run_best_grn;
-                delete this->run_best_ptype;
-            }
-            this->run_best_grn = new Grn((*pop)[best_index]); //create a copy
-            this->run_best_ptype = new Phenotype((*phenotypes)[best_index]); //create a copy
-            this->run_best_pop_index = best_index;
-        }
-        
         sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
         
-        avg_fitness /= (float) this->run->pop_size;
+        this->gen_avg_fitness /= (float) this->run->pop_size;
 
         sqlite3_finalize(fitness_stmt);
 
@@ -432,6 +426,7 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
             cout << "********" << endl;
             cout << "initial:" << endl;
             cout << "********" << endl;
+            cout << "seed: " << this->run->rand->seed << endl;
         }
         else {
             //we're going to be looking at this output a lot, so we might as well make it pretty...
@@ -446,46 +441,21 @@ void Logger::log_fitnesses(int ga_step, vector<Grn*> *pop, vector<Phenotype*> *p
         }
         cout << "mut_prob: " << this->run->mut_prob << endl;
         cout << "cross_frac: " << this->run->cross_frac << endl;
-        cout << "gen best fitness: " << best_fitness << endl;
-        cout << "gen avg fitness: " << avg_fitness << endl;
-
-        cout << "run-best fitness: " << this->run_best_fitness << endl;
-        cout << "run-best pop_index: " << this->run_best_pop_index << endl;
-        cout << "run-best phenotype:" << endl;
-        cout << this->run_best_ptype->to_code() << endl;
-        
-        // Grn *best_grn = (*pop)[best_index];
-        // Phenotype *best_ptype = (*phenotypes)[best_index];
-        // cout << "best index: " << best_index << endl;
-        // cout << "best phenotype: " << endl;
-        // cout << best_ptype->to_code() << endl;
-        // cout << "final protein count in best individual: " << best_grn->proteins->size() << endl;
+        cout << endl;
+        cout << "grn:" << endl;
+        cout << "gen best fitness: " << this->grn_bests.get_gen_best_fitness() << endl;
+        cout << "gen avg fitness: " << this->gen_avg_fitness << endl;
+        cout << "run-best fitness: " << this->grn_bests.get_run_best_fitness() << endl;
+        cout << "run-best pop_index: " << this->grn_bests.get_run_best_index() << endl;
+        cout << endl;
+        cout << "phenotype:" << endl;
+        cout << "size: " << this->ptype_bests.get_run_best()->size() << endl;
+        cout << "filled_nodes: " << this->ptype_bests.get_run_best()->get_num_filled_nodes() << endl;
+        cout << "unfilled_nodes: " << this->ptype_bests.get_run_best()->get_num_unfilled_nodes() << endl;
+        cout << this->ptype_bests.get_run_best()->to_code() << endl;
         
         cout << endl;
         cout.flush();
-    }
-
-    else {
-        float avg_fitness = 0.0f;
-        float best_fitness = -1.0f;
-        int best_index = -1;
-        for (int i = 0; i < this->run->pop_size; i++) {
-            avg_fitness += (*fitnesses)[i];
-            if (i == 0 || (*fitnesses)[i] < best_fitness) {
-                best_fitness = (*fitnesses)[i];
-                best_index = i;
-            }
-        }
-
-        if (best_fitness < this->run_best_fitness) {
-            this->run_best_fitness = best_fitness;
-            if (this->run_best_grn != nullptr) { //remove old best individual
-                delete this->run_best_grn;
-                delete this->run_best_ptype;
-            }
-            this->run_best_grn = new Grn((*pop)[best_index]); //create a copy
-            this->run_best_ptype = new Phenotype((*phenotypes)[best_index]); //create a copy
-        }
     }
 }
 
@@ -510,47 +480,31 @@ float Logger::get_fitness_val(int ga_step, string *sql_fcn) {
     return result;
 }
 
-float Logger::get_best_fitness(int ga_step) {
-    string fcn = "min";
-    return this->get_fitness_val(ga_step, &fcn);
-}
-
-float Logger::get_avg_fitness(int ga_step) {
-    string fcn = "avg";
-    return this->get_fitness_val(ga_step, &fcn);
-}
-
-//best fitness *so far*
 float Logger::get_run_best_fitness() {
-    return this->run_best_fitness;
+    return this->grn_bests.get_run_best_fitness();
+}
+
+float Logger::get_gen_avg_fitness() {
+    return this->gen_avg_fitness;
 }
 
 bool Logger::should_sample(int ga_step) {
     return ga_step <= 0 || ga_step == this->run->ga_steps - 1 || (ga_step + 1) % this->run->fitness_log_interval == 0;
 }
 
-void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, BestInfo<RegSnapshot> *bests) {
+void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, BestInfo<RegSnapshot*> *bests) {
     if (this->run->log_grns) {
         if (this->run->log_mode == "all" &&
             this->should_sample(ga_step)) {
             this->log_ga_step(ga_step, grns, 0);
         }
-
-        //for mode == "best": log ga when logging the reg snapshot (in log_reg_step())
-        // else if (this->run->log_mode == "best") {
-        //     if (bests->run_best_updated) {
-        //         vector<Grn*> best;
-        //         best.push_back((*grns)[bests->run_best_index]);
-        //         this->log_ga_step(ga_step, &best, bests->run_best_index);
-        //     }
-        // }
     }
 }
 
 void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, int pop_index_offset=0) {
     int rc;
     int bind_index;
-    string grn_sql = "INSERT INTO grn (ga_step, pop_index) VALUES (?, ?);";
+    string grn_sql = "INSERT INTO grn (ga_step, pop_index, growth_seq) VALUES (?, ?, ?);";
     sqlite3_stmt *grn_stmt;
     sqlite3_prepare_v2(this->conn, grn_sql.c_str(), grn_sql.size() + 1, &grn_stmt, NULL);
 
@@ -566,6 +520,7 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, int pop_index_offset=0
         bind_index = 1;
         sqlite3_bind_int(grn_stmt, bind_index++, ga_step);
         sqlite3_bind_int(grn_stmt, bind_index++, pop_index_offset + i);
+        sqlite3_bind_text(grn_stmt, bind_index++, grn->growth_seq->to_str().c_str(), -1, SQLITE_TRANSIENT);
 
         rc = sqlite3_step(grn_stmt);
         if (rc != SQLITE_DONE) {
@@ -666,8 +621,8 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
 
             stringstream pstate_sql;
             stringstream pstate_vals;
-            pstate_sql << "INSERT INTO protein_state (reg_step, ";
-            pstate_vals << "?";
+            pstate_sql << "INSERT INTO protein_state (reg_step, interactions, ";
+            pstate_vals << "?, ?";
             for (int i = 0; i < this->run->num_genes; i++) {
                 pstate_sql << "conc" << i;
                 pstate_vals << ", ?";
@@ -734,6 +689,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
                 //insert protein_state
                 bind_index = 1;
                 sqlite3_bind_int(pstate_stmt, bind_index++, reg_step);
+                sqlite3_bind_int(pstate_stmt, bind_index++, protein->interactions);
                 for (int i = 0; i < this->run->num_genes; i++) {
                     sqlite3_bind_double(pstate_stmt, bind_index++, (double) protein->concs[i]);
                 }
@@ -742,6 +698,7 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
 
                 if ((rc = sqlite3_step(pstate_stmt)) != SQLITE_DONE) {
                     cerr << "Error inserting protein_state: " << rc << endl;
+                    cerr << sqlite3_errmsg(this->conn) << endl;
                     exit(1);
                 }
 
@@ -791,6 +748,11 @@ void Logger::log_reg_step(int ga_step, int reg_step, Grn *grn, int pop_index, Ph
 
                     if (sqlite3_step(gstate_selp_stmt) != SQLITE_ROW) {
                         cerr << "Error selecting protein (2)." << endl;
+                        cerr << "grn_id: " << grn_id << endl;
+                        cerr << "gene index: " << i << endl;
+                        cerr << "active_output: " << gene->active_output << endl;
+                        sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
+                        this->write_db();
                         exit(1);
                     }
 

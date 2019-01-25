@@ -27,6 +27,7 @@ public:
     ProteinStore *proteins;
     Run *run;
     vector<Protein*> initial_proteins;
+    BitVec *growth_seq; //growth protein sequence
 };
 
 #endif

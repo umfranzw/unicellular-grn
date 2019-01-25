@@ -10,7 +10,6 @@ Program::~Program() {
 }
 
 string Program::run(vector<Instr*> *params, vector<string> *args) {
-    //call main with the args
     stringstream buf;
     buf << "(LET (";
     for (int i = 0; i < (int) params->size(); i++) {
@@ -23,7 +22,8 @@ string Program::run(vector<Instr*> *params, vector<string> *args) {
     buf << ")";
     buf << this->code;
     buf << ")";
-    
+
+    //cout << "Running code: " << buf.str() << endl;
     LispWorker worker = LispWorker(buf.str());
     worker.run();
 

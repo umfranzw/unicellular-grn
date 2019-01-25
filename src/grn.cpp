@@ -49,11 +49,12 @@ Grn::Grn(Grn *grn, bool copy_store, bool copy_gene_state) { //copy constructor
 
     if (copy_store) {
         this->proteins = new ProteinStore(grn->proteins);
+        this->growth_seq = new BitVec(*(grn->growth_seq));
     }
 
     else {
         this->proteins = new ProteinStore();
-        this->push_initial_proteins();
+        this->push_initial_proteins(); //note: this will copy growth_seq
     }
 }
 
@@ -63,11 +64,13 @@ void Grn::reset() {
     }
 
     this->proteins->reset();
-    this->push_initial_proteins();
+    delete this->growth_seq;
+    this->push_initial_proteins(); //resets the growth protein
 }
 
 Grn::~Grn() {
     delete this->proteins;
+    delete this->growth_seq;
     
     for (Gene *gene : this->genes) {
         delete gene;
@@ -79,10 +82,18 @@ Grn::~Grn() {
     }
 }
 
+//note: this assumes we always have at least 1 initial protein
 void Grn::push_initial_proteins() {
     //insert initial (random) proteins
-    for (int i = 0; i < this->run->initial_proteins; i++) {
-        this->proteins->add(new Protein(this->initial_proteins[i])); //push a *copy* - that way originals never get deleted
+    //push a *copy* - that way originals never get deleted
+
+    //first, insert the first protein and make it the growth protein
+    Protein *growth_protein = new Protein(this->initial_proteins[0]);
+    this->growth_seq = new BitVec(*(growth_protein->seq));
+    this->proteins->add(growth_protein);
+    //then, insert the rest
+    for (int i = 1; i < this->run->initial_proteins; i++) {
+        this->proteins->add(new Protein(this->initial_proteins[i])); 
     }
 }
 

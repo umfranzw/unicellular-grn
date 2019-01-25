@@ -1,4 +1,6 @@
 #include "tree.hpp"
+#include "instr_types.hpp"
+#include "sym_instr.hpp"
 #include <iostream>
 #include <assert.h>
 
@@ -37,6 +39,37 @@ bool Tree::invariant() {
     }
     
     return success;
+}
+
+int Tree::count_instr_type(int instr_type) {
+    int count = 0;
+    for (auto it = this->id_to_node.begin(); it != this->id_to_node.end(); it++) {
+        Node *node = it->second;
+        if (node->instr != nullptr && node->instr->type == instr_type) {
+            count++;
+        }
+    }
+    
+    return count;
+}
+
+map<string, int> Tree::get_var_freqs() {
+    map<string, int> freqs;
+    for (auto it = this->id_to_node.begin(); it != this->id_to_node.end(); it++) {
+        Node *node = it->second;
+        if (node->instr != nullptr && node->instr->type == VAR_CONST) {
+            SymInstr *instr = (SymInstr*) node->instr;
+            string var = instr->get_val();
+            if (freqs.find(var) == freqs.end()) {
+                freqs[var] = 1;
+            }
+            else {
+                freqs[var]++;
+            }
+        }
+    }
+    
+    return freqs;
 }
 
 int Tree::get_num_children(int id) {

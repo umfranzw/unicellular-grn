@@ -30,7 +30,7 @@ private:
     vector<GeneticOp*> gen_ops;
     RegSim *evalor;
 
-    void adjust_params(Run *run, int ga_step);
+    void adjust_params(Run *run);
     float clamp_param(float cur_val, float step, float limit);
 
     void update_fitness(int ga_step);

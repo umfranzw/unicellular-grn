@@ -38,7 +38,7 @@ void RegSim::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<
 
             this->grow_step(grn, ptype, i, j, ga_step);
 
-            this->code_step(grn, ptype, i, j, ga_step);
+            this->code_step2(grn, ptype, i, j, ga_step);
 
             //if we're not in the coding phase, do the decay
             if (j < this->run->code_start || j > this->run->code_end) {
@@ -58,7 +58,7 @@ void RegSim::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<
 
         bool gen_best_updated = this->bests.update_gen_best(snappy, i, fitness);
         if (gen_best_updated) {
-            run_best_updated = run_best_updated || this->bests.update_run_best(snappy, i, fitness);
+            run_best_updated = this->bests.update_run_best(snappy, i, fitness, ga_step) || run_best_updated;
         }
         
         else {
@@ -75,17 +75,16 @@ void RegSim::update_fitness(vector<Grn*> *pop, vector<float> *fitnesses, vector<
 
 void RegSim::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
     int cur_size = ptype->size();
-    bool growing = reg_step >= this->run->growth_start && reg_step <= this->run->growth_end && cur_size < this->run->max_pgm_size;
+    bool growing = reg_step >= this->run->growth_start && reg_step <= this->run->growth_end && cur_size < min(this->run->max_pgm_size, this->run->num_genes);
     bool sampling = (reg_step - this->run->growth_start) % this->run->growth_sample_interval == 0;
     
     if (growing && sampling) {
-        const static BitVec growth_seq(this->run->growth_seq);
-        vector<Protein*> proteins = grn->proteins->get_all((const BitVec*) &growth_seq);
+        vector<Protein*> proteins = grn->proteins->get_all(grn->growth_seq);
 
         map<int, bool> grow_indices;
         for (Protein *p : proteins) {
             for (int i = 0; i < this->run->num_genes; i++) {
-                if (p->concs[i] > this->run->growth_threshold && (cur_size + (int) grow_indices.size()) < this->run->max_pgm_size) {
+                if (p->concs[i] > this->run->growth_threshold && (cur_size + (int) grow_indices.size()) < min(this->run->max_pgm_size, this->run->num_genes)) {
                     grow_indices.insert(pair<int, bool>(i, true));
                 }
             }
@@ -99,6 +98,54 @@ void RegSim::grow_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, 
     }
 }
 
+//This function assigned one instruction per sample, using each gene in order from left to right. The only situation in which a program can be left with unfilled nodes is when a gene has no proteins above it, or none of the proteins map to instructions that take the correct number of args.
+void RegSim::code_step2(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
+    bool coding = reg_step >= this->run->code_start && reg_step <= this->run->code_end;
+    bool sampling = (reg_step - this->run->code_start) % this->run->code_sample_interval == 0;
+
+    if (coding && sampling) {
+        int code_step = (reg_step - this->run->code_start) / this->run->code_sample_interval;
+        if (code_step < ptype->size()) {
+            //filter out the growth protein
+            vector<int> pids;
+            for (int pid : grn->proteins->get_ids()) {
+                if (*(grn->proteins->get(pid)->seq) != *(grn->growth_seq)) {
+                    pids.push_back(pid);
+                }
+            }
+            map<Protein*, float, bool(*)(Protein*, Protein*)> buckets(Protein::compare); //holds all the concs over position code_step whose protein sequence maps to an instr with the correct number of args
+            //for each protein in the grn, grab the protein in the pos given by
+            //the phenotype node index and insert it into the bucket
+            int num_args = ptype->get_num_children(code_step);
+            for (int i = 0; i < (int) pids.size(); i++) {
+                Protein *p = grn->proteins->get(pids[i]);
+                //filter down to only those instructions with a reasonable number of args
+                InstrInfo info = this->instr_factory->seq_to_instr_info(p->seq);
+                if (num_args >= info.min_args && (num_args <= info.max_args || info.max_args == UNLIMITED_ARGS)) {
+                    //check if we already have a protein with that seq
+                    if (buckets.find(p) != buckets.end()) {
+                        buckets[p] = max(buckets[p], p->concs[code_step]); //take the one with the higher conc
+                    }
+                    else {
+                        buckets[p] = p->concs[code_step];
+                    }
+                }
+            }
+            //if we have any instructions that accept the correct number of arguments (and that we have more than 0 proteins), choose an instruction
+            if (buckets.size() > 0) {
+                InstrDist dist(this->run, this->instr_factory, &buckets);
+                pair<Protein*, Instr *> sample = dist.sample(); //note: instr may be nullptr
+                if (sample.first != nullptr) {
+                    ptype->set_instr(code_step, sample.second);
+                }
+            }
+            //else if no proteins or no instructions with correct number of args,
+            //leave the node empty. The fitness function will deal with this.
+        }
+    }
+}
+
+//calculated the number of instructions per sample that we need to assign, uses mod to grab them
 void RegSim::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, int ga_step) {
     bool coding = reg_step >= this->run->code_start && reg_step <= this->run->code_end;
     bool sampling = (reg_step - this->run->code_start) % this->run->code_sample_interval == 0;
@@ -114,7 +161,7 @@ void RegSim::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, 
             int end = start + instr_per_sample;
             for (int i = start; i < end; i++) { //for each phenotype node
                 int gene_index = i % this->run->num_genes;
-                map<BitVec*, float, bool(*)(BitVec*, BitVec*)> buckets(BitVec::compare); //holds all the concs over position gene_index whose protein sequence maps to an instr with the correct number of args
+                map<Protein*, float, bool(*)(Protein*, Protein*)> buckets(Protein::compare); //holds all the concs over position gene_index whose protein sequence maps to an instr with the correct number of args
                 //for each protein in the grn, grab the protein in the pos given by
                 //the phenotype node index and insert it into the bucket
                 int num_args = ptype->get_num_children(i);
@@ -124,20 +171,20 @@ void RegSim::code_step(Grn *grn, Phenotype *ptype, int grn_index, int reg_step, 
                     InstrInfo info = this->instr_factory->seq_to_instr_info(p->seq);
                     if (num_args >= info.min_args && (num_args <= info.max_args || info.max_args == UNLIMITED_ARGS)) {
                         //check if we already have a protein with that seq
-                        if (buckets.find(p->seq) != buckets.end()) {
-                            buckets[p->seq] = max(buckets[p->seq], p->concs[gene_index]); //take the one with the higher conc
+                        if (buckets.find(p) != buckets.end()) {
+                            buckets[p] = max(buckets[p], p->concs[gene_index]); //take the one with the higher conc
                         }
                         else {
-                            buckets[p->seq] = p->concs[gene_index];
+                            buckets[p] = p->concs[gene_index];
                         }
                     }
                 }
                 //check if we have any instructions that accept the correct number of arguments (and that we have more than 0 proteins)
                 if (buckets.size() > 0) {
                     InstrDist dist(this->run, this->instr_factory, &buckets);
-                    Instr *instr = dist.sample(); //note: instr may be nullptr
-                    if (instr != nullptr) {
-                        ptype->set_instr(i, instr);
+                    pair<Protein*, Instr *> sample = dist.sample(); //note: instr may be nullptr
+                    if (sample.first != nullptr) {
+                        ptype->set_instr(i, sample.second);
                     }
                 }
                 //else if no proteins or no instructions with correct number of args,

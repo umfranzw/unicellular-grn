@@ -13,11 +13,14 @@ public:
     Protein(Protein *protein);
     ~Protein();
     string to_str();
+    bool operator<(const Protein& rhs);
+    static bool compare(Protein *x, Protein *y);
 
     BitVec *seq;
     vector<float> concs;
     int src_pos;
     Run *run;
+    int interactions;
 };
 
 #endif

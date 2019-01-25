@@ -7,6 +7,7 @@
 namespace FitnessFcn {
     float eval(Phenotype *ptype, vector<Instr*> *input_params);
     float test_pgm(Program *pgm, vector<Instr*> *input_params);
+    float test_pgm2(Program *pgm, vector<Instr*> *input_params);
 }
 
 #endif

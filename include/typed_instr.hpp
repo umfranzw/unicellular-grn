@@ -21,6 +21,10 @@ public:
         this->val = *typed_val;
     }
 
+    T get_val() {
+        return this->val;
+    }
+
 protected:
     T val;
 };

@@ -4,6 +4,7 @@
 RandSearch::RandSearch(Run *run) {
     this->run = run;
     this->instr_factory = InstrFactory::create(this->run);
+    this->max_nodes = min(this->run->max_pgm_size, this->run->num_genes);
 }
 
 RandSearch::~RandSearch() {
@@ -39,7 +40,7 @@ void RandSearch::run_alg() {
             Phenotype *copy = new Phenotype(ptype);
             bool gen_best_updated = this->bests.update_gen_best(copy, j, this->fitnesses[j]);
             if (gen_best_updated) {
-                this->bests.update_run_best(copy, j, this->fitnesses[j]);
+                this->bests.update_run_best(copy, j, this->fitnesses[j], i);
             }
         }
 
@@ -59,9 +60,9 @@ void RandSearch::run_alg() {
 }
 
 void RandSearch::randomize_ptype(Phenotype *ptype) {
-    int size = this->run->rand->in_range(0, MAX_NODES + 1);
+    int size = this->run->rand->in_range(0, this->max_nodes + 1);
     for (int i = 0; i < size; i++) {
-        ptype->add_child(this->run->rand->in_range(0, MAX_NODES), nullptr);
+        ptype->add_child(this->run->rand->in_range(0, this->max_nodes), nullptr);
     }
 
     for (int i = 0; i < ptype->size(); i++) {

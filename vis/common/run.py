@@ -67,7 +67,6 @@ class Run():
             ("growth_start", int),
             ("growth_end", int),
             ("growth_sample_interval", int),
-            ("growth_seq", str),
             ("growth_threshold", float),
             ("term_cutoff", float),
             ("code_start", int),
@@ -115,7 +114,6 @@ class Run():
         info += "growth_start: {}\n".format(self.growth_start)
         info += "growth_end: {}\n".format(self.growth_end)
         info += "growth_sample_interval: {}\n".format(self.growth_sample_interval)
-        info += "growth_seq: {}\n".format(self.growth_seq)
         info += "growth_threshold: {}\n".format(self.growth_threshold)
         info += "term_cutoff: {}\n".format(self.term_cutoff)
         info += "code_start: {}\n".format(self.code_start)

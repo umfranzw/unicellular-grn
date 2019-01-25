@@ -23,6 +23,9 @@ public:
     int get_num_unfilled_nodes();
     int get_num_filled_nodes();
     bool is_leaf(int id);
+    int count_instr_type(int type);
+    int count_var_occurs();
+    int count_distinct_vars();
     
     Tree *tree;
     

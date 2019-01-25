@@ -73,7 +73,7 @@ void Gene::update_binding(int *bind_pid, ProteinStore *store) {
         //check if this gene has output its output protein in the past, and that protein is still around...
         pair<int, Protein*> result = store->get_by_seq(this->output_seq);
         //if so, reactivate the existing protein
-        if (result.first != -1) {
+        if (result.first != -1 && result.second->src_pos == this->pos) {
             this->active_output = result.first;
         }
 
@@ -83,6 +83,10 @@ void Gene::update_binding(int *bind_pid, ProteinStore *store) {
             int pid = store->add(protein);
             this->active_output = pid;
             this->outputs.push_back(pid);
+
+            //update the binding protein's interation count
+            Protein *bind_protein = store->get(*bind_pid);
+            bind_protein->interactions++;
         }
     }
     //if we got passed a null protein pointer, unbind and stop output protein production

@@ -1,4 +1,5 @@
 #include "phenotype.hpp"
+#include "instr_types.hpp"
 #include <sstream>
 
 Phenotype::Phenotype(Run *run) {
@@ -62,4 +63,18 @@ bool Phenotype::is_leaf(int id) {
 void Phenotype::reset() {
     delete this->tree;
     this->tree = new Tree();
+}
+
+int Phenotype::count_instr_type(int type) {
+    return this->tree->count_instr_type(type);
+}
+
+int Phenotype::count_var_occurs() {
+    return this->tree->count_instr_type(VAR_CONST);
+}
+
+int Phenotype::count_distinct_vars() {
+    map<string, int> freqs = this->tree->get_var_freqs();
+    
+    return (int) freqs.size();
 }

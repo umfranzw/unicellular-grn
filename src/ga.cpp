@@ -69,7 +69,7 @@ void Ga::run_alg() {
 
         this->reset_proteins(&this->pop);
 
-        this->adjust_params(this->run, i);
+        this->adjust_params(this->run);
 
         i++;
     }
@@ -99,9 +99,9 @@ void Ga::graph_results() {
     }
 }
 
-void Ga::adjust_params(Run *run, int ga_step) {
+void Ga::adjust_params(Run *run) {
     static float prev_avg = numeric_limits<float>::max();
-    float cur_avg = this->logger->get_avg_fitness(ga_step);
+    float cur_avg = this->logger->get_gen_avg_fitness();
 
     if (cur_avg <= prev_avg) {
         prev_avg = cur_avg;

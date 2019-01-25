@@ -27,6 +27,8 @@ public:
     bool invariant();
     Node *get_node(int id);
     bool is_leaf(int id);
+    int count_instr_type(int instr_type);
+    map<string, int> get_var_freqs();
     
     Node *root;
 private:

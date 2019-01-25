@@ -9,6 +9,9 @@ Crossover::~Crossover() {
 }
 
 void Crossover::run_op(vector<Grn*> *pop, vector<float> *fitnesses) {
+    //note: because we are crossing the initial proteins, and the growth protein is set to the first initial protein,
+    //the growth proteins are automatically crossed and we don't have to do it explicitly
+    
     vector<pair<int, int>> parents = this->select(fitnesses);
     
     //note: can't do in-place swap of individuals in existing population because selection is done with replacement (same individual might be selected more than once)

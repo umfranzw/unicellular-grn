@@ -22,8 +22,8 @@ void Test::run() {
     // bitvec(run);
     // to_code(run);
     // program(run);
-    //fitness(run);
-    variability(run);
+    fitness(run);
+    //variability(run);
     delete run;
 }
 
@@ -56,7 +56,6 @@ Run *Test::create_run() {
     run->growth_start = 10;
     run->growth_end = 19;
     run->growth_sample_interval = 2;
-    run->growth_seq = "11111111";
     run->growth_threshold = 0.25;
 
     run->code_start = 20;
@@ -225,21 +224,37 @@ void Test::program(Run *run) {
 }
 
 void Test::fitness(Run *run) {
+    // InstrFactory *factory = InstrFactory::create(run);
+    // Phenotype ptype(run);
+    // Instr *mult = factory->get_F_instr(MULT);
+    // Instr *x0 = factory->get_T_instr(VAR_CONST, 0);
+    // Instr *x1 = factory->get_T_instr(VAR_CONST, 1);
+    // ptype.add_child(0, mult);
+    // ptype.add_child(0, x0);
+    // ptype.add_child(0, x1);
+
+    // vector<Instr*> args;
+    // args.push_back(x0);
+    // args.push_back(x1);
+
+    // float fitness = FitnessFcn::eval(&ptype, &args);
+    // assert(fitness == 0.0f);
+
     InstrFactory *factory = InstrFactory::create(run);
     Phenotype ptype(run);
-    Instr *mult = factory->get_F_instr(MULT);
-    Instr *x0 = factory->get_T_instr(VAR_CONST, 0);
+    Instr *add = factory->get_F_instr(ADD);
     Instr *x1 = factory->get_T_instr(VAR_CONST, 1);
-    ptype.add_child(0, mult);
-    ptype.add_child(0, x0);
+    ptype.add_child(0, add);
+    ptype.add_child(0, x1);
     ptype.add_child(0, x1);
 
     vector<Instr*> args;
-    args.push_back(x0);
+    args.push_back(x1);
     args.push_back(x1);
 
-    float fitness = FitnessFcn::eval(&ptype, &args);
-    assert(fitness == 0.0f);
+    float fitness = FitnessFcn::eval(&ptype, factory->get_vars());
+    cout << "fitness: " << fitness << endl;
+    //assert(fitness == 0.0f);
 }
 
 void Test::variability(Run *run) {

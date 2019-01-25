@@ -4,11 +4,12 @@
 template <class T>
 class BestInfo {
 private:
-    T *gen_best;
-    T *run_best;
+    T gen_best;
+    T run_best;
     
     int run_best_index;
     float run_best_fitness;
+    int run_best_iter;
     int gen_best_index;
     float gen_best_fitness;
     bool gen_over;
@@ -17,6 +18,7 @@ public:
     BestInfo() {
         this->run_best_index = -1;
         this->run_best_fitness = -1.0f;
+        this->run_best_iter = -1;
         this->run_best = nullptr;
     
         this->gen_best_index = -1;
@@ -36,7 +38,7 @@ public:
         }
     }
     
-    T *get_gen_best() {
+    T get_gen_best() {
         return this->gen_best;
     }
 
@@ -44,7 +46,7 @@ public:
         return this->gen_best_fitness;
     }
     
-    bool update_gen_best(T *gen_best, int index, float fitness) {
+    bool update_gen_best(T gen_best, int index, float fitness) {
         bool updated = false;
         
         if (this->gen_best == nullptr || this->gen_over || fitness < this->gen_best_fitness) {
@@ -61,16 +63,28 @@ public:
 
         return updated;
     }
+
+    int get_gen_best_index() {
+        return this->gen_best_index;
+    }
     
-    T *get_run_best() {
+    T get_run_best() {
         return this->run_best;
     }
 
     float get_run_best_fitness() {
         return this->run_best_fitness;
     }
+
+    int get_run_best_index() {
+        return this->run_best_index;
+    }
+
+    int get_run_best_iter() {
+        return this->run_best_iter;
+    }
     
-    bool update_run_best(T *run_best, int index, float fitness) {
+    bool update_run_best(T run_best, int index, float fitness, int iter) {
         bool updated = false;
 
         if (this->run_best == nullptr || fitness < this->run_best_fitness) {
@@ -80,6 +94,7 @@ public:
             this->run_best = run_best;
             this->run_best_index = index;
             this->run_best_fitness = fitness;
+            this->run_best_iter = iter;
             updated = true;
         }
 

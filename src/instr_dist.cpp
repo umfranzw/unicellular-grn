@@ -2,19 +2,19 @@
 #include <sstream>
 
 //don't store non-zero probs
-InstrDist::InstrDist(Run *run, InstrFactory *factory, map<BitVec*, float, bool(*)(BitVec*, BitVec*)> *buckets) {
+InstrDist::InstrDist(Run *run, InstrFactory *factory, map<Protein*, float, bool(*)(Protein*, Protein*)> *buckets) {
     this->run = run;
-    this->buckets = new map<BitVec*, float, bool(*)(BitVec*, BitVec*)>(BitVec::compare);
+    this->buckets = new map<Protein*, float, bool(*)(Protein*, Protein*)>(Protein::compare);
     this->factory = factory;
 
     float sum = 0.0f;
-    for (pair<BitVec*, float> item : *buckets) {
+    for (pair<Protein*, float> item : *buckets) {
         sum += item.second;
-        (*this->buckets)[item.first] = item.second; //!!! requires < operator
+        (*this->buckets)[item.first] = item.second; //note: this requires < operator to be implemented on Protein
     }
 
     if (sum > 0.0f) {
-        for (pair<BitVec*, float> item : *(this->buckets)) {
+        for (pair<Protein*, float> item : *(this->buckets)) {
             item.second /= sum;
         }
     }
@@ -22,7 +22,7 @@ InstrDist::InstrDist(Run *run, InstrFactory *factory, map<BitVec*, float, bool(*
 
 InstrDist::InstrDist(InstrDist *other) {
     this->run = other->run;
-    this->buckets = new map<BitVec*, float, bool(*)(BitVec*, BitVec*)>(*other->buckets);
+    this->buckets = new map<Protein*, float, bool(*)(Protein*, Protein*)>(*other->buckets);
     this->factory = other->factory;
 }
 
@@ -30,7 +30,7 @@ InstrDist::~InstrDist() {
     delete this->buckets;
 }
 
-Instr *InstrDist::sample() {
+pair<Protein*, Instr *> InstrDist::sample() {
     float spin = this->run->rand->next_float();
     auto it = this->buckets->begin();
     float accum = 0.0f;
@@ -39,13 +39,13 @@ Instr *InstrDist::sample() {
         it++;
     }
 
-    Instr *instr = nullptr;
+    pair<Protein*, Instr *> result = make_pair(nullptr, nullptr);
     if (it != this->buckets->end()) {
-        BitVec *result = it->first;
-        instr = this->factory->create_instr(result);
+        result.first = it->first;
+        result.second = this->factory->create_instr(it->first->seq);
     }
     
-    return instr;
+    return result;
 }
 
 string InstrDist::to_str() {
