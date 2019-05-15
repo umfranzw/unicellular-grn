@@ -12,7 +12,7 @@ class Mutation : public GeneticOp {
 public:
     Mutation(Run *run);
     ~Mutation();
-    void run_op(vector<Grn*> *pop, vector<float> *fitnesses);
+    void run_op(vector<Grn*> *pop, vector<float> *fitnesses, int ga_step, Logger *logger);
     void mutate_initial_proteins(vector<Protein*> *proteins);
     
 private:

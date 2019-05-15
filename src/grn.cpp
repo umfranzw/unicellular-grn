@@ -113,11 +113,13 @@ void Grn::run_binding(int pop_index, int reg_step, int ga_step) {
         vector<int> protein_ids = this->proteins->get_ids();
         for (const int& id: protein_ids) {
             Protein *protein = this->proteins->get(id);
-            int hamming_dist = Utils::hamming_dist(protein->seq, this->genes[pos]->binding_seq);
-            if (hamming_dist <= this->run->binding_seq_play) {
-                if (protein->concs[pos] >= this->genes[pos]->threshold) {
-                    binding_probs.push_back(pair<int, float>(id, protein->concs[pos]));
-                    pos_sum += protein->concs[pos];
+            if (protein->src_pos != pos) { //prevent genes from producing proteins that bind to themselves
+                int hamming_dist = Utils::hamming_dist(protein->seq, this->genes[pos]->binding_seq);
+                if (hamming_dist <= this->run->binding_seq_play) {
+                    if (protein->concs[pos] >= this->genes[pos]->threshold) {
+                        binding_probs.push_back(pair<int, float>(id, protein->concs[pos]));
+                        pos_sum += protein->concs[pos];
+                    }
                 }
             }
         }

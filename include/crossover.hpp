@@ -8,13 +8,14 @@
 #include "bitvec.hpp"
 #include "utils.hpp"
 #include "genetic_op.hpp"
+#include "logger.hpp"
 #include <vector>
 
 class Crossover : public GeneticOp {
 public:
     Crossover(Run *run);
     ~Crossover();
-    void run_op(vector<Grn*> *pop, vector<float> *fitnesses);
+    void run_op(vector<Grn*> *pop, vector<float> *fitnesses, int ga_step, Logger *logger);
 
 private:
     vector<pair<int, int>> select(vector<float> *fitnesses);

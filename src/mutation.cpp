@@ -7,7 +7,7 @@ Mutation::Mutation(Run *run) : GeneticOp(run) {
 Mutation::~Mutation() {
 }
 
-void Mutation::run_op(vector<Grn*> *pop, vector<float> *fitnesses) {
+void Mutation::run_op(vector<Grn*> *pop, vector<float> *fitnesses, int ga_step, Logger *logger) {
     for (int i = 0; i < this->run->pop_size; i++) {
         Grn *grn = (*pop)[i];
         for (int j = 0; j < this->run->num_genes; j++) {
@@ -27,7 +27,7 @@ void Mutation::mutate_initial_proteins(vector<Protein*> *proteins) {
         for (int i = 0; i < this->run->num_genes; i++) {
             this->mutate_float(&p->concs[i], 0.0f, this->run->max_protein_conc);
         }
-        this->mutate_int(&p->src_pos, 0, this->run->num_genes);
+        //this->mutate_int(&p->src_pos, 0, this->run->num_genes);
     }
 }
 

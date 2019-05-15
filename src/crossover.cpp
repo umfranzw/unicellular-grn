@@ -8,7 +8,7 @@ Crossover::Crossover(Run *run)
 Crossover::~Crossover() {
 }
 
-void Crossover::run_op(vector<Grn*> *pop, vector<float> *fitnesses) {
+void Crossover::run_op(vector<Grn*> *pop, vector<float> *fitnesses, int ga_step, Logger *logger) {
     //note: because we are crossing the initial proteins, and the growth protein is set to the first initial protein,
     //the growth proteins are automatically crossed and we don't have to do it explicitly
     
@@ -22,6 +22,9 @@ void Crossover::run_op(vector<Grn*> *pop, vector<float> *fitnesses) {
 
         int gene_split_pt = this->run->rand->in_range(1, (int) this->run->num_genes + 1); //in [1, num_genes]
         int protein_split_pt = this->run->rand->in_range(1, (int) this->run->initial_proteins + 1); //in [1, initial_proteins]
+
+        logger->log_split_pt(ga_step - 1, couple.first, gene_split_pt);
+        logger->log_split_pt(ga_step - 1, couple.second, gene_split_pt);
 
         //build the children
 
@@ -200,7 +203,8 @@ Protein *Crossover::cross_proteins(Protein *left, Protein *right) {
         concs.push_back(val);
     }
 
-    int src_pos = this->cross_primitives<int>(left->src_pos, right->src_pos, 0, this->run->num_genes);
+    //int src_pos = this->cross_primitives<int>(left->src_pos, right->src_pos, 0, this->run->num_genes);
+    int src_pos = -1;
 
     return new Protein(
         this->run,

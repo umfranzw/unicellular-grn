@@ -168,7 +168,8 @@ void Logger::create_tables() {
         grn_sql << "id INTEGER PRIMARY KEY AUTOINCREMENT,";
         grn_sql << "ga_step INTEGER NOT NULL,";
         grn_sql << "pop_index INTEGER NOT NULL,";
-        grn_sql << "growth_seq TEXT NOT NULL";
+        grn_sql << "growth_seq TEXT NOT NULL,";
+        grn_sql << "split_pt INTEGER NULL";
         grn_sql << ");";
         sqlite3_exec(this->conn, grn_sql.str().c_str(), NULL, NULL, NULL);
 
@@ -499,6 +500,29 @@ void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, BestInfo<RegSnapshot*>
             this->log_ga_step(ga_step, grns, 0);
         }
     }
+}
+
+void Logger::log_split_pt(int ga_step, int pop_index, int split_pt) {
+    sqlite3_exec(this->conn, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
+    
+    string sql = "UPDATE grn SET split_pt = ? WHERE ga_step = ? AND pop_index = ?;";
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(this->conn, sql.c_str(), sql.size() + 1, &stmt, NULL);
+
+    int bind_index = 1;
+    sqlite3_bind_int(stmt, bind_index++, split_pt);
+    sqlite3_bind_int(stmt, bind_index++, ga_step);
+    sqlite3_bind_int(stmt, bind_index++, pop_index);
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) {
+        cerr << "Error updating grn with split_pt." << endl;
+        cerr << sqlite3_errmsg(this->conn) << endl;
+        exit(1);
+    }
+
+    sqlite3_finalize(stmt);
+
+    sqlite3_exec(this->conn, "COMMIT TRANSACTION;", nullptr, nullptr, nullptr);
 }
 
 void Logger::log_ga_step(int ga_step, vector<Grn*> *grns, int pop_index_offset=0) {
